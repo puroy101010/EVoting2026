@@ -1,0 +1,269 @@
+.div-documents {
+    margin: 5px;
+    padding: 5px;
+}
+
+.div-documents .a-documents {
+    color: #8A0808;
+    font-family: "Gill Sans", sans-serif;
+    text-align: center;
+    display: block;
+}
+
+.div-documents .a-documents:hover {
+    color: #304c40;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.divButton {
+    width: 200px;
+    margin: 0 auto;
+    background: #304c40;
+    color: #fff;
+    font-weight: bold;
+    text-transform: uppercase;
+    padding: 20px 25px 20px 20px;
+    text-align: center;
+    border-radius: 5px;
+    box-shadow: 0px 17px 10px -10px rgba(0, 0, 0, 0.4);
+    cursor: pointer;
+    -webkit-transition: all ease-in-out 300ms;
+    transition: all ease-in-out 300ms;
+}
+
+.divButton:hover {
+    box-shadow: 0px 37px 20px -20px rgba(0, 0, 0, 0.2);
+    -webkit-transform: translate(0px, -10px) scale(1.2);
+    transform: translate(0px, -10px) scale(1.2);
+}
+
+
+/*--------------Media Query------------*/
+
+/* ----------- iPhone X ----------- */
+
+/* Portrait and Landscape */
+@media only screen 
+  and (min-device-width: 375px) 
+  and (max-device-width: 812px) 
+  and (-webkit-min-device-pixel-ratio: 3) { 
+ 
+    .divButton {
+        width: 150px;
+        padding: 15px 20px 15px 15px;
+        font-size: 0.75em;
+    }
+
+    .h3-documents {
+        font-size: 1.438em;
+    }
+
+    .div-documents .a-documents {
+        font-size: 0.813em;
+    }
+
+    .h3-callendar-act {
+       font-size: 0.813em; 
+    }
+
+    .card-calendar .th-custom {
+        font-size: 0.875em;
+    }
+
+    .card-calendar .td-head {
+        font-size: 0.938em;
+    }
+  
+}
+
+
+/* ----------- iPhone 4 and 4S ----------- */
+
+/* Portrait and Landscape */
+@media only screen 
+  and (min-device-width: 320px) 
+  and (max-device-width: 480px)
+  and (-webkit-min-device-pixel-ratio: 2) {
+
+    .divButton {
+        width: 150px;
+        padding: 15px 20px 15px 15px;
+        font-size: 0.75em;
+    }
+
+    .h3-documents {
+        font-size: 1.438em;
+    }
+
+    .div-documents .a-documents {
+        font-size: 0.813em;
+    }
+
+    .h3-callendar-act {
+       font-size: 0.813em; 
+    }
+
+    .card-calendar .th-custom {
+        font-size: 0.875em;
+    }
+
+    .card-calendar .td-head {
+        font-size: 0.938em;
+    }
+
+}
+
+
+/* ----------- iPhone 11 and XR ----------- */
+@media only screen 
+    and (width: 414px) 
+    and (height: 896px) 
+    and (-webkit-device-pixel-ratio: 2) { 
+
+        .container-Div .divButton {
+          width: 200px;
+          padding: 20px;
+          font-size: 0.938em;
+        }
+
+        .container-Div .h3-documents {
+            font-size: 1.563em;
+        }
+
+        .container-Div .div-documents .a-documents {
+            font-size: 0.938em;
+        }
+
+        .card-calendar .h3-callendar-act {
+            font-size: 1em; 
+         }
+
+    }
+
+    /* ----------- For iPhone 11, 12, 13 and 14 ----------- */
+        @media only screen 
+        and (width: 390px) 
+        and (height: 844px) 
+        and (-webkit-device-pixel-ratio: 3) {
+        
+        .container-Div .divButton {
+            width: 200px;
+            padding: 20px;
+            font-size: 0.938em;
+            }
+    
+            .container-Div .h3-documents {
+                font-size: 1.563em;
+            }
+    
+            .container-Div .div-documents .a-documents {
+                font-size: 0.938em;
+            }
+    
+            .card-calendar .h3-callendar-act {
+                font-size: 1em; 
+            }
+
+    }
+
+
+     /* ----------- iPhone 14 Pro Max ----------- */
+@media only screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) { 
+   
+
+    .container-Div .divButton {
+        width: 200px;
+        padding: 20px;
+        font-size: 0.938em;
+      }
+
+      .container-Div .h3-documents {
+          font-size: 1.563em;
+      }
+
+      .container-Div .div-documents .a-documents {
+          font-size: 0.938em;
+      }
+
+      .card-calendar .h3-callendar-act {
+          font-size: 1em; 
+       }
+ 
+}
+
+
+/*------JioPhone 2--------*/
+@media only screen and (max-device-width: 240px) {
+  
+    .divButton {
+        width: 100px;
+        padding: 10px 15px 10px 10px;
+        font-size: 0.625em;
+    }
+
+    .h3-documents {
+        font-size: 1.25em;
+    }
+
+    .div-documents .a-documents {
+        font-size: 0.625em;
+    }
+
+    .h3-callendar-act {
+        font-size: 0.625em; 
+     }
+
+     .card-calendar .card-header {
+        padding: 5px;
+     }
+
+     .card-calendar .th-custom {
+        font-size: 0.875em;
+    }
+
+    .card-calendar .td-head {
+        font-size: 0.938em;
+    }
+
+}
+
+
+/*---------Galaxy Fold-----------*/
+@media only screen 
+  and (min-device-width: 280px) 
+  and (max-device-width: 653px)
+  and (-webkit-min-device-pixel-ratio: 2) {
+
+    .divButton {
+        width: 100px;
+        padding: 10px 15px 10px 10px;
+        font-size: 0.625em;
+    }
+
+    .h3-documents {
+        font-size: 1.25em;
+    }
+
+    .div-documents .a-documents {
+        font-size: 0.75em;
+    }
+
+    .h3-callendar-act {
+        font-size: 0.625em; 
+     }
+
+     .card-calendar .card-header {
+        padding: 5px;
+     }
+
+     .card-calendar .th-custom {
+        font-size: 0.875em;
+    }
+
+    .card-calendar .td-head {
+        font-size: 0.938em;
+    }
+
+
+  }

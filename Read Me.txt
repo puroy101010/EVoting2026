@@ -1,0 +1,9 @@
+Read Me:
+
+Clear Cache before uploading
+Generate new app key and put it in the config/app. Make sure env and config/app is equal
+Make sure to double check env file and the config/database
+Make sure config/app app_debug  set to false
+Make sure to check for the Database Seeder
+Check the ConfigurationSeeder and set the default values to null the Voting Period, OTP Login Enabled and the Amendment Module Enabled.
+Check if the log channel is adding the authenticated userID and the email.

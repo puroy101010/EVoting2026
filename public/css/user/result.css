@@ -1,0 +1,411 @@
+	* {
+		box-sizing: border-box;
+	}
+	.my-card
+		{
+		position:absolute;
+		left:40%;
+		top:-20px;
+		width: 70px;
+		height: 70px;
+		border-radius:50%;
+		color: #565835;
+	}
+
+	.li-numbers {
+		display: inline-block;
+		font-size: 15px;
+		list-style-type: none;
+		padding: 10px;
+		text-transform: uppercase;
+		font-weight: bold;
+		text-align: center;
+		font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+	}
+
+	.li-numbers span {
+		display: block;
+		font-size: 2rem;
+		text-align: center;
+		font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+		background-color: #333;
+		color: #ffc107;
+		width: 60px;
+		height: 50px;
+		border-radius: 2px;
+	}
+
+
+	.h4-title {
+		margin-top: 40px;
+	}
+
+	.h3-title {
+	color: #ffc107;
+	}
+
+	.div-box {
+		background-color: #333;
+		width: 50%;
+		padding: 5px;
+		margin: 0 auto;
+		display: block;
+		margin-top: 12px;
+	}
+
+	.image-candidate {
+		width: 100px;
+		height: 100px;
+		max-width: 100%;
+		max-height: 100%;
+		}
+
+	.p-vote-received {
+		font-size: 17px;
+		font-weight: bold;
+		margin-top: 18px;
+		display: block;
+	}
+
+	.p-vote-number {
+		font-size: 30px;
+		font-weight: bold;
+		color: #2b3309;
+		}
+
+	.card-two {
+		height: 190px;
+	}
+
+	.col-box {
+		width: 100%;
+		height: 100%;
+	}
+
+
+
+
+	/*----media query----*/
+	/* Iphone 4 and 4's Portrait and Landscape */
+	@media only screen 
+	and (min-device-width: 320px) 
+	and (max-device-width: 480px)
+	and (-webkit-min-device-pixel-ratio: 2) {
+		.rows-sm {
+			width: 100%;
+		}
+
+	
+		.col-box {
+			width: 100%;
+			background-color: #eee;
+			margin: 5px;
+		}
+
+		.h4-small-text {
+			font-size: 20px;
+			text-align: center;
+		}
+
+		.p-vote-received {
+			text-align: center;
+			margin: 0;
+
+		}
+
+		.p-vote-number {
+			display: block;
+			text-align: center;
+		}
+
+		 .image-candidate {
+			margin-top: 10px;
+			padding: 0;
+			border: 2px solid red;
+
+		}
+
+
+		.h4-title {
+			text-align: center;
+			font-size: 15px;
+		}
+
+		.li-numbers span {
+			display: block;
+			font-size: 1rem;
+			text-align: center;
+			background-color: #333;
+			color: #ffc107;
+			width: 30px;
+			height: 30px;
+			border-radius: 2px;
+		}
+
+		.li-numbers {
+			display: inline-block;
+			font-size: 8px;
+			list-style-type: none;
+			padding: 4px;
+			text-transform: uppercase;
+			font-weight: bold;
+			text-align: center;
+		}
+
+		.uls-sm {
+			text-align: center;
+		}
+
+		.navbar {
+			width: 100%;
+		}
+
+		.image-logo {
+		   display: block;
+		   margin-left: auto;
+		   margin-right: auto;
+		   width: 100%;
+		}
+
+		 .text-title {
+			text-align: center;
+			display: block;
+			font-size: 20px;
+		}
+
+
+	}
+
+	/* ----------- iPad 1, 2, Mini and Air ----------- */
+    /* Portrait and Landscape */
+		@media only screen 
+		  and (min-device-width: 768px) 
+		  and (max-device-width: 1024px) 
+		  and (-webkit-min-device-pixel-ratio: 1) {
+            
+            .navbar {
+			    width: 100%;
+			  }
+
+			  .h4-title {
+			  	font-size: 18px;
+			  }
+
+			  .card-two {
+			  	height: 90%;
+			  	
+			  }
+
+			 .li-numbers span {
+				display: block;
+				font-size: 1rem;
+				text-align: center;
+				background-color: #333;
+				color: #ffc107;
+				width: 30px;
+				height: 30px;
+				border-radius: 2px;
+		}
+
+			.li-numbers {
+				display: inline-block;
+				font-size: 8px;
+				list-style-type: none;
+				padding: 3px;
+				text-transform: uppercase;
+				font-weight: bold;
+				text-align: center;
+			}
+
+			.div-box {
+				background-color: #333;
+				width: 100%;
+				padding: 5px;
+				margin: 0 auto;
+				display: block;
+				margin-top: 12px;
+			}
+
+			.col-box {
+              width: 350px;
+              margin-left: 200px;
+              margin-bottom: 10px;
+
+			}
+
+			.card-two {
+ 				width: 110%;
+ 				
+			}
+
+	/*		.w-25 {
+				width: 50%;
+				border: 1px solid red;
+			}
+
+			.w-75 {
+				width: 50%;
+				border: 1px solid cyan;
+			}*/
+
+			.rows-small {
+				display: block;
+			}
+		
+
+	}
+
+
+	/* Ipod Pro Portrait and Landscape */
+		@media only screen 
+		  and (min-device-width: 1024px) 
+		  and (max-device-width: 1366px)
+		  and (-webkit-min-device-pixel-ratio: 2) {
+
+		  .col-box {
+              width: 350px;
+               margin-top: 0;
+               margin-bottom: 15px;
+               margin-left: 100px;
+               margin-right: 0;
+
+			}
+
+			.rows-small {
+				display: inline-block;
+			}
+
+			.nav-user {
+				color: red;
+				width: 240px;
+				float: right;
+			}
+
+			.navbar {
+				width: 100%;
+
+			}
+
+
+}
+
+/* ----------- Non-Retina Screens ----------- */
+@media screen 
+  and (min-device-width: 1200px) 
+  and (max-device-width: 1600px) 
+  and (-webkit-min-device-pixel-ratio: 1) { 
+
+  	.card-two {
+  		width: 100%;
+
+  	}
+
+  	.li-numbers {
+/*		display: inline-block;*/
+		font-size: 15px;
+		list-style-type: none;
+		padding: 2px;
+		text-transform: uppercase;
+		font-weight: bold;
+		text-align: center;
+
+	}
+
+	.li-numbers span {
+/*		display: block;*/
+		font-size: 2rem;
+		text-align: center;
+		background-color: #333;
+		color: #ffc107;
+		width: 60px;
+		height: 50px;
+		border-radius: 2px;
+	}
+
+	.rows-small {
+	 	margin: 0;
+	}
+
+
+}
+
+/* ----------- Microsoft Lumia ----------- */
+@media only screen 
+   and (max-width : 720px) 
+   and (max-height : 1280px) {
+   
+
+   .text-title {
+   	text-align: center;
+   	display: block;
+
+   }
+
+   .navbar {
+   	width: 100%;
+   }
+
+   .image-logo {
+   	display: block;
+ 	margin-left: auto;
+  	margin-right: auto;
+  	width: 100%;
+   }
+  
+   .navbar-brand {
+  	margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+   }
+}
+
+/* ----------- Laptop with touch ----------- */
+@media only screen 
+   and (max-width : 1280px) 
+   and (max-height : 950px) {
+   
+  body {
+  	background-color: #e1e1e1e1;
+  }
+
+  .col-box {
+  	background-color: #fff;
+  	height: 150px;
+  	margin: 0px;
+  }
+
+  .image-candidate {
+  	width: 100%;
+  	border: 1px solid red;
+    padding: 0;
+  }
+
+  .h4-small-text {
+	font-size: 20px;
+	width: 100%;
+  }
+
+  .p-vote-received {
+  	width: 100%;
+
+  }
+
+  .p-vote-number {
+	display: block;
+	margin-left: -25px;
+  }
+   
+}
+
+/* ----------- 1025 x 1050 -------- */
+@media only screen 
+   and (max-width : 1025px) 
+   and (max-height :100px) {
+   
+  body {
+  	background-color: red;
+  }
+
+   
+}

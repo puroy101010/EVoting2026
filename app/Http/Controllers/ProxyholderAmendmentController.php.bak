@@ -1,0 +1,674 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\AmendmentHistory;
+use App\Exports\AmendmentExport;
+use App\Models\ProxyAmendment;
+use Illuminate\Http\Request;
+use App\Models\StockholderAccount;
+use Exception;
+use Illuminate\Support\Facades\Validator;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
+use Maatwebsite\Excel\Facades\Excel;
+
+
+class ProxyholderAmendmentController extends Controller
+{
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+
+
+
+    public function index(Request $request)
+    {
+        try {
+
+            if (!in_array($request->filter, [null, 'all', 'verified', 'unverified'])) {
+
+                return view('errors.response', ['code' => 500, 'message' => null]);
+            }
+
+            $filter = $request->filter;
+
+            $proxies = ProxyAmendment::with([
+                'stockholderAccount',
+                'assignee',
+                'assignee.stockholder',
+                'assignee.stockholderAccount',
+                'assignee.stockholderAccount.stockholder',
+                'assignee.nonMemberAccount',
+                'auditor.adminAccount' => function ($query) {
+                    $query->withTrashed();
+                },
+                'assignor.stockholder',
+                'assignor.stockholderAccount',
+                'assignor.stockholderAccount.stockholder',
+                'assignor.nonMemberAccount',
+                'createdBy',
+                'usedAccount'
+            ])->when($filter !== null, function ($query) use ($filter) {
+
+                if ($filter === 'unverified') {
+                    $query->where('auditedBy', '=', null);
+                } elseif ($filter === 'verified') {
+                    $query->where('auditedBy', '!=', null);
+                }
+            })
+                ->get()->toArray();
+
+
+            $proxyList = [];
+
+            foreach ($proxies as $proxy) {
+
+                $assignee = '';
+
+                switch ($proxy['assignee']['role']) {
+
+                    case 'stockholder':
+                        $assignee = $proxy['assignee']['stockholder']['stockholder'];
+                        $assigneeAccountNo = $proxy['assignee']['stockholder']['accountNo'];
+
+                        break;
+
+                    case 'corp-rep':
+                        $assignee = $proxy['assignee']['stockholder_account']['corpRep'];
+                        $assigneeAccountNo = $proxy['assignee']['stockholder_account']['accountKey'];
+                        break;
+
+                    case 'non-member':
+                        $assignee = $proxy['assignee']['non_member_account']['firstName'] . ' ' . $proxy['assignee']['non_member_account']['lastName'];
+                        $assigneeAccountNo = $proxy['assignee']['non_member_account']['nonmemberAccountNo'];
+                        break;
+
+                    default:
+
+                        throw new Exception("Assignee is not valid.");
+                        break;
+                }
+
+
+                switch ($proxy['assignor']['role']) {
+
+                    case 'stockholder':
+                        $assignor = $proxy['assignor']['stockholder']['stockholder'];
+                        $assignorAccountNo = $proxy['assignor']['stockholder']['accountNo'];
+
+
+                        break;
+
+                    case 'corp-rep':
+                        $assignor = $proxy['assignor']['stockholder_account']['corpRep'];
+                        $assignorAccountNo = $proxy['assignor']['stockholder_account']['accountKey'];
+                        break;
+
+                    default:
+
+                        throw new Exception("Assignor is not valid.");
+                        break;
+                }
+
+
+
+                $proxyList[] = array(
+
+                    'id' => $proxy['proxyAmendmentId'],
+                    'assignee' => $assignee,
+                    'assigneeAccountNo' => $assigneeAccountNo,
+                    'assignor' => $assignor,
+                    'assignorAccountNo' => $assignorAccountNo,
+                    'proxyFormNo' => $proxy['proxyAmendmentFormNo'],
+                    'isDelinquent' => $proxy['stockholder_account']['isDelinquent'] === 1 ? '<span class="badge badge-danger">delinquent</span>' : '<span class="badge badge-success">active</span>',
+                    'vote' => $proxy['used_account'] === null ? '<span class="badge badge-success">available</span>' : '<span class="badge badge-danger">used</span>',
+                    'audited' => $proxy['auditedBy'] === null ? '' : 'checked',
+                    'auditor' => $proxy['auditedBy'] === null ? '' : $proxy['auditor']['admin_account']['firstName'] . ' ' .  $proxy['auditor']['admin_account']['lastName']
+                );
+            }
+
+
+            ActivityController::log(['activityCode' => '00109']);
+
+            return view('admin.proxyholder_amendment', [
+                'proxyholders' => $proxyList,
+                'filter' => $filter
+            ]);
+        } catch (Exception $e) {
+            Log::error($e);
+            return view('errors.response', ['code' => 500, 'message' => null]);
+        }
+    }
+
+
+    public function export()
+    {
+        try {
+
+            $proxies = ProxyAmendment::with([
+                'stockholderAccount',
+                'assignee',
+                'assignee.stockholder',
+                'assignee.stockholderAccount',
+                'assignee.stockholderAccount.stockholder',
+                'assignee.nonMemberAccount',
+                'auditor.adminAccount' => function ($query) {
+                    $query->withTrashed();
+                },
+                'assignor.stockholder',
+                'assignor.stockholderAccount',
+                'assignor.stockholderAccount.stockholder',
+                'assignor.nonMemberAccount',
+                'createdBy',
+                'usedAccount'
+            ])->get()->toArray();
+
+
+            $proxyList = [];
+
+            foreach ($proxies as $proxy) {
+
+                $assignee = '';
+
+                switch ($proxy['assignee']['role']) {
+
+                    case 'stockholder':
+                        $assignee = $proxy['assignee']['stockholder']['stockholder'];
+                        $assigneeAccountNo = $proxy['assignee']['stockholder']['accountNo'];
+
+                        break;
+
+                    case 'corp-rep':
+                        $assignee = $proxy['assignee']['stockholder_account']['corpRep'];
+                        $assigneeAccountNo = $proxy['assignee']['stockholder_account']['accountKey'];
+                        break;
+
+                    case 'non-member':
+                        $assignee = $proxy['assignee']['non_member_account']['firstName'] . ' ' . $proxy['assignee']['non_member_account']['lastName'];
+                        $assigneeAccountNo = $proxy['assignee']['non_member_account']['nonmemberAccountNo'];
+                        break;
+
+                    default:
+
+                        throw new Exception("Assignee is not valid.");
+                        break;
+                }
+
+
+                switch ($proxy['assignor']['role']) {
+
+                    case 'stockholder':
+                        $assignor = $proxy['assignor']['stockholder']['stockholder'];
+                        $assignorAccountNo = $proxy['assignor']['stockholder']['accountNo'];
+
+
+                        break;
+
+                    case 'corp-rep':
+                        $assignor = $proxy['assignor']['stockholder_account']['corpRep'];
+                        $assignorAccountNo = $proxy['assignor']['stockholder_account']['accountKey'];
+                        break;
+
+                    default:
+
+                        throw new Exception("Assignor is not valid.");
+                        break;
+                }
+
+
+
+                $proxyList[] = array(
+
+
+                    'assignee' => $assigneeAccountNo . ' - ' . $assignee,
+                    'proxyFormNo' => 'A-' . $proxy['proxyAmendmentFormNo'],
+                    'assignor' => $assignorAccountNo . ' - ' . $assignor,
+                    'isDelinquent' => $proxy['stockholder_account']['isDelinquent'] === 1 ? 'delinquent' : 'active',
+                    'auditor' => $proxy['auditedBy'] === null ? '' : $proxy['auditor']['admin_account']['firstName'] . ' ' .  $proxy['auditor']['admin_account']['lastName'],
+                    'audited' => $proxy['auditedBy'] === null ? 'no' : 'yes'
+
+                );
+            }
+
+
+
+
+            $currentDateTime = Carbon::now()->format('Y-m-d H:i:s');
+
+            Log::info("Exported Amendment Proxies", ["user" => Auth()->user(), "title" => 'Amendment Proxies ' . $currentDateTime . '.xlsx']);
+
+            ActivityController::log(['activityCode' => '00107']);
+
+            return Excel::download(new AmendmentExport($proxyList), 'Amendment Proxies ' . $currentDateTime . '.xlsx');
+        } catch (Exception $e) {
+            Log::error($e);
+            return view('errors.response', ['code' => 500, 'message' => null]);
+        }
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function create()
+    {
+        //
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+
+    //  done 2023-08-31
+    public function store(Request $request)
+    {
+        try {
+
+            $validator = Validator::make($request->all(), [
+                'accountToAssign' => 'required|numeric',
+                'assignor' => 'required|numeric',
+                'assignee' => 'required|numeric',
+
+            ],);
+
+            if ($validator->fails()) {
+                $err = EApp::obj_to_array($validator->errors());
+                return response()->json(["message" => $err[array_key_first($err)][0], "field" => array_key_first($err)], 400);
+            }
+
+
+            $accountToAssign = StockholderAccount::findOrFail($request->accountToAssign);
+            $assigneeDetails = User::with('nonMemberAccount')->findOrFail($request->assignee);
+            $assignor        = $accountToAssign->stockholder->accountType === 'indv' ? $accountToAssign->stockholder->userId : $request->assignor;
+            $assignorDetails = User::whereIn('role', ['stockholder', 'corp-rep'])->findOrFail($assignor);
+
+
+            if ($assigneeDetails->role !== 'non-member') {
+
+                return response()->json(['message' => 'Only the General Manager (GM) can be a proxyholder for the Amendment Proxy.'], 400);
+            }
+
+            if ($assigneeDetails->nonMemberAccount->isGM !== 1) {
+
+                return response()->json(['message' => 'Only the General Manager (GM) can be a proxyholder for the Amendment Proxy.'], 400);
+            }
+
+
+            $assignorAccountNo = $assignorDetails->role === 'stockholder'
+                ? $assignorDetails->stockholder->accountNo
+                : $assignorDetails->stockholderAccount->stockholder->accountNo;
+
+
+
+
+
+
+
+
+            if ($accountToAssign->stockholder->accountNo !== $assignorAccountNo) {
+
+                Log::error('The assignor and the stock being assigned have different account numbers.');
+
+                return response()->json(['message' => 'The assignor and the stock being assigned have different account numbers.'], 400);
+            }
+
+
+            if ($assignorDetails->role ===  'corp-rep') {
+
+                if ($assignorDetails->email === null) {
+                    return response()->json(['message' => 'Proxy cannot be assigned. The assignor doesn\'t have an email address.'], 400);
+                }
+
+                if ($assignorDetails->email != $accountToAssign->user->email) {
+                    return response()->json(['message' => 'Proxy cannot be assigned.'], 400);
+                }
+            }
+
+            DB::beginTransaction();
+
+
+
+            $insertProxy = new ProxyAmendment([
+                'proxyAmendmentFormNo' => $accountToAssign->accountKey,
+                'accountId' => $request->accountToAssign,
+                'assignorId' => $assignor,
+                'assigneeId' => $request->assignee,
+                'createdBy' => Auth::user()->id
+            ]);
+
+            if (!$insertProxy->save()) {
+
+                return response()->json(['message' => "An error was encountered while inserting the record."], 500);
+            }
+
+            ActivityController::log(['activityCode' => '00099', 'remarks' => "Assigned an amendment proxy with reference no A-" . $accountToAssign->accountKey, 'proxyAmendmentId' => $insertProxy->proxyAmendmentId]);
+
+
+            DB::commit();
+
+            return response()->json(['message' => 'The proxy for amendment has been successfully assigned'], 200);
+        } catch (Exception $e) {
+
+            Log::error($e);
+
+            return response()->json([], 500);
+        }
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function show($id)
+    {
+        try {
+
+            $stockholderAccount = StockholderAccount::with([
+                'stockholder',
+                'stockholder.stockholderAccounts',
+                'proxyAmendment',
+                'proxyAmendment.assignee',
+                'proxyAmendment.assignee.stockholder',
+                'proxyAmendment.assignee.stockholderAccount',
+                'proxyAmendment.assignee.stockholderAccount.stockholder',
+                'proxyAmendment.assignee.nonMemberAccount',
+
+                'proxyAmendment.assignor',
+                'proxyAmendment.assignor.stockholder',
+                'proxyAmendment.assignor.stockholderAccount',
+                'proxyAmendment.assignor.stockholderAccount.stockholder',
+
+            ])->find($id);
+
+            return $stockholderAccount;
+        } catch (Exception $e) {
+
+            return response()->json([], 500);
+        }
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function edit($id)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, $id)
+    {
+        //
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  int  $id
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy($id)
+    {
+        //
+    }
+
+
+
+
+    // done 2023-09-01
+    public function cancel($id)
+    {
+        try {
+
+            $proxy = ProxyAmendment::findOrFail($id);
+
+            DB::beginTransaction();
+
+            $proxyAmendmentHistoryId = EApp::generate_id('proxy_amendment_histories', 'proxyAmendmentHistoryId');
+
+            $history = $proxy->toArray();
+            $history['proxyAmendmentHistoryId'] = $proxyAmendmentHistoryId;
+            $history['cancelledBy'] = Auth::user()->id;
+            $history['cancelledAt'] = now();
+
+            AmendmentHistory::insert([$history]);
+
+            ProxyAmendment::where('proxyAmendmentId', $id)->forceDelete();
+
+            ActivityController::log([
+                'activityCode' => '00100',
+                'remarks' => "Cancelled amendment proxy with ref no A-$proxy->proxyAmendmentFormNo",
+                'proxyAmendmentId' => $proxy->proxyAmendmentId,
+                'proxyAmendmentHistoryId' => $proxyAmendmentHistoryId,
+                'accountId' => $proxy->accountId,
+                'userId' => $proxy->stockholderAccount->userId
+            ]);
+
+
+            // return response()->json(['message' => 'debug'], 400);          
+
+            DB::commit();
+
+            return response()->json(['message' => 'Amendment proxy has been cancelled successfully.'], 200);
+        } catch (Exception $e) {
+
+            Log::error($e);
+
+            return response()->json([], 500);
+        }
+    }
+
+
+    public function audit(Request $request, $id)
+    {
+
+        try {
+
+            $proxyAmendment = ProxyAmendment::findOrFail($id);
+            $action = $request->input('action');
+
+            if (!in_array($action, [0, 1])) {
+                return response('ERROR', 500);
+            }
+
+
+            if ($action == 0) {
+                $proxyAmendment->auditedBy = null;
+                $proxyAmendment->auditedAt = null;
+                $activityCode = '00102';
+                $remarks = 'Revoked the verified status for proxy form no. A-' . $proxyAmendment->proxyAmendmentFormNo;
+            } else {
+                $proxyAmendment->auditedBy = Auth::id();
+                $proxyAmendment->auditedAt = now();
+                $activityCode = '00101';
+                $remarks = 'Verified amendment proxy form no. A-' . $proxyAmendment->proxyAmendmentFormNo;
+            }
+
+            $proxyAmendment->save();
+
+            $message = $action == 1 ? 'Successfully verified the proxy with form no. A-' . $proxyAmendment->proxyAmendmentFormNo : 'Successfully revoked the verified status for proxy form no. A-' . $proxyAmendment->proxyAmendmentFormNo;
+
+            ActivityController::log(['activityCode' => $activityCode, 'remarks' => $remarks, 'proxyAmendmentId' => $proxyAmendment->proxyAmendmentId, 'userId' => $proxyAmendment->stockholderAccount->userId]);
+
+            return response()->json(['message' => $message], 200);
+        } catch (Exception $e) {
+
+            Log::error($e);
+
+            return response()->json([], 500);
+        }
+    }
+
+    // done 2023-09-01
+    public function summary()
+    {
+        try {
+
+            $groupByEmail = [];
+
+            $proxyholders = User::with([
+                'collectedProxyAmendment',
+                'collectedProxyAmendment.stockholderAccount:accountId,isDelinquent',
+                'stockholder',
+                'stockholderAccount',
+                'stockholderAccount.stockholder',
+                'nonMemberAccount'
+            ])
+                ->has('collectedProxyAmendment')
+                ->get();
+
+
+            $groupByEmail = [];
+
+            foreach ($proxyholders as $proxyholder) {
+
+                if ($proxyholder->email === null) {
+
+                    throw new Exception("Assignor's email cannot be null");
+                }
+
+                switch ($proxyholder->role) {
+
+                    case 'stockholder':
+                        $userRole = 'SH';
+                        $corpRep = null;
+                        $stockholder = $proxyholder->stockholder->stockholder;
+                        $accountNo = $proxyholder->stockholder->accountNo;
+                        break;
+
+                    case 'corp-rep':
+                        $userRole = 'CR';
+                        $corpRep = $proxyholder->stockholderAccount->corpRep;
+                        $stockholder = $proxyholder->stockholderAccount->stockholder->stockholder;
+                        $accountNo = $proxyholder->stockholderAccount->accountKey;
+                        break;
+
+                    case 'non-member':
+                        $userRole = 'NM';
+                        $corpRep = null;
+                        $stockholder = $proxyholder->nonMemberAccount->firstName . ' ' . $proxyholder->nonMemberAccount->lastName;
+                        $accountNo = $proxyholder->nonMemberAccount->nonmemberAccountNo;
+                        break;
+
+                    default:
+                        throw new Exception('Account type is not valid. Only allowed accountType can have a proxy.');
+                        break;
+                }
+
+
+                foreach ($proxyholder->collectedProxyAmendment->toArray() as $proxy) {
+                    $groupByEmail[$proxyholder->email]['userId'] = $proxyholder->id;
+                    $groupByEmail[$proxyholder->email]['role'] = $userRole;
+                    $groupByEmail[$proxyholder->email]['stockholder'] = $stockholder;
+                    $groupByEmail[$proxyholder->email]['corpRep'] = $corpRep;
+                    $groupByEmail[$proxyholder->email]['accountNo'] = $accountNo;
+                    $groupByEmail[$proxyholder->email]['proxies'][] = $proxy;
+                    $groupByEmail[$proxyholder->email]['isDelinquent'][] = $proxy['stockholder_account']['isDelinquent'];
+                }
+            }
+
+
+
+            ActivityController::log(['activityCode' => '00110']);
+
+            return view('admin.proxyholder_amendment_summary', [
+                'proxyholders' => $groupByEmail
+            ]);
+        } catch (Exception $e) {
+            Log::error($e);
+            return view('errors.response', ['code' => 500, 'message' => null]);
+        }
+    }
+
+
+    // done 2023-09-01
+    public function proxy_list($id)
+    {
+        try {
+
+            $user = User::with([
+                'stockholder',
+                'stockholderAccount',
+                'stockholderAccount.stockholder'
+            ])->findOrFail($id);
+
+            switch ($user->role) {
+                case 'stockholder':
+                    $proxyList = ProxyAmendment::with([
+                        'assignor:id,role',
+                        'assignor.stockholder',
+                        'assignor.stockholderAccount',
+                        'assignor.stockholderAccount.stockholder',
+                        'stockholderAccount.stockholder',
+                        'usedAccount'
+
+                    ])->where('assigneeId', $id)->get()->toArray();
+
+                    break;
+
+                case 'corp-rep':
+
+                    $accountNo = $user->stockholderAccount->stockholder->accountNo;
+
+                    $assigneeIds = User::whereHas('stockholderAccount.stockholder', function ($query) use ($accountNo) {
+                        $query->where('accountNo', $accountNo);
+                    })->where('email', $user->email)->pluck('id');
+
+
+                    $proxyList   = ProxyAmendment::with([
+                        'assignor:id,role',
+                        'assignor.stockholder',
+                        'assignor.stockholderAccount',
+                        'assignor.stockholderAccount.stockholder',
+                        'stockholderAccount.stockholder',
+                        'usedAccount'
+
+                    ])->whereIn('assigneeId', $assigneeIds)->get()->toArray();;
+                    Log::debug($proxyList);
+                    break;
+
+                case 'non-member':
+                    $proxyList = ProxyAmendment::with([
+                        'assignor:id,role',
+                        'assignor.stockholder',
+                        'assignor.stockholderAccount',
+                        'assignor.stockholderAccount.stockholder',
+                        'stockholderAccount.stockholder',
+                        'usedAccount'
+
+
+                    ])->where('assigneeId', $id)->get()->toArray();
+
+                    break;
+            }
+
+            return response()->json(['proxyList' => $proxyList]);
+        } catch (Exception $e) {
+
+            Log::error($e);
+
+            return response()->json([], 500);
+        }
+    }
+}

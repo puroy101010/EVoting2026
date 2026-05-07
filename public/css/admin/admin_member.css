@@ -1,0 +1,875 @@
+@font-face {
+	src: url(Chapaza.ttf);
+	font-family: chapaza-bold;
+  }
+  
+  @font-face {
+	src: url(AvenirLTStd-Black.otf);
+	font-family: Avenir LT Std;
+  }
+  
+  @font-face {
+	src: url(AvenirLTStd-Roman.otf);
+	font-family: AvenirLTStd-Roman;
+  }
+  
+
+* {
+  box-sizing: border-box;
+}
+
+.btn-add-proxy-holder {
+	cursor: pointer;
+}
+
+.myInput {
+  background-image: url('../../../images/search_icon.png');
+  background-position: 10px 12px;
+  background-repeat: no-repeat;
+  width: 100%;
+  font-size: 16px;
+  padding: 9px 20px 12px 40px;
+  border: 1px solid #ddd;
+  margin-bottom: 12px;
+}
+
+#search_account {
+	list-style-type: none;
+	padding: 0;
+	margin: 0;
+}
+
+#search_account li a {
+	border: 1px solid #ddd;
+	margin-top: -1px;
+	background-color: #f6f6f6;
+	padding: 10px;
+	text-decoration: none;
+	font-size: 17px;
+	color: #000000;
+	display: block;
+}
+
+.btn-group-sm>.btn, .btn-button {
+    padding: .25rem .5rem;
+    font-size: .875rem;
+    line-height: 1.5;
+    border-radius: .2rem;
+}
+
+.label-assign {
+	color: #4BB543;
+	cursor: pointer;
+}
+
+.fa-plus {
+	cursor: pointer;
+}
+
+#search_account li a:hover:not(.header) {
+  background-color: #eee;
+}
+
+
+.div-button button {
+	float: right;
+	border-radius: 0; 
+}
+
+#memberTable th {
+	background-color:#FFF;
+	/* color: #fff; */
+	font-family: Avenir LT Std;
+}
+
+#memberTable td {
+	/* color:  #6b8e4e;; */
+ 	font-family: AvenirLTStd-Roman;
+	font-size: 0.8em;
+}
+
+#memberTable .td-account-no, #memberTable .td-stockholder {
+
+	font-size: 0.7em;
+}
+
+.badge-mid-green {
+	color: #ffffff;
+	background-color:#6b8e4e;
+	padding-right: 0.6em;
+	padding-left: 0.6em;
+  }
+  
+  .badge-dark-green {
+	color: #ffffff;
+	background-color:#304c40;
+  }
+  
+  .btn-mid-green {
+	color: #ffffff;
+	background-color:#6b8e4e;;
+  }
+  
+  .btn-mid-green:hover {
+	color: #304c40;
+	background-color:#6b8e4e;
+	border-color: #304c40;
+  }
+
+  .btn-custom-darkg {
+	background-color: #304c40;
+	color: #ffffff;
+	border: 1px solid #ffffff;
+  }
+  
+  .btn-custom-darkg:hover {
+	color: #b0d182;;
+  }
+
+  .active {
+	background-color: #6b8e4e!important;
+  }
+
+  #memberTable .th-padding {
+	position: sticky;
+	top:0;
+  }
+  
+
+#assign_spa_modal .modal-setsize {
+	max-width: 800px;
+}
+
+#assign_proxy_modal .modal-setsize {
+	max-width: 800px;
+}
+
+
+#section_members .div-textTitle {
+	font-family: chapaza-bold;
+	font-size: 1.5em;
+}
+
+
+/*------------------Media Query--------------*/
+
+/* ----------- iPhone X ----------- */
+/* Portrait and Landscape */
+@media only screen 
+  and (min-device-width: 375px) 
+  and (max-device-width: 812px) 
+  and (-webkit-min-device-pixel-ratio: 3) {
+
+	.rowskip .col-sm6-size1 {
+		flex: 0 0 40%;
+		max-width: 40%;
+	}
+
+	.rowskip .col-sm6-size2 {
+		flex: 0 0 60%;
+		max-width: 60%;
+	}
+
+	.rowskip .div-textTitle {
+		font-size: 13px;
+	}
+
+	.rowskip .breadcrumb-item {
+		font-size: 12px;
+	}
+   
+	.dflex-button {
+		display: flex!important;
+		justify-content: center!important;
+		margin: 2px;
+	}
+
+    .div-text {
+		font-size: 9px;
+		flex: 0 0 40%;
+		max-width: 40%;
+	}
+	
+
+	.col-md2-size {
+		flex: 0 0 60%;
+		max-width: 60%;
+	}
+
+	.offset-md-4 {
+		margin-left: 0;
+	}
+
+	#cardStockholder .div-text-right {
+		text-align: left;
+	}
+
+	.div-align {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.btn-group-sm>.btn, .btn-button {
+		padding: .25rem .4rem;
+		font-size: .400rem;
+	}
+
+
+	/*----PROXY----*/
+	#assign_proxy_modal .modal-setsize {
+		max-width: 500px;
+	}
+
+	#assign_proxy_modal .modal-header {
+		padding: 4px;
+	}
+
+	#assign_proxy_modal .modal-footer {
+		padding: 4px;
+	}
+
+	#proxy_holder_table .th-padding {
+		font-size: 10px;
+		padding: 2px;
+	}
+
+	#proxy_holder_table .td-padding {
+		font-size: 10px;
+		padding: 2px;
+	}
+
+
+  }
+
+  /* ----------- iPhone 6, 6S, 7 and 8 ----------- */
+
+/* Portrait and Landscape */
+@media only screen 
+and (min-device-width: 375px) 
+and (max-device-width: 667px) 
+and (-webkit-min-device-pixel-ratio: 2) { 
+
+	.rowskip .col-sm6-size1 {
+		flex: 0 0 40%;
+		max-width: 40%;
+	}
+
+	.rowskip .col-sm6-size2 {
+		flex: 0 0 60%;
+		max-width: 60%;
+	}
+
+	.rowskip .div-textTitle {
+		font-size: 13px;
+	}
+
+	.rowskip .breadcrumb-item {
+		font-size: 12px;
+	}
+   
+	.dflex-button {
+		display: flex!important;
+		justify-content: center!important;
+		margin: 2px;
+	}
+
+	.div-text {
+		font-size: 9px;
+		flex: 0 0 40%;
+		max-width: 40%;
+	}
+	
+
+	.col-md2-size {
+		flex: 0 0 60%;
+		max-width: 60%;
+	}
+
+	.offset-md-4 {
+		margin-left: 0;
+	}
+
+	#cardStockholder .div-text-right {
+		text-align: left;
+	}
+
+	.div-align {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	#assign_spa_modal .modal-setsize {
+		max-width: 500px;
+	}
+
+	#assign_spa_modal .modal-header {
+		padding: 4px;
+	}
+
+	#assign_spa_modal .th-modal {
+		font-size: 11px;
+		padding: 4px;
+	}
+
+	#assign_spa_modal .td-padding {
+		font-size: 10px;
+		padding: 5px;
+	}
+
+	.btn-group-sm>.btn, .btn-button {
+		padding: .25rem .4rem;
+		font-size: .400rem;
+	}
+
+	/*----PROXY----*/
+	#assign_proxy_modal .modal-setsize {
+		max-width: 500px;
+	}
+
+	#assign_proxy_modal .modal-header {
+		padding: 4px;
+	}
+
+	#assign_proxy_modal .modal-footer {
+		padding: 4px;
+	}
+
+	#proxy_holder_table .th-padding {
+		font-size: 12px;
+		padding: 4px;
+	}
+
+	#proxy_holder_table .td-padding {
+		font-size: 10px;
+		padding: 5px;
+	}
+
+
+
+}
+
+/* ----------- iPhone 5, 5S, 5C and 5SE ----------- */
+/* Portrait and Landscape */
+@media only screen 
+  and (min-device-width: 320px) 
+  and (max-device-width: 568px)
+  and (-webkit-min-device-pixel-ratio: 2) {
+
+	.rowskip .col-sm6-size1 {
+		flex: 0 0 40%;
+		max-width: 40%;
+	}
+
+	.rowskip .col-sm6-size2 {
+		flex: 0 0 60%;
+		max-width: 60%;
+	}
+
+	.rowskip .div-textTitle {
+		font-size: 13px;
+	}
+
+	.rowskip .breadcrumb-item {
+		font-size: 12px;
+	}
+   
+	.dflex-button {
+		display: flex!important;
+		justify-content: center!important;
+		margin: 2px;
+	}
+
+	.div-text {
+		font-size: 9px;
+		flex: 0 0 40%;
+		max-width: 40%;
+	}
+	
+
+	.col-md2-size {
+		flex: 0 0 60%;
+		max-width: 60%;
+	}
+
+	.offset-md-4 {
+		margin-left: 0;
+	}
+
+	#cardStockholder .div-text-right {
+		text-align: left;
+	}
+
+	.div-align {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	#assign_spa_modal .modal-setsize {
+		max-width: 500px;
+	}
+
+	#assign_spa_modal .modal-header {
+		padding: 4px;
+	}
+
+	#assign_spa_modal .th-modal {
+		font-size: 11px;
+		padding: 4px;
+	}
+
+	#assign_spa_modal .td-padding {
+		font-size: 10px;
+		padding: 5px;
+	}
+
+	.btn-group-sm>.btn, .btn-button {
+		padding: .25rem .4rem;
+		font-size: .400rem;
+	}
+
+	/*----PROXY----*/
+	#assign_proxy_modal .modal-setsize {
+		max-width: 500px;
+	}
+
+	#assign_proxy_modal .modal-header {
+		padding: 4px;
+	}
+
+	#assign_proxy_modal .modal-footer {
+		padding: 4px;
+	}
+
+	#proxy_holder_table .th-padding {
+		font-size: 12px;
+		padding: 4px;
+	}
+
+	#proxy_holder_table .td-padding {
+		font-size: 10px;
+		padding: 5px;
+	}
+
+}
+
+/*------JioPhone 2--------*/
+@media only screen and (max-device-width: 240px) {
+
+	.rowskip .col-sm6-size1 {
+		flex: 0 0 100%;
+		max-width: 100%;
+	}
+
+	.rowskip .col-sm6-size2 {
+		flex: 0 0 100%;
+		max-width: 100%;
+		text-align: center;
+	}
+
+	.rowskip .div-textTitle {
+		font-size: 14px;
+		text-align: center;
+	}
+
+	.rowskip .breadcrumb-item {
+		font-size: 12px;
+	}
+   
+	.dflex-button {
+		display: flex!important;
+		justify-content: center!important;
+		margin: 2px;
+	}
+
+	.div-text {
+		font-size: 8px;
+		flex: 0 0 40%;
+		max-width: 40%;
+	}
+	
+
+	.col-md2-size {
+		flex: 0 0 60%;
+		max-width: 60%;
+	}
+
+	.offset-md-4 {
+		margin-left: 0;
+	}
+
+	#cardStockholder .div-text-right {
+		text-align: left;
+	}
+
+	.div-align {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	#assign_spa_modal .modal-setsize {
+		max-width: 500px;
+	}
+
+	#assign_spa_modal .modal-header {
+		padding: 4px;
+	}
+
+	#assign_spa_modal .modal-footer {
+		padding: 4px;
+	}
+
+	#assign_spa_modal .th-modal {
+		font-size: 11px;
+		padding: 3px;
+	}
+
+	#assign_spa_modal .td-padding {
+		font-size: 10px;
+		padding: 3px;
+	}
+
+	.btn-group-sm>.btn, .btn-button {
+		padding: .25rem .4rem;
+		font-size: .300rem;
+	}
+
+	.btn-group-sm>.btn, .btn-button-2 {
+		padding: .25rem .4rem;
+		font-size: .650rem;
+		border-radius: 0;
+	}
+
+	/*----PROXY----*/
+	#assign_proxy_modal .modal-setsize {
+		max-width: 500px;
+	}
+
+	#assign_proxy_modal .modal-header {
+		padding: 4px;
+	}
+
+	#assign_proxy_modal .modal-footer {
+		padding: 4px;
+	}
+
+	#proxy_holder_table .th-padding {
+		font-size: 12px;
+		padding: 4px;
+	}
+
+	#proxy_holder_table .td-padding {
+		font-size: 10px;
+		padding: 5px;
+	}
+	
+}
+
+/*---------Galaxy Fold-----------*/
+@media only screen 
+  and (min-device-width: 280px) 
+  and (max-device-width: 653px)
+  and (-webkit-min-device-pixel-ratio: 2) {
+
+	.rowskip .col-sm6-size1 {
+		flex: 0 0 100%;
+		max-width: 100%;
+	}
+
+	.rowskip .col-sm6-size2 {
+		flex: 0 0 100%;
+		max-width: 100%;
+		text-align: center;
+	}
+
+	.rowskip .div-textTitle {
+		font-size: 14px;
+		text-align: center;
+	}
+
+	.rowskip .breadcrumb-item {
+		font-size: 12px;
+	}
+   
+	.dflex-button {
+		display: flex!important;
+		justify-content: center!important;
+		margin: 2px;
+	}
+
+	.div-text {
+		font-size: 8px;
+		flex: 0 0 40%;
+		max-width: 40%;
+	}
+	
+
+	.col-md2-size {
+		flex: 0 0 60%;
+		max-width: 60%;
+	}
+
+	.offset-md-4 {
+		margin-left: 0;
+	}
+
+	#cardStockholder .div-text-right {
+		text-align: left;
+	}
+
+	.div-align {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	#assign_spa_modal .modal-setsize {
+		max-width: 500px;
+	}
+
+	#assign_spa_modal .modal-header {
+		padding: 4px;
+	}
+
+	#assign_spa_modal .modal-footer {
+		padding: 0px;
+	}
+
+	#assign_spa_modal .th-modal {
+		font-size: 11px;
+		padding: 3px;
+	}
+
+	#assign_spa_modal .td-padding {
+		font-size: 10px;
+		padding: 3px;
+	}
+
+	.btn-group-sm>.btn, .btn-button {
+		padding: .25rem .4rem;
+		font-size: .300rem;
+	}
+  
+
+	/*----PROXY----*/
+	#assign_proxy_modal .modal-setsize {
+		max-width: 500px;
+	}
+
+	#assign_proxy_modal .modal-header {
+		padding: 4px;
+	}
+
+	#assign_proxy_modal .modal-footer {
+		padding: 4px;
+	}
+
+	#proxy_holder_table .th-padding {
+		font-size: 12px;
+		padding: 4px;
+	}
+
+	#proxy_holder_table .td-padding {
+		font-size: 10px;
+		padding: 5px;
+	}
+
+  }
+
+	
+/* (1280x720) Galaxy Note 2, WXGA */
+@media only screen and (min-device-width: 720px) and (max-device-width: 1280px) {
+    /* .rowskip {
+		border: 10px solid red;
+	} */
+}
+ 
+/* (1366x768) WXGA Display */
+@media  screen and (max-width: 1366px) {
+
+    #memberTable .th-padding {
+		font-size: 11px;
+		padding: 5px;
+	}
+
+	#memberTable .td-padding {
+		font-size: 10px;
+		padding: 5px;
+	}
+
+	.div-text {
+		font-size: 13px;
+	}
+
+	.col-md2-size {
+		flex: 0 0 30%;
+		max-width: 30%;
+	}
+
+	.offset-md-4 {
+		margin-left: 0;
+	}
+}
+ 
+/* (1280x1024) SXGA Display */
+@media  screen and (max-width: 1280px) {
+
+    /* .rowskip {
+		border: 10px solid yellow;
+	} */
+
+	.btn-group-sm>.btn, .btn-button {
+		padding: .25rem .5rem;
+		font-size: .675rem;
+		line-height: 1.5;
+	}
+		
+	#memberTable .th-padding {
+		font-size: 13px;
+		padding: 6px;
+	}
+
+	#memberTable .td-padding {
+		font-size: 11px;
+		padding: 5px;
+	}
+
+	.div-text {
+		font-size: 13px;
+	}
+
+	.col-md2-size {
+		flex: 0 0 30%;
+		max-width: 30%;
+	}
+
+	.offset-md-4 {
+		margin-left: 0;
+	}
+
+	.badge {
+		display: inline-block;
+		padding: 5px;
+		font-size: 60%;
+		font-weight: 700;
+		line-height: 1;
+		text-align: center;
+		white-space: nowrap;
+		vertical-align: baseline;
+		border-radius: .25rem;
+	}
+
+	#cardStockholder .form-group {
+		margin-bottom: 0.5rem;
+	}
+}
+
+/* For 1024 Resolution */  
+@media only screen   
+and (min-device-width : 768px)   
+and (max-device-width : 1024px)  {
+	
+	/* .rowskip {
+		border: 10px solid green;
+	} */
+
+	.btn-group-sm>.btn, .btn-button {
+		padding: .25rem .5rem;
+		font-size: .675rem;
+		line-height: 1.5;
+	}
+		
+	#memberTable .th-padding {
+		font-size: 11px;
+		padding: 5px;
+	}
+
+	#memberTable .td-padding {
+		font-size: 10px;
+		padding: 5px;
+	}
+
+	.div-text {
+		font-size: 13px;
+	}
+
+	.col-md2-size {
+		flex: 0 0 30%;
+		max-width: 30%;
+	}
+
+	.offset-md-4 {
+		margin-left: 0;
+	}
+
+	.badge {
+		display: inline-block;
+		padding: 4px;
+		font-size: 55%;
+		font-weight: 700;
+		line-height: 1;
+		text-align: center;
+		white-space: nowrap;
+		vertical-align: baseline;
+		border-radius: .25rem;
+	}
+
+	#cardStockholder .form-group {
+		margin-bottom: 0.5rem;
+	}
+} 
+
+
+/* smartphones, iPhone, portrait 480x320 phones */
+@media (min-width:320px)  {
+	
+	/* .rowskip {
+		border: 10px solid black;
+	} */
+	
+} 
+
+/* portrait e-readers (Nook/Kindle), smaller tablets @ 600 or @ 640 wide. */
+@media (min-width:481px)  { 
+	
+	/* .rowskip {
+		border: 10px solid cyan;
+	}
+	 */
+
+}
+
+/* portrait tablets, portrait iPad, landscape e-readers, landscape 800x480 or 854x480 phones */
+@media (min-width:641px)  { 
+	
+	/* .rowskip {
+		border: 10px solid green;
+	} */
+}
+
+/* tablet, landscape iPad, lo-res laptops ands desktops */
+@media (min-width:961px)  { 
+	
+	/* .rowskip {
+		border: 10px solid yellow;
+	} */
+ }
+
+
+/* big landscape tablets, laptops, and desktops */
+@media (min-width:1025px) { 
+	/* .rowskip {
+		border: 10px solid red;
+	} */
+}
+
+
+/* hi-res laptops and desktops */
+@media (min-width:1281px) { 
+	/* .rowskip {
+		border: 10px solid blue;
+	} */
+ }

@@ -1,0 +1,377 @@
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title><?php
+
+use App\Http\Controllers\EApp;
+
+echo $title; ?></title>
+        <style>
+
+            .header,
+            .footer {
+                width: 100%;
+                text-align: left;
+                position: fixed;
+            }
+            .header {
+                top: 0px;
+            }
+            .footer {
+                bottom: -20px;
+            }
+            .pagenum:before {
+                content: counter(page);
+            }
+
+
+
+
+            @page{
+                padding: 10px;
+                size: 216mm 279mm;
+            }
+
+            @font-face {
+                font-family: 'Roboto'; 
+                src: url("{{ asset('fonts/Roboto-Bold.ttf') }}");
+                font-weight: normal;
+            }
+
+            table {
+
+                border-spacing: 0;
+                width: 100%; 
+                border: 1px 1px 0px 1px;
+      
+            }
+
+            td,th {
+                border: 1px solid black;
+                padding: 8px; 
+                text-align: center;
+            } 
+
+            .text-left {
+                text-align: left;
+            }
+
+            tfoot td {
+                border: 0px; 
+            }
+
+            .page-break {
+                page-break-after: always;
+            }
+
+            #amendment_table {
+                font-size: 11px;
+            }
+
+            #amendment_table .td-amendment {
+
+                text-align: left;]
+                background-color: red;
+            }
+
+            #table_ballots {
+                font-size: 9px;
+            }
+            
+        </style>
+    </head>
+    <body style="font-family: 'Roboto', sans-serif;">
+
+    <!-- <div class="header">
+    Page <span class="pagenum"></span>
+</div> -->
+<div class="footer">
+
+
+    Page <span class="pagenum"></span>
+
+    
+</div>
+
+
+        <?php
+
+            $setting = EApp::setting();
+
+            if($setting->vote_in_person_start === null || $setting->vote_by_proxy_end === null) {
+
+                return "Please set the election day on the setting.";
+
+            }
+
+        ?>
+        
+        <img style="position: absolute; left: 270px; width: 180px" src="https://valleygolf.com.ph/wp-content/uploads/2021/09/new-logo-header.png">
+        
+        <h2 style="text-align: center; margin-top: 120px; line-height: 1px">Results of Online Voting</h2>
+        <h4 style="text-align: center; line-height: 1px; margin-bottom: 15px"><?php echo $electionDate; ?></h4><br>
+        
+        <table>
+            <thead style="color: red">
+                <tr>
+                    <th>CANDIDATES</th>
+                    <th>VOTE BY PROXY</th>
+                    <th>VOTE IN PERSON</th>
+                    <th>TOTAL</th>
+                </tr>
+            </thead>
+            <tbody>
+                
+                <?php
+        
+                    $data = '';
+                    $totalProxy   = 0;
+                    $totalPerson  = 0;
+                    $totalVotes   = 0;
+
+                    foreach($candidates as $candidate) {
+
+
+                        $data .= '<tr><td class="text-left">'.$candidate->lastName . ', ' . $candidate->firstName . '</td>';
+
+
+                        $candidateVotesProxy = 0;
+
+
+                        if(array_key_exists('proxy', $ballots)) {
+
+                            if(array_key_exists($candidate->candidateId, $ballots['proxy'])) {
+
+                            $candidateVotesProxy = array_sum($ballots['proxy'][$candidate->candidateId]);
+
+                            }
+
+                        }
+
+
+                        $candidateVotesPerson = 0;
+
+                        if(array_key_exists('person', $ballots)) {
+
+                            if(array_key_exists($candidate->candidateId, $ballots['person'])) {
+
+                            $candidateVotesPerson = array_sum($ballots['person'][$candidate->candidateId]);
+
+                            }
+
+                        }
+
+                        $candidateTotalVote = $candidateVotesProxy + $candidateVotesPerson;
+                        
+
+
+                        $totalVotes   = $totalVotes + $candidateTotalVote;
+                        $totalProxy   = $totalProxy + $candidateVotesProxy;
+                        $totalPerson  = $totalPerson + $candidateVotesPerson;
+
+
+                        
+                        $data .= '<td>'.$candidateVotesProxy.'</td>
+                                    <td>'.$candidateVotesPerson.'</td>
+                                    <td>'.$candidateTotalVote.'</td>
+                                    </tr>';
+
+
+                    }
+
+                    echo $data;
+                    echo '<tfoot><tr><td></td><td>'.number_format($totalProxy, 0).'</td><td>'.number_format($totalPerson, 0).'</td><td>'.number_format($totalVotes, 0).'</td></tr></tfoot>';
+
+                ?>
+            </tbody>
+        </table>
+        <br>
+
+
+
+
+        <span style="position: absolute; top: 512px; left: 250px; font-size: 11px">MARIA CRISTINA ODON</span>
+        <span style="position: absolute; top: 512px; left: 500px; font-size: 11px">MARK ANTHONY FALCUTILA</span>
+    
+        <span style="position: absolute; top: 532px; left: 250px; font-size: 11px">INTERNAL AUDIT HEAD</span>
+        <span style="position: absolute; top: 532px; left: 500px; font-size: 11px">INTERNAL AUDIT ASSISTANT</span>
+
+        <span style="position: absolute; top: 600px; left: 245px; font-size: 11px">SGV REPRESENTATIVE</span>
+        <span style="position: absolute; top: 600px; left: 515px; font-size: 11px">SGV REPRESENTATIVE</span>
+    
+
+        <span style="position: absolute; top: 649px; left: 255px; font-size: 11px; "><?php echo strtoupper($generatedBy); ?></span> 
+
+      
+
+
+
+        <span style="text-align: center; position: absolute; top: 510px; font-size: 11px">Verified by: </span>
+
+        <span style="text-align: center; position: absolute; top: 575px; font-size: 11px">Witnessed by: </span>
+
+        <span style="text-align: center; position: absolute; top: 650px; font-size: 11px">Report generated by: </span>
+        
+        <pre style="margin-top: 50px;  margin-left: 150px; font-family: 'Roboto'">               _________________________               _________________________</pre>
+        
+        <pre style="margin-top: 50px;  margin-left: 150px; font-family: 'Roboto'">               _________________________               _________________________</pre>
+
+        <pre style="margin-top: 50px;  margin-left: 150px; font-family: 'Roboto'">               _________________________</pre>
+
+        <p style="text-align: center; margin-top: 100px">COMELEC</p>
+
+        <pre style="margin-left: 58px; margin-top: 35px">__________________     __________________      __________________</pre>
+
+        <p style="position: absolute; bottom: 0px; right: 0px; font-size: 10px">REPORT GENERATION DATE AND TIME: <?php echo EApp::datetime(); ?></p> 
+
+        <div class="page-break"></div>
+
+        <img style="position: absolute; left: 270px; width: 180px" src="https://valleygolf.com.ph/wp-content/uploads/2021/09/new-logo-header.png">
+        
+        <h2 style="text-align: center; margin-top: 120px; line-height: 1px">Results of Online Voting</h2>
+        <h4 style="text-align: center; line-height: 1px; margin-bottom: 15px"><?php echo $electionDate; ?></h4>
+        <p style="text-align: center">AMENDMENTS </p>
+
+
+
+        <table id="amendment_table" class="">
+            <thead class="text-nowrap">
+                <tr>
+                    <th class="th-padding">AMENDMENTS</th>
+                    <th class="th-padding">FOR</th>
+                    <th class="th-padding">NOT IN FAVOR</th>
+                    <th class="th-padding">ABSTAIN</th>
+                </tr>
+            </thead>
+            <tbody>
+
+            <?php
+
+                foreach($amendments as $amendment) {
+
+                    echo '<tr><td class="td-amendment">'.$amendment["amendment"].'</td><td>'.$amendment["inFavor"].'</td><td>'.$amendment["notFavor"].'</td><td>'.$amendment["abstain"].'</td></tr>';
+
+                }
+            ?>
+            
+            </tbody>
+            </table>
+
+            <p style="position: absolute; bottom: 0px; right: 0px; font-size: 10px">REPORT GENERATION DATE AND TIME: <?php echo EApp::datetime(); ?></p> 
+
+
+            <div class="page-break"></div>
+
+            <img style="position: absolute; left: 270px; width: 180px" src="https://valleygolf.com.ph/wp-content/uploads/2021/09/new-logo-header.png">
+
+            <h2 style="text-align: center; margin-top: 120px; line-height: 1px">Detailed Result of Voting</h2>
+            <h4 style="text-align: center; line-height: 1px; margin-bottom: 15px"><?php echo $electionDate; ?></h4>
+            <p style="text-align: center">BALLOTS </p>
+
+            <table class="table table-bordered" id="table_ballots">
+                    <thead class="text-nowrap">
+                      <tr>
+                        <th class="th-padding">Ballot Type</th>
+                        <th class="th-padding">Ballot No</th>
+                        <th class="th-padding">Revoke</th>
+                        <th class="th-padding">Unused Votes</th>
+                        <th class="th-padding">Status</th>
+
+                        <?php
+                          foreach($candidates as $candidate) {
+
+                            echo '<th class="th-padding">'.$candidate->firstName . ' ' . $candidate->lastName . '</th>';
+
+                          }
+                        ?>
+                        <th class="th-padding table-secondary">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+
+                      <?php 
+
+
+                        $candidateTotal = [];
+                        $overAllTotal = 0;
+
+                        foreach($processBallot as $ballot) {
+
+                          $role     = $ballot['accountType'] === 'indv' ? 'Stockholder' : $ballot['role'];
+                          $revoked  = $ballot['revoked'] === 1 ? '<span class="badge badge-secondary">Revoked</span>' : '';
+                          $status   = $ballot['status'] === 1 ? '<span class="badge badge-success">Submitted</span>' : '<span class="badge badge-danger">Unsubmitted</span>'; 
+                          $ballotNo = $ballot['status'] === 1 ? '<span class="font-weight-bold text-primary ballot-no">'.$ballot['ballotNo'].'</span>' : '<span class="font-weight-bold">'.$ballot['ballotNo'].'</span>';
+
+                          $votesAvailable = $ballot['votesAvailable'] * 3;
+                        
+                          $votesUnused = ($ballot['votesAvailable'] * 3) - $ballot['votesUsed'];
+
+                          $votesUnused = $ballot['status'] === 1 ?  ($votesUnused === 0 ? '' : $votesUnused) : '';
+
+                          echo '<tr data-id="'.$ballot['id'].'">
+                                  <td class="td-padding">'.strtoupper($ballot['ballotType']).'</td>
+                                  <td class="td-padding">'.$ballotNo.'</td>
+                                  <td class="td-padding text-center">'.$revoked.'</td>
+                                  <td class="td-padding">'.$votesUnused.'</td>
+                                  <td class="td-padding text-center">'.$status.'</td>';
+
+
+                          $ballotTotalVote = 0;
+
+                          foreach($candidates as $candidate) {
+
+                            $matched = false;
+
+                            foreach($candidateVotes as $candidateVote) {
+
+
+                              if($ballot['id'] === $candidateVote['ballotId'] AND $candidate->candidateId === $candidateVote['candidateId']) {
+
+                                $matched = true;
+
+                                $vote = $candidateVote['vote'];
+
+
+                                $ballotTotalVote = $ballotTotalVote + $vote;
+
+                                $candidateTotal[$candidate->candidateId][] = $vote;
+
+
+                              }
+
+
+                              
+                    
+
+                            }
+
+                            echo $matched === true ? '<td class="td-padding text-center table-light">' . $vote . '</td>' : '<td class="td-padding text-center table-light"></td>';
+                            
+
+                            
+
+                          } 
+
+
+                          $overAllTotal = $overAllTotal + $ballotTotalVote;
+
+
+                          echo '<td class="td-padding text-center">'.($ballotTotalVote === 0 ? '-' : $ballotTotalVote).'</td>';
+
+                          echo '</tr>';
+                        }
+
+                      ?>
+                    </tbody>
+                    <tfoot>
+                     
+                    </tfoot>
+                  </table>
+                  <p style="position: absolute; bottom: 0px; right: 0px; font-size: 10px">REPORT GENERATION DATE AND TIME: <?php echo EApp::datetime(); ?></p> 
+
+
+                  
+    </body>
+</html>
+
+

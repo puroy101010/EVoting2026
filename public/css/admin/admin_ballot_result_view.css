@@ -1,0 +1,505 @@
+@font-face {
+	src: url(Chapaza.ttf);
+	font-family: chapaza-bold;
+  }
+  
+@font-face {
+	src: url(AvenirLTStd-Black.otf);
+	font-family: Avenir LT Std;
+  }
+  
+@font-face {
+	src: url(AvenirLTStd-Roman.otf);
+	font-family: AvenirLTStd-Roman;
+  }
+
+#ballot_form .thead-background {
+    background-color: #6b8e4e;
+	color: #fff;
+	font-family: Avenir LT Std;
+}
+
+#ballot_form td {
+    color:  #6b8e4e;;
+    font-family: AvenirLTStd-Roman;
+    font-size: 0.75em;
+}
+
+.btn-custom-darkg {
+    background-color: #304c40;
+    color: #ffffff;
+    border: 1px solid #ffffff;
+  }
+  
+.btn-custom-darkg:hover {
+    color: #b0d182;;
+  }
+
+.col-width-sm {
+    position: absolute;
+    margin-left: auto;
+    margin-right: auto;
+    left: 0;
+    right: 0;
+    top: 110px;
+}
+
+.ballot-info {
+    width: 100%;
+    background: #304c40;
+    margin: 2px;
+    padding: 5px;
+    color: #fff;
+}
+
+.ballot-info .p-title {
+    font-size: 20px;
+    text-decoration:underline;
+    font-family: chapaza-bold;
+    margin: 0;
+    font-weight: bold;
+}
+
+.ballot-info .p-info {
+    margin: 0;
+    font-family: AvenirLTStd-Roman;
+}
+
+#ballot_form .card-body {
+    margin: 30px 5px 30px 20px;
+}
+
+.h4-no-votes {
+    text-align: right;
+    font-weight: bold;
+    color: #304c40;
+    font-family: Avenir LT Std;
+}
+
+.div-votes {
+    padding: 1px;
+}
+
+.span-divider {
+	color: #b0d182;
+    font-weight: bold;
+	font-size: 30px;
+	border-bottom: double;
+    font-family: chapaza-bold;
+}
+
+.table-size {
+	font-size: 20px;
+}
+
+.p-no-share {
+	font-size: 18px;
+	font-weight: bold;
+	text-align: right;
+    color: #304c40;
+    font-family: Avenir LT Std;
+}
+
+.p-message {
+	font-size: 16px;
+    font-style: italic;
+    font-weight: bold;
+}
+
+.total-votes {
+	text-align: center;
+	color: #fff;
+    font-family: chapaza-bold;
+}
+
+.votes-span {
+	color: #fff;
+	font-size: 40px;
+    text-decoration: underline;
+}
+
+.h3-avail {
+	text-align: right;
+	font-weight: bold;
+}
+
+.p-announce {
+	font-size: 14px;
+	color: #000000;
+	font-weight: bold;
+	font-style: italic;
+}
+
+.p-amendment {
+	font-size: 17px;
+  text-align: justify;
+	font-family: Arial, Helvetica, sans-serif;
+}
+
+.bg-dark-green {
+    background-color: #304c40;
+}
+
+input[type='radio']:after {
+    height: 1.2rem;
+    width: 1.2rem;
+    border-radius: 15px;
+    top: -2px;
+    left: -1px;
+    position: relative;
+    background-color: #b0d182;
+    content: '';
+    display: inline-block;
+    visibility: visible;
+    border: 2px solid white;
+}
+
+input[type='radio']:checked:after {
+    height: 1.2rem;
+    width: 1.2rem;
+    border-radius: 15px;
+    top: -2px;
+    left: -1px;
+    position: relative;
+    background-color: #304c40;
+    content: '';
+    display: inline-block;
+    visibility: visible;
+    border: 2px solid #b0d182;
+}
+
+
+
+/*-----------Media Query-----------*/
+
+/* ----------- iPhone X ----------- */
+/* Portrait and Landscape */
+@media only screen 
+  and (min-device-width: 375px) 
+  and (max-device-width: 812px) 
+  and (-webkit-min-device-pixel-ratio: 3) { 
+
+    .dflex-button {
+        display: flex!important;
+        justify-content: center!important;
+        margin: 2px;
+    }
+
+    .ballot-info .p-title {
+        text-align: center;
+    }
+
+    .col-md6-size {
+        flex: 100%;
+        max-width: 0 0 100%;
+        text-align: center;
+    }
+
+    .p-no-share, .h4-no-votes {
+        text-align: center;
+    }
+
+    .h4-no-votes {
+        font-size: 19px;
+    }
+
+    .span-divider {
+        color: #d9534f;
+        font-weight: bold;
+        font-size: 20px;
+        border-bottom: double;
+    }
+
+    #candidates_table .th-label-sm {
+        padding: 6px;
+        font-size: 14px;
+    }
+
+    #candidates_table .td-label-sm {
+        padding: 6px;
+        font-size: 14px;
+    }
+
+
+    .total-votes {
+        font-size: 20px;
+        margin-top: 4px;
+    }
+
+    .votes-span {
+        font-size: 22px;
+    }
+
+}
+
+/* ----------- iPhone 6, 6S, 7 and 8 ----------- */
+/* Portrait and Landscape */
+@media only screen 
+  and (min-device-width: 375px) 
+  and (max-device-width: 667px) 
+  and (-webkit-min-device-pixel-ratio: 2) { 
+
+
+    .dflex-button {
+        display: flex!important;
+        justify-content: center!important;
+        margin: 2px;
+    }
+
+    .ballot-info .p-title {
+        text-align: center;
+    }
+
+    .col-md6-size {
+        flex: 100%;
+        max-width: 0 0 100%;
+        text-align: center;
+    }
+
+    .p-no-share, .h4-no-votes {
+        text-align: center;
+    }
+
+    .h4-no-votes {
+        font-size: 19px;
+    }
+
+    .span-divider {
+        color: #d9534f;
+        font-weight: bold;
+        font-size: 20px;
+        border-bottom: double;
+    }
+
+    #candidates_table .th-label-sm {
+        padding: 6px;
+        font-size: 14px;
+    }
+
+    #candidates_table .td-label-sm {
+        padding: 6px;
+        font-size: 14px;
+    }
+
+
+    .total-votes {
+        font-size: 20px;
+        margin-top: 4px;
+    }
+
+    .votes-span {
+        font-size: 22px;
+    }
+
+}
+
+/* ----------- iPhone 5, 5S, 5C and 5SE ----------- */
+/* Portrait and Landscape */
+@media only screen 
+  and (min-device-width: 320px) 
+  and (max-device-width: 568px)
+  and (-webkit-min-device-pixel-ratio: 2) {
+
+    .dflex-button {
+        display: flex!important;
+        justify-content: center!important;
+        margin: 2px;
+    }
+
+    .ballot-info .p-title {
+        text-align: center;
+    }
+
+    .col-md6-size {
+        flex: 100%;
+        max-width: 0 0 100%;
+        text-align: center;
+    }
+
+    .p-no-share, .h4-no-votes {
+        text-align: center;
+    }
+
+    .h4-no-votes {
+        font-size: 19px;
+    }
+
+    .span-divider {
+        color: #d9534f;
+        font-weight: bold;
+        font-size: 20px;
+        border-bottom: double;
+    }
+
+    #candidates_table .th-label-sm {
+        padding: 6px;
+        font-size: 14px;
+    }
+
+    #candidates_table .td-label-sm {
+        padding: 6px;
+        font-size: 14px;
+    }
+
+
+    .total-votes {
+        font-size: 20px;
+        margin-top: 4px;
+    }
+
+    .votes-span {
+        font-size: 22px;
+    }
+
+}
+
+/*------JioPhone 2--------*/
+@media only screen and (max-device-width: 240px) {
+
+    .dflex-button {
+        display: flex!important;
+        justify-content: center!important;
+        margin: 2px;
+    }
+
+    .ballot-info {
+        width: 100%;
+        background: #00897b;
+        margin: 2px;
+        padding: 3px;
+        color: #fff;
+    }
+    
+    .ballot-info .p-title {
+        text-align: center;
+        font-size: 15px;
+    }
+    
+    .ballot-info .p-info {
+        margin: 0;
+        font-size: 12px;
+    }
+
+    .col-md6-size {
+        flex: 100%;
+        max-width: 0 0 100%;
+        text-align: center;
+    }
+
+    .p-no-share, .h4-no-votes {
+        text-align: center;
+    }
+
+    .p-no-share {
+        font-size: 14px;
+    }
+
+    .h4-no-votes {
+        font-size: 15px;
+    }
+
+    .span-divider {
+        color: #d9534f;
+        font-weight: bold;
+        font-size: 20px;
+        border-bottom: double;
+    }
+
+    #candidates_table .th-label-sm {
+        padding: 6px;
+        font-size: 14px;
+    }
+
+    #candidates_table .td-label-sm {
+        padding: 6px;
+        font-size: 14px;
+    }
+
+
+    .total-votes {
+        font-size: 20px;
+        margin-top: 4px;
+    }
+
+    .votes-span {
+        font-size: 22px;
+    }
+
+}
+
+/*---------Galaxy Fold-----------*/
+@media only screen 
+  and (min-device-width: 280px) 
+  and (max-device-width: 653px)
+  and (-webkit-min-device-pixel-ratio: 2) {
+
+    .dflex-button {
+        display: flex!important;
+        justify-content: center!important;
+        margin: 2px;
+    }
+
+    .ballot-info {
+        width: 100%;
+        background: #00897b;
+        margin: 2px;
+        padding: 3px;
+        color: #fff;
+    }
+    
+    .ballot-info .p-title {
+        text-align: center;
+        font-size: 15px;
+    }
+    
+    .ballot-info .p-info {
+        margin: 0;
+        font-size: 12px;
+    }
+
+    .col-md6-size {
+        flex: 100%;
+        max-width: 0 0 100%;
+        text-align: center;
+    }
+
+    .p-no-share, .h4-no-votes {
+        text-align: center;
+    }
+
+    .p-no-share {
+        font-size: 14px;
+    }
+
+    .h4-no-votes {
+        font-size: 15px;
+    }
+
+    .span-divider {
+        color: #d9534f;
+        font-weight: bold;
+        font-size: 20px;
+        border-bottom: double;
+    }
+
+    #candidates_table .th-label-sm {
+        padding: 6px;
+        font-size: 14px;
+    }
+
+    #candidates_table .td-label-sm {
+        padding: 6px;
+        font-size: 14px;
+    }
+
+
+    .total-votes {
+        font-size: 20px;
+        margin-top: 4px;
+    }
+
+    .votes-span {
+        font-size: 22px;
+    }
+
+  }

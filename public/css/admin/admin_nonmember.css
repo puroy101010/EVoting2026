@@ -1,0 +1,452 @@
+@font-face {
+	src: url(Chapaza.ttf);
+	font-family: chapaza-bold;
+  }
+  
+  @font-face {
+	src: url(AvenirLTStd-Black.otf);
+	font-family: Avenir LT Std;
+  }
+  
+  @font-face {
+	src: url(AvenirLTStd-Roman.otf);
+	font-family: AvenirLTStd-Roman;
+  }
+  
+
+* {
+    margin: 0;
+    padding: 0;
+}
+
+
+.card .card-header .card-title {
+    font-family: chapaza-bold;
+}
+
+#NonmemberTable td {
+    color:  #6b8e4e;;
+    font-family: AvenirLTStd-Roman;
+    font-size: 1em;
+}
+
+#NonmemberTable th {
+	font-family: Avenir LT Std;
+}
+
+.badge-mid-green {
+	color: #ffffff;
+	background-color:#6b8e4e;
+	padding-right: 0.6em;
+	padding-left: 0.6em;
+  }
+  
+.badge-dark-green {
+    color: #ffffff;
+    background-color:#304c40;
+  }
+
+  .btn-mid-green {
+	color: #ffffff;
+	background-color:#6b8e4e;;
+  }
+  
+  .btn-mid-green:hover {
+	color: #304c40;
+	background-color:#6b8e4e;
+	border-color: #304c40;
+  }
+
+.btn-custom-darkg {
+	background-color: #304c40;
+	color: #ffffff;
+	border: 1px solid #ffffff;
+  }
+  
+  .btn-custom-darkg:hover {
+	color: #b0d182;;
+  }
+
+.active {
+	background-color: #6b8e4e!important;
+  }
+
+
+/*------------Media Query-------------*/
+
+/* (1366x768) WXGA Display */
+@media  screen and (max-width: 1366px) {
+
+    .btn-button {
+        font-weight: 200;
+        user-select: none;
+        padding: .100rem .7rem;
+        font-size: 0.830rem;
+        margin: 4px;
+    }
+
+    .card .card-header {
+        padding: 3px;
+    } 
+    
+    .card-header .card-title {
+        font-size: 18px;
+        margin: 2px;
+    }
+
+    #memberTable .th-padding {
+        font-size: 12px;
+        padding: 5px;
+    }
+
+    #memberTable .td-padding {
+        font-size: 12px;
+        padding: 5px;
+    }
+
+    .btn-group-sm>.btn, .btn-sm-edit {
+        padding: .25rem .5rem;
+        font-size: .300rem;
+        line-height: 1.52;
+        border-radius: .2rem;
+    }
+
+}
+
+/* For 1024 Resolution */  
+@media only screen   
+and (min-device-width : 768px)   
+and (max-device-width : 1024px) {
+
+    .btn-button {
+        font-weight: 200;
+        user-select: none;
+        padding: .100rem .7rem;
+        font-size: 0.830rem;
+        margin: 4px;
+    }
+
+    .card .card-header {
+        padding: 3px;
+    } 
+    
+    .card-header .card-title {
+        font-size: 18px;
+        margin: 2px;
+    }
+
+    #memberTable .th-padding {
+        font-size: 12px;
+        padding: 5px;
+    }
+
+    #memberTable .td-padding {
+        font-size: 12px;
+        padding: 5px;
+    }
+
+    .btn-group-sm>.btn, .btn-sm-edit {
+        padding: .25rem .5rem;
+        font-size: .500rem;
+        line-height: 1.52;
+        border-radius: .2rem;
+    }
+      
+}
+
+/* ----------- iPhone X ----------- */
+/* Portrait and Landscape */
+@media only screen 
+  and (min-device-width: 375px) 
+  and (max-device-width: 812px) 
+  and (-webkit-min-device-pixel-ratio: 3) { 
+
+    .card-header {
+        padding: 0;
+      }
+  
+    .card-header .card-title {
+        font-size: 20px;
+        margin: 4px;
+    }
+
+    .btn-button {
+        font-weight: 200;
+        user-select: none;
+        padding: .100rem .7rem;
+        font-size: 0.830rem;
+        margin: 4px;
+        float: right;
+    }
+
+    #memberTable .th-padding {
+        padding: 5px;
+        font-size: 12px;
+    }
+  
+    #memberTable .td-padding {
+        padding: 3px;
+        font-size: 12px;
+    }
+
+    .btn-group-sm>.btn, .btn-sm-edit {
+        padding: .25rem .5rem;
+        font-size: .500rem;
+        line-height: 1.52;
+        border-radius: .2rem;
+    }
+
+}
+
+/* ----------- iPhone 6, 6S, 7 and 8 ----------- */
+/* Portrait and Landscape */
+@media only screen 
+  and (min-device-width: 375px) 
+  and (max-device-width: 667px) 
+  and (-webkit-min-device-pixel-ratio: 2) {
+      
+    .card-header {
+        padding: 0;
+      }
+  
+    .card-header .card-title {
+        font-size: 20px;
+        margin: 4px;
+    }
+
+    .btn-button {
+        font-weight: 200;
+        user-select: none;
+        padding: .100rem .7rem;
+        font-size: 0.830rem;
+        margin: 4px;
+        float: right;
+    }
+
+    #memberTable .th-padding {
+        padding: 5px;
+        font-size: 12px;
+    }
+  
+    #memberTable .td-padding {
+        padding: 3px;
+        font-size: 12px;
+    }
+
+    .btn-group-sm>.btn, .btn-sm-edit {
+        padding: .25rem .5rem;
+        font-size: .500rem;
+        line-height: 1.52;
+        border-radius: .2rem;
+    }
+
+}
+
+
+/* Portrait and Landscape */
+@media only screen 
+  and (min-device-width: 320px) 
+  and (max-device-width: 568px)
+  and (-webkit-min-device-pixel-ratio: 2) {
+
+    .card-header {
+        padding: 0;
+      }
+  
+    .card-header .card-title {
+        font-size: 20px;
+        margin: 4px;
+    }
+
+    .btn-button {
+        font-weight: 200;
+        user-select: none;
+        padding: .100rem .7rem;
+        font-size: 0.830rem;
+        margin: 4px;
+        float: right;
+    }
+
+    #memberTable .th-padding {
+        padding: 5px;
+        font-size: 12px;
+    }
+  
+    #memberTable .td-padding {
+        padding: 3px;
+        font-size: 12px;
+    }
+
+    .btn-group-sm>.btn, .btn-sm-edit {
+        padding: .25rem .5rem;
+        font-size: .500rem;
+        line-height: 1.52;
+        border-radius: .2rem;
+    }
+
+}
+
+/*------JioPhone 2--------*/
+@media only screen and (max-device-width: 240px) {
+
+    .card-header {
+        padding: 0;
+      }
+  
+    .card-header .card-title {
+        font-size: 12px;
+        margin: 4px;
+    }
+
+    .btn-button {
+        font-weight: 200;
+        user-select: none;
+        padding: .100rem .7rem;
+        font-size: 0.830rem;
+        margin: 4px;
+        float: right;
+    }
+
+    #memberTable .th-padding {
+        padding: 3px;
+        font-size: 10px;
+    }
+  
+    #memberTable .td-padding {
+        padding: 3px;
+        font-size: 9px;
+    }
+
+    .btn-group-sm>.btn, .btn-sm-edit {
+        padding: .25rem .5rem;
+        font-size: .500rem;
+        line-height: 1.52;
+        border-radius: .2rem;
+    }
+
+    .btn-add-button {
+        font-weight: 200;
+        user-select: none;
+        padding: .100rem .7rem;
+        font-size: 0.600rem;
+        margin: 4px;
+    }
+
+}
+
+/*---------Galaxy Fold-----------*/
+@media only screen 
+  and (min-device-width: 280px) 
+  and (max-device-width: 653px)
+  and (-webkit-min-device-pixel-ratio: 2) {
+
+    .card-header {
+        padding: 0;
+      }
+  
+    .card-header .card-title {
+        font-size: 12px;
+        margin: 4px;
+    }
+
+    .btn-button {
+        font-weight: 200;
+        user-select: none;
+        padding: .100rem .7rem;
+        font-size: 0.830rem;
+        margin: 4px;
+        float: right;
+    }
+
+    #memberTable .th-padding {
+        padding: 3px;
+        font-size: 10px;
+    }
+  
+    #memberTable .td-padding {
+        padding: 3px;
+        font-size: 9px;
+    }
+
+    .btn-group-sm>.btn, .btn-sm-edit {
+        padding: .25rem .5rem;
+        font-size: .500rem;
+        line-height: 1.52;
+        border-radius: .2rem;
+    }
+
+    .btn-add-button {
+        font-weight: 200;
+        user-select: none;
+        padding: .100rem .7rem;
+        font-size: 0.600rem;
+        margin: 4px;
+    }
+
+  }
+
+
+
+  /*------------Media Query Breakpoints----------*/
+/* smartphones, iPhone, portrait 480x320 phones */
+@media (min-width:320px)  { 
+
+    /* .card-header {
+        border: 10px solid red;
+    } */
+
+}
+
+/*portrait e-readers (Nook/Kindle), smaller tablets @ 600 or @ 640 wide.*/
+@media (min-width:481px)  { 
+
+    /* .card-header {
+        border: 10px solid cyan;
+    } */
+
+}
+
+
+ /* portrait tablets, portrait iPad, landscape e-readers, landscape 800x480 or 854x480 phones */
+@media (min-width:641px) {
+
+    /* .card-header {
+        border: 10px solid yellow;
+    } */
+
+    }
+
+/* tablet, landscape iPad, lo-res laptops ands desktops */
+@media (min-width:961px)  { 
+
+    /* .card-header {
+        border: 10px solid green;
+    } */
+
+   }
+  
+/* big landscape tablets, laptops, and desktops */
+@media (min-width:1025px) { 
+   
+    /* .card-header {
+        border: 10px solid blue;
+    } */
+
+   }
+
+/* hi-res laptops and desktops */ 
+@media (min-width:1281px) { 
+    .btn-group-sm>.btn, .btn-sm-edit {
+      padding: .25rem .5rem;
+      font-size: .875rem;
+      line-height: 1.5;
+      border-radius: .2rem;
+   }
+
+   /* .card-header {
+       border: 10px solid pink;
+   } */
+
+  }
+
+ 

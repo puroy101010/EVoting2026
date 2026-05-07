@@ -1,0 +1,1 @@
+<p style="font-size: 20px">Your vote has been successfully recorded. Thank you for participating.</p>
