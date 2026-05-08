@@ -26,7 +26,7 @@ class EnsureUserIsAdmin
         // make available on the Request object
         $request->attributes->set('transaction_id', $transactionId);
 
-        Log::info("EnsureUserIsAdmin invoked");
+        // Log::info("EnsureUserIsAdmin invoked");
 
 
 

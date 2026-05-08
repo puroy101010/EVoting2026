@@ -22,8 +22,8 @@ class CreateStockholdersTable extends Migration
             $table->string('stockholder', 100);
             $table->enum('accountType', ['indv', 'corp']);
             $table->enum('voteInPerson', ['stockholder', 'corp-rep'])->default('stockholder');
-            $table->unsignedBigInteger('userId');
-            // $table->boolean('isActive')->default(true);
+            $table->string('authorizedSignatory')->nullable()->comment('Name of the authorized signatory for corporate accounts');
+            $table->unsignedBigInteger('userId')->comment('User ID of the stockholder');
             $table->timestamp('createdAt')->useCurrent();
             $table->timestamp('updatedAt')->nullable();
             $table->timestamp('deletedAt')->nullable();

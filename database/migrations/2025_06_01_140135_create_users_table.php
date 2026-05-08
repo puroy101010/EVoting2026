@@ -23,7 +23,6 @@ class CreateUsersTable extends Migration
             $table->boolean('otpValid')->default(false);
             $table->timestamp('otpCreatedAt')->nullable()->default(null);
             $table->enum('role', ['superadmin', 'admin', 'stockholder', 'corp-rep', 'non-member']);
-            // $table->boolean('isActive')->default(true);
             $table->timestamp('createdAt')->useCurrent();
             $table->timestamp('updatedAt')->nullable()->default(null);
             $table->timestamp('deletedAt')->nullable()->default(null);

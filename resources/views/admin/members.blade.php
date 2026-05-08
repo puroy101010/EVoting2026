@@ -320,6 +320,21 @@
                   </select>
                 </div>
               </div>
+
+              <div class="col-md-6">
+                <div class="corporate-form-group ultra-compact">
+                  <label for="auth_signatory" class="corporate-label ultra-compact">
+                    Authorized Signatory
+                  </label>
+                  <div class="corporate-input-group">
+                    <div class="corporate-input-icon compact">
+                      <i class="fas fa-pen"></i>
+                    </div>
+                    <input type="text" id="auth_signatory" class="corporate-input compact"
+                      name="auth_signatory" placeholder="Enter authorized signatory name" autocomplete="off">
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -359,18 +374,6 @@
                     <input type="email" id="corp_rep_email" class="corporate-input compact"
                       name="corp_rep_email" placeholder="Enter representative email" autocomplete="off">
                   </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="row">
-              <div class="col-md-12">
-                <div class="corporate-form-group ultra-compact">
-                  <label for="auth_signatory" class="corporate-label ultra-compact">
-                    Authorized Signatory
-                  </label>
-                  <textarea name="auth_signatory" id="auth_signatory" class="corporate-textarea compact"
-                    placeholder="Enter authorized signatory details" rows="3"></textarea>
                 </div>
               </div>
             </div>
@@ -571,6 +574,21 @@
                   </select>
                 </div>
               </div>
+
+              <div class="col-md-6">
+                <div class="corporate-form-group ultra-compact">
+                  <label for="edit_auth_signatory" class="corporate-label ultra-compact">
+                    Authorized Signatory
+                  </label>
+                  <div class="corporate-input-group">
+                    <div class="corporate-input-icon compact">
+                      <i class="fas fa-pen"></i>
+                    </div>
+                    <input type="text" id="edit_auth_signatory" class="corporate-input compact"
+                      name="auth_signatory" placeholder="Enter authorized signatory name" autocomplete="off">
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -596,8 +614,10 @@
                   </select>
                 </div>
               </div>
+            </div>
 
-              <div class="col-md-6">
+            <div class="row">
+              <div class="col-md-12">
                 <div class="corporate-form-group ultra-compact">
                   <label for="edit_delinquent" class="corporate-label ultra-compact">
                     Delinquent Status
@@ -648,18 +668,6 @@
                     <input type="email" id="edit_corp_rep_email" class="corporate-input compact"
                       name="corp_rep_email" placeholder="Enter representative email" autocomplete="off">
                   </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="row">
-              <div class="col-md-12">
-                <div class="corporate-form-group ultra-compact">
-                  <label for="edit_auth_signatory" class="corporate-label ultra-compact">
-                    Authorized Signatory
-                  </label>
-                  <textarea name="auth_signatory" id="edit_auth_signatory" class="corporate-textarea compact"
-                    placeholder="Enter authorized signatory details" rows="3"></textarea>
                 </div>
               </div>
             </div>

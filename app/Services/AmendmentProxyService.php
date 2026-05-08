@@ -14,6 +14,7 @@ use App\Models\ProxyAmendmentHistory;
 use App\Models\StockholderAccount;
 use App\Models\User;
 use Carbon\Carbon;
+use DateTime;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Maatwebsite\Excel\Facades\Excel;
@@ -22,16 +23,18 @@ class AmendmentProxyService
 {
 
     protected $settings = [];
+    protected DateTime $now;
+    protected ProxyService $proxyService;
 
     public function __construct()
     {
         $this->settings = ConfigService::getConfig();
+        $this->now = new DateTime();
+        $this->proxyService = new ProxyService();
     }
 
 
-
-
-    public function index($request)
+    public function index(Request $request)
     {
         try {
 
@@ -61,7 +64,7 @@ class AmendmentProxyService
         }
     }
 
-    public function exportActiveProxies($request)
+    public function exportActiveProxies(Request $request)
     {
         $filter =  $this->validateIndexFilter($request);
 
@@ -81,7 +84,7 @@ class AmendmentProxyService
         return Excel::download(new \App\Exports\AmendmentProxyActiveExport($activeProxies), 'Amendment Proxy Active Proxies ' . $currentDateTime . ' (' . $filter . ') ' . '.xlsx');
     }
 
-    private function validateIndexFilter($request)
+    private function validateIndexFilter(Request $request)
     {
 
         if (!in_array($request->filter, [null, 'all', 'verified', 'unverified'])) {
@@ -96,35 +99,32 @@ class AmendmentProxyService
     {
         try {
 
+            $proxyService = new ProxyService();
+
             DB::beginTransaction();
 
-            $this->validateAssignor($request);
-            $this->validateAssignee($request);
+            $assignorUser = $proxyService->validateAssignor($request);
+            $assigneeUser = $proxyService->validateAssignee($request);
+
+            $assignorUserId = $assignorUser->id;
+
 
             $accountToAssign = StockholderAccount::findOrFail($request->accountToAssign);
-            $assignor = $accountToAssign->stockholder->accountType === 'indv' ? $accountToAssign->stockholder->userId : $request->assignor;
-            $proxy = $this->createProxyAmendment($assignor, $request, $accountToAssign);
-            $history = $this->createAmendmentProxyHistory($proxy, $request);
+            $createdProxy = $this->createProxyAmendment($assignorUserId, $assigneeUser, $accountToAssign);
+            $createdHistory = $this->createAmendmentProxyHistory($createdProxy, $request);
 
+            $remarks = "<span class='fw-bold'>Assigned</span> Amendment proxy form <span class='fw-bold'>" . $createdProxy->proxyAmendmentFormNo . "</span> to <span class='fw-bold'>" . $createdProxy->proxy_assignee_name . "</span> (" . $assigneeUser->email . ") - ID: " . $createdProxy->proxyAmendmentId;
 
             ActivityController::log([
                 'activityCode' => '00099',
-                'remarks' => "<span class='fw-bold'>Assigned</span> Amendment proxy form no
-                              <span class='font-weight-bold'>" . $proxy->proxyAmendmentFormNo . " </span> 
-                              to <span class='font-weight-bold'>" . $proxy->proxy_assignee_name . "</span> --ID: " . $proxy->proxyAmendmentId,
+                'remarks' => $remarks,
                 'accountId' => $accountToAssign->accountId,
                 'userId' => $accountToAssign->user->id,
-                'proxyAmendmentId' => $proxy->proxyAmendmentId,
-                'proxyAmendmentHistoryId' => $history->id
+                'proxyAmendmentId' => $createdProxy->proxyAmendmentId,
+                'proxyAmendmentHistoryId' => $createdHistory->id
             ]);
-
-
 
             DB::commit();
-
-            Log::info('Amendment proxy stored successfully', [
-                'proxyAmendmentId' => $proxy->proxyAmendmentId
-            ]);
 
             return response()->json(['message' => 'The amendment proxy has been successfully assigned.'], 200);
         } catch (ValidationErrorException $e) {
@@ -132,7 +132,7 @@ class AmendmentProxyService
             return response()->json(['message' => $e->getMessage()], 400);
         } catch (Exception $e) {
 
-            UtilityService::logServerError($request, $e, 'Error occurred while storing amendment proxy');
+            AppHelper::logServerError("Error occurred while storing amendment proxy", $e);
             return response()->json([], 500);
         }
     }
@@ -164,172 +164,94 @@ class AmendmentProxyService
         ]);
     }
 
-    private function createProxyAmendment($assignor, $request, $accountToAssign): ProxyAmendment
+
+
+    /**
+     * Create a new proxy amendment record
+     *
+     * Generates a proxy amendment with a unique form number derived from the account key,
+     * associates it with the provided assignor and assignee, and records the creator.
+     *
+     * @param int $assignorUserId The user ID of the assignor
+     * @param User $assigneeUser The user object of the assignee
+     * @param StockholderAccount $accountToAssign The stockholder account for this proxy assignment
+     *
+     * @return ProxyAmendment The newly created proxy amendment record
+     */
+
+    private function createProxyAmendment(int $assignorUserId, User $assigneeUser, StockholderAccount $accountToAssign): ProxyAmendment
     {
 
         return ProxyAmendment::create([
             'proxyAmendmentFormNo' => 'A-' . $accountToAssign->accountKey,
-            'accountId' => $request->accountToAssign,
-            'assignorId' => $assignor,
-            'assigneeId' => $request->assignee,
+            'accountId' => $accountToAssign->accountId,
+            'assignorId' => $assignorUserId,
+            'assigneeId' => $assigneeUser->id,
+            'assigneeEmail' => $assigneeUser->email,
             'createdBy' => Auth::user()->id
         ]);
     }
 
-    private function validateAssignee(Request $request): User
-    {
-
-
-        $assigneeUserDetails = User::whereIn('role', ['stockholder', 'corp-rep', 'non-member'])->findOrFail($request->assignee);
-
-        // Check GM restriction for non-members and stockholders
-        if ($assigneeUserDetails->role !== 'non-member' && $this->settings['amendment_restricted_to_gm'] === 1) {
-            throw new ValidationErrorException("The amendment proxyholder is restricted to the General Manager.");
-        }
-
-
-        // Non-member specific validations
-        if ($assigneeUserDetails->role === 'non-member') {
-            $this->validateNonMemberAssignee($assigneeUserDetails);
-        }
-
-
-        // General email validation for all assignees
-        if ($assigneeUserDetails->email === null) {
-            throw new ValidationErrorException("Assignee does not have an email address.");
-        }
-
-        return $assigneeUserDetails;
-    }
 
 
 
-
-
-
-
-    private function validateNonMemberAssignee(User $assignee): void
-    {
-        $nonmemberInfo = $assignee->nonMemberAccount()->withTrashed()->first();
-
-        if (!$nonmemberInfo) {
-            throw new ValidationErrorException("Assignee non-member account not found.");
-        }
-
-        if ($nonmemberInfo->trashed()) {
-            throw new ValidationErrorException("Assignment to an inactive non-member is not allowed. Please reactivate the non-member to proceed.");
-        }
-
-        if ($nonmemberInfo->isGM !== 1) {
-            throw new ValidationErrorException("The amendment proxyholder is restricted to the General Manager.");
-        }
-    }
-
-
-    private function validateAssignor(Request $request): User
-    {
-
-
-        $submittedAssignorUserId = $request->assignor;
-        $submittedAccountIdToAssign = $request->accountToAssign;
-
-
-        $stockholderAccountToAssign = StockholderAccount::find($submittedAccountIdToAssign);
-
-        if (!$stockholderAccountToAssign) {
-            throw new ValidationErrorException("The stockholder account to assign was not found.");
-        }
-
-
-        $assignorUser = ProxyService::getAssignorByAccountNo($submittedAssignorUserId, $submittedAccountIdToAssign);
-
-
-
-
-        if ($assignorUser->role === 'corp-rep') {
-
-
-            if ($assignorUser->email === null) {
-                throw new ValidationErrorException("Cannot assign proxy. The assignor does not have an email address.");
-            }
-
-            if ($assignorUser->email !== $stockholderAccountToAssign->user->email) {
-
-                throw new ValidationErrorException("Proxy assignment failed. Corporate representatives must assign the stock under their own name.");
-            }
-        }
-
-        return $assignorUser;
-    }
-
-
-
-
-
-    public function cancel($request, $id)
+    public function cancel(Request $request, int $id)
     {
         try {
 
+            $proxy = ProxyAmendment::find($id);
 
-            Log::info("Cancelling Amendment proxy with ID: $id");
-            $proxy = ProxyAmendment::findOrFail($id);
+            if (!$proxy) {
+                return response()->json(['message' => 'Amendment proxy not found.'], 404);
+            }
 
             if ($proxy->auditedBy !== null) {
-                Log::error("Attempt to cancel a verified proxy.", ['proxyAmendmentId' => $proxy->proxyAmendmentId]);
                 return response()->json(['message' => 'Cannot cancel a verified proxy. Please contact the Auditor.'], 400);
             }
 
             DB::beginTransaction();
 
             $history = $this->createCancelHistory($proxy, $request);
+
             $this->createCancellationRecord($proxy, $request);
 
             ActivityController::log([
                 'activityCode' => '00100',
                 'remarks' => "<span class='text-danger fw-bold'>Cancelled</span> Amendment proxy 
                               <span class='font-weight-bold'>(" . $proxy->proxyAmendmentFormNo . ")</span> 
-                              that was assigned to <span class='font-weight-bold'>" . $proxy->proxy_assignee_name . "</span> --ID: " . $proxy->proxyAmendmentId,
+                              that was assigned to <span class='font-weight-bold'>" . $proxy->proxy_assignee_name . "(" . $proxy->assignee->email . ")</span> --ID: " . $proxy->proxyAmendmentId,
 
                 'accountId' => $proxy->accountId,
                 'userId' => $proxy->stockholderAccount->user->id,
                 'proxyAmendmentId' => $id,
                 'proxyAmendmentHistoryId' => $history->id,
-                'accountId' => $proxy->accountId,
-                'userId' => $proxy->stockholderAccount->userId
             ]);
 
             ProxyAmendment::where('proxyAmendmentId', $id)->forceDelete();
             DB::commit();
-
-            Log::info("Amendment proxy with ID: $id has been cancelled successfully");
-
             return response()->json(['message' => 'Amendment proxy has been cancelled successfully.'], 200);
         } catch (Exception $e) {
 
-            UtilityService::logServerError(request(), $e, 'Error occurred while cancelling Amendment proxy');
+            AppHelper::logServerError("Error occurred while cancelling amendment proxy with ID: $id", $e);
 
             return response()->json([], 500);
         }
     }
 
-
-
-    private function createCancellationRecord($proxy, $request): ProxyAmendmentCancelled
+    private function createCancellationRecord(ProxyAmendment $proxy, Request $request): ProxyAmendmentCancelled
     {
 
-
-        $now = now();
         $history = $proxy->toArray();
 
         unset($history['assignor']);
         unset($history['assignee']);
 
         $history['createdBy'] = Auth::id();
-        $history['createdAt'] = $now;
+        $history['createdAt'] = $this->now;
         $history['updatedBy'] = Auth::id();
-        $history['updatedAt'] = $now;
+        $history['updatedAt'] = $this->now;
         $history['cancelledBy'] = Auth::id();
-        $history['cancelledAt'] = $now;
+        $history['cancelledAt'] = $this->now;
         $history['reason'] = $request->reason;
         $history['remarks'] = $request->remarks;
         $history['assignorName'] = $proxy->proxy_assignor_name;
@@ -343,18 +265,17 @@ class AmendmentProxyService
         return $cancelled;
     }
 
-    private function createCancelHistory($proxy, $request): ProxyAmendmentHistory
+    private function createCancelHistory(ProxyAmendment $proxy, Request $request): ProxyAmendmentHistory
     {
-        $now = now();
+
         $history = $proxy->toArray();
 
-
         $history['createdBy'] = Auth::id();
-        $history['createdAt'] = $now;
+        $history['createdAt'] = $this->now;
         $history['cancelledBy'] = Auth::id();
-        $history['cancelledAt'] = $now;
+        $history['cancelledAt'] = $this->now;
         $history['updatedBy'] = Auth::id();
-        $history['updatedAt'] = $now;
+        $history['updatedAt'] = $this->now;
 
         $history['status'] = 'cancelled';
         $history['remarks'] = $request->remarks;
@@ -368,40 +289,27 @@ class AmendmentProxyService
         return ProxyAmendmentHistory::create($history);
     }
 
-    public function audit($request, $id)
+    public function audit(Request $request, int $id)
     {
         try {
 
-            Log::info("Auditing Amendment proxy with ID: $id");
             DB::beginTransaction();
-            $action = $this->getAuditAction($request->input('action'));
+
+            $action = $this->proxyService->getAuditAction($request->input('action'));
             $proxyAmendment = ProxyAmendment::findOrFail($id);
 
+            $this->proxyService->validateAuditRule($proxyAmendment, $action);
 
-
-            $this->validateAuditRule($proxyAmendment, $action);
-
-            if ($action === 'verify') {
-                $this->verifyProxy($proxyAmendment);
-            } else {
-                $this->unverifyProxy($proxyAmendment);
-            }
-
-
+            $this->executeAuditAction($proxyAmendment, $action);
             $this->logProxyAuditActivity($proxyAmendment, $action);
+
             $message = $action == 'verify'
                 ? 'The proxy with form number ' . $proxyAmendment->proxyAmendmentFormNo . ' has been successfully verified.'
                 : 'The verified status for proxy form number ' . $proxyAmendment->proxyAmendmentFormNo . ' has been successfully revoked.';
 
-
-
-
-
             $this->createAuditHistory($proxyAmendment, $action);
-            Log::info("Audit history created for proxy with ID: $id", ['action' => $action]);
-            DB::commit();
 
-            Log::info("Amendment proxy with ID: $id has been successfully audited", ['action' => $action]);
+            DB::commit();
 
             return response()->json(['message' => $message], 200);
         } catch (ValidationErrorException $e) {
@@ -415,22 +323,21 @@ class AmendmentProxyService
         }
     }
 
-    private function validateAuditRule($proxyAmendment, $action)
+    private function executeAuditAction(ProxyAmendment $proxyAmendment, string $action)
     {
+        $proxyService = new ProxyService();
 
-        if ($proxyAmendment->auditedBy === null and  $action === 'unverify') {
-
-            Log::error("Attempt to revoke verification status for a proxy that has not been verified.", ['proxyAmendmentId' => $proxyAmendment->id]);
-            throw new ValidationErrorException("You are trying to revoke verification status for a proxy that has not been verified.");
+        if ($action === 'verify') {
+            $proxyService->verifyProxy($proxyAmendment);
+            return;
         }
 
-        if ($proxyAmendment->auditedBy !== null and  $action === 'verify') {
-            Log::error("Attempt to verify a proxy that has already been verified.", ['proxyAmendmentId' => $proxyAmendment->id]);
-            throw new ValidationErrorException("You are trying to verify a proxy that has already been verified.");
-        }
+        $proxyService->unverifyProxy($proxyAmendment);
     }
 
-    private function createAuditHistory($proxy, $action)
+
+
+    private function createAuditHistory(ProxyAmendment $proxy, string $action)
     {
 
         $history = $proxy->toArray();
@@ -449,8 +356,6 @@ class AmendmentProxyService
 
         $history['updatedAt'] = now();
 
-
-
         return ProxyAmendmentHistory::create($history);
     }
 
@@ -458,11 +363,9 @@ class AmendmentProxyService
     private function logProxyAuditActivity($proxy, $action)
     {
 
-
         $remarks = $action === 'verify'
             ? "Verified Amendment proxy form <span class='font-weight-bold'>{$proxy->proxyAmendmentFormNo}</span> that was assigned to {$proxy->proxy_assignee_name} --ID: {$proxy->proxyAmendmentId}"
             : "Revoked verified status for Amendment proxy form <span class='font-weight-bold'>{$proxy->proxyAmendmentFormNo}</span> that was assigned to <span class='font-weight-bold'>{$proxy->proxy_assignee_name}</span> --ID: {$proxy->proxyAmendmentId}";
-
 
         ActivityController::log([
             'activityCode' => $action === 'verify' ? '00039' : '00040',
@@ -472,44 +375,8 @@ class AmendmentProxyService
         ]);
     }
 
-    private function verifyProxy($proxy)
+    public function getProxies($request, string $filter)
     {
-
-        if (Auth::user()->cannot('verify amendment proxy')) {
-            Log::warning("Amendment Proxy: Unauthorized verify attempt", ['userId' => Auth::id()]);
-            throw new ValidationErrorException("You are not authorized to verify this amendment proxy.");
-        }
-
-        $proxy->auditedBy = Auth::id();
-        $proxy->auditedAt = now();
-        $proxy->save();
-    }
-
-    private function unverifyProxy($proxy)
-    {
-
-        if (Auth::user()->cannot('remove amendment proxy audit')) {
-            Log::warning("Amendment Proxy: Unauthorized attempt to revoke verification status", ['userId' => Auth::id()]);
-            throw new ValidationErrorException("You do not have permission to revoke the verified status for this amendment proxy.");
-        }
-
-        $proxy->auditedBy = null;
-        $proxy->auditedAt = null;
-        $proxy->save();
-    }
-    private function getAuditAction($action)
-    {
-        if (!in_array($action, [0, 1])) {
-            Log::error("Invalid audit action: $action", ['action' => $action]);
-            throw new ValidationErrorException("Invalid audit action.");
-        }
-
-        return $action == 1 ? 'verify' : 'unverify';
-    }
-
-    public function getProxies($request, $filter)
-    {
-
 
         $proxies = ProxyAmendment::with([
             'stockholderAccount',

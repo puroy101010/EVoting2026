@@ -128,6 +128,14 @@ return [
             'path' => storage_path('logs/laravel.log'),
         ],
 
+        'serverError' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/server-error.log'),
+            'level' => env('LOG_LEVEL', 'error'),
+            'days' => env('LOG_DAILY_DAYS', 99999),
+            'replace_placeholders' => true,
+        ],
+
     ],
 
 ];

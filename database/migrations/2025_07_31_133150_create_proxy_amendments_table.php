@@ -18,12 +18,15 @@ class CreateProxyAmendmentsTable extends Migration
 
             $table->id('proxyAmendmentId')->unsignedBigInteger();
             $table->string('proxyAmendmentFormNo', 10)->unique();
-            $table->unsignedBigInteger('accountId')->unique();
-            $table->unsignedBigInteger('assignorId');
-            $table->unsignedBigInteger('assigneeId');
+            $table->unsignedBigInteger('accountId')->unique()->remarks('Stockholder account ID');
+            $table->unsignedBigInteger('assignorId')->remarks('User ID of the assignor');
+            $table->unsignedBigInteger('assigneeId')->remarks('User ID of the assignee');
+
+            //assignee email
+            $table->string('assigneeEmail')->remarks('Email address of the assignee');
+
             $table->unsignedBigInteger('auditedBy')->nullable();
             $table->timestamp('auditedAt')->nullable();
-            // $table->boolean('isActive')->default(true);
             $table->timestamp('createdAt')->useCurrent();
             $table->timestamp('updatedAt')->nullable();
             $table->timestamp('deletedAt')->nullable();

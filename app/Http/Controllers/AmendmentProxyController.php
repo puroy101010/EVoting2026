@@ -50,15 +50,6 @@ class AmendmentProxyController extends Controller
         return $this->amendmentProxyService->exportActiveProxies($request);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
 
     /**
      * Store a newly created resource in storage.
@@ -68,7 +59,6 @@ class AmendmentProxyController extends Controller
      */
     public function store(StoreAmendmentProxyRequest $request)
     {
-
         return $this->amendmentProxyService->store($request);
     }
 
@@ -116,48 +106,13 @@ class AmendmentProxyController extends Controller
         }
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
+
+    public function cancel(CancelProxyAmendmentRequest $request, int $id)
     {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
-    }
-
-
-    public function cancel(CancelProxyAmendmentRequest $request, $id)
-    {
-
         return $this->amendmentProxyService->cancel($request, $id);
     }
 
-    public function audit(Request $request, $id)
+    public function audit(Request $request, int $id)
     {
         return $this->amendmentProxyService->audit($request, $id);
     }
@@ -186,7 +141,7 @@ class AmendmentProxyController extends Controller
         }
     }
 
-    public function proxy_list(Request $request, $id)
+    public function proxy_list(Request $request, int $id)
     {
         try {
 
@@ -235,7 +190,7 @@ class AmendmentProxyController extends Controller
         return $this->amendmentProxyService->exportMasterlist($request);
     }
 
-    public function history(Request $request, $id)
+    public function history(Request $request, int $id)
     {
         try {
 

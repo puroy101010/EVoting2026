@@ -1,4 +1,5 @@
 $(document).ready(function () {
+
   $(document).on("shown.bs.modal", "#assignProxyBodModal", function () {
     $("#assignProxyBodModal [name=proxyFormNo]").focus();
   });
@@ -17,9 +18,9 @@ $(document).ready(function () {
     assign_amendment_proxy($(this));
   });
 
-  load_stockholder();
-  load_filter_data_users();
-  load_option_assignees();
+  loadStockholders();
+  loadFilterDataUsers();
+  loadOptionAssignees();
 
   // initialize chosen select
   $("select").chosen({ width: "100%" });
@@ -52,7 +53,7 @@ $(document).ready(function () {
       },
 
       success: function (data) {
-        load_stockholder();
+        loadStockholders();
         Swal.fire({
           icon: "success",
           title: "Success",
@@ -73,7 +74,7 @@ $(document).ready(function () {
       $("#filter_form [name=active_page]").val(1).trigger("chosen:updated");
     }
 
-    load_stockholder();
+    loadStockholders();
   });
 
   // //done 2023-08-28
@@ -106,7 +107,7 @@ $(document).ready(function () {
   // done 2023-08-29
   $(document).on("click", "#btn_filter_reset", function () {
     reset_filter();
-    load_stockholder();
+    loadStockholders();
   });
 
   // done 2023-08-28
@@ -121,7 +122,7 @@ $(document).ready(function () {
       .attr("href")
       .substring($(this).attr("href").lastIndexOf("=") + 1);
 
-    load_stockholder(url);
+    loadStockholders(url);
   });
 
   // done 2023-08-28
@@ -144,7 +145,7 @@ $(document).ready(function () {
       success: function (data) {
         Swal.fire({ icon: "success", title: "Success", text: data.message })
           .then(() => {
-            load_stockholder();
+            loadStockholders();
           })
           .then(() => {
             $("#edit_member_modal").modal("hide");
@@ -371,7 +372,7 @@ $(document).ready(function () {
         $("#btn_upload").text("Upload").attr("disabled", false);
       },
       success: function (data) {
-        load_stockholder();
+        loadStockholders();
         Swal.fire({
           icon: "success",
           title: "Uploaded!",
@@ -386,7 +387,7 @@ $(document).ready(function () {
 });
 
 // done 2023-08-27
-function load_option_assignees() {
+function loadOptionAssignees() {
   $.ajax({
     url: BASE_URL + "admin/stockholder/assignee",
     dataType: "json",
@@ -405,7 +406,7 @@ function load_option_assignees() {
 }
 
 // done 2023-08-28
-function load_filter_data_users() {
+function loadFilterDataUsers() {
   $.ajax({
     url: BASE_URL + "admin/stockholder/user",
     dataType: "json",
@@ -447,27 +448,18 @@ function editMember(id) {
           let account = data["stockholder_account"];
           let stockholder = account["stockholder"];
 
-          $("#edit_member_modal [name=stockholder]")
-            .val(stockholder["stockholder"])
-            .attr("readonly", false);
-          $("#edit_member_modal [name=account_number]")
-            .val(stockholder["accountNo"])
-            .attr("readonly", true);
-          $("#edit_member_modal [name=email]")
-            .val(stockholder["user"]["email"])
-            .attr("readonly", true);
-          $("#edit_member_modal [name=account_type]")
-            .attr("disabled", true)
-            .find("option[value=" + stockholder["accountType"] + "]")
-            .prop("selected", true)
-            .attr("disabled", false)
-            .siblings()
-            .removeAttr("selected")
-            .attr("disabled", true);
-          $("#edit_member_modal [name=vote_in_person]")
-            .attr("disabled", true)
-            .find("option[value=" + stockholder["voteInPerson"] + "]")
-            .attr("disabled", false)
+          $("#edit_member_modal [name=stockholder]").val(stockholder["stockholder"]).attr("readonly", false);
+          $("#edit_member_modal [name=account_number]").val(stockholder["accountNo"]).attr("readonly", true);
+          $("#edit_member_modal [name=email]").val(stockholder["user"]["email"]).attr("readonly", true);
+          $("#edit_member_modal [name=account_type]").attr("disabled", true).find("option[value=" + stockholder["accountType"] + "]").prop("selected", true).attr("disabled", false).siblings().removeAttr("selected").attr("disabled", true);
+
+
+
+
+
+
+
+          $("#edit_member_modal [name=vote_in_person]").attr("disabled", true).find("option[value=" + stockholder["voteInPerson"] + "]").attr("disabled", false)
             .prop("selected", true)
             .siblings()
             .removeAttr("selected")
@@ -679,7 +671,7 @@ function displayStockholder(data) {
 }
 
 // done 2023-08-29
-function load_stockholder(page = null) {
+function loadStockholders(page = null) {
   try {
     let filterData = $("#filter_form").serialize();
     let loadPageNo = page || $("#filter_form [name=active_page]").val();
@@ -709,142 +701,133 @@ function load_stockholder(page = null) {
   }
 }
 
-// done 2023-08-28
+
 function showProxyBoad(data) {
-  let assignor = "";
-  let assignee = "";
-  let objAssignor = data["proxy_board"]["assignor"];
-  let objAssignee = data["proxy_board"]["assignee"];
+  const proxyBoard = data["proxy_board"];
+  const objAssignor = proxyBoard["assignor"];
+  const objAssignee = proxyBoard["assignee"];
+  const assignor = buildUserDisplay(objAssignor);
+  const assignee = buildUserDisplay(objAssignee);
+  const stockKey = data.accountKey + " " + data.stockholder.stockholder;
+  const proxyBodFormNo = proxyBoard["proxyBodFormNo"];
+  const assignorDetailForm = $("#assignProxyForm .assignee-details");
 
-  $("#btnCancelBodProxy").attr("data-id", data["proxy_board"]["proxyBodId"]);
+  $("#btnCancelBodProxy").attr("data-id", proxyBoard["proxyBodId"]);
 
-  switch (objAssignor["role"]) {
-    case "stockholder":
-      assignor = `${objAssignor["stockholder"]["accountNo"]} ${objAssignor["stockholder"]["stockholder"]} <span class="badge badge-success">stockholder</span>`;
-      break;
-    case "corp-rep":
-      assignor = `${objAssignor["stockholder_account"]["accountKey"]} ${objAssignor["stockholder_account"]["corpRep"]} <span class="badge badge-success">corporate representative</span>`;
-      break;
-  }
+  assignorDetailForm.find(".assignee-details-stock").text(stockKey);
+  assignorDetailForm.find(".assignee-details-form-no").text(proxyBodFormNo);
+  assignorDetailForm.find(".assignee-details-assignor").html(assignor);
+  assignorDetailForm.find(".assignee-details-assignee").html(assignee);
 
-  switch (objAssignee["role"]) {
-    case "stockholder":
-      assignee = `${objAssignee["stockholder"]["accountNo"]} ${objAssignee["stockholder"]["stockholder"]} <span class="badge badge-success">stockholder</span>`;
-      break;
-    case "corp-rep":
-      assignee = `${objAssignee["stockholder_account"]["accountKey"]} ${objAssignee["stockholder_account"]["stockholder"]["stockholder"]} |  ${objAssignee["stockholder_account"]["corpRep"]} <span class="badge badge-success">corporate representative</span>`;
-      break;
-    case "non-member":
-      assignee = `${objAssignee["non_member_account"]["nonmemberAccountNo"]} ${objAssignee["non_member_account"]["firstName"]} ${objAssignee["non_member_account"]["lastName"]} <span class="badge badge-success">non-member</span>`;
-      break;
-  }
-
-  $("#assignProxyForm .assignee-details .assignee-details-stock").text(
-    data.accountKey + " " + data.stockholder.stockholder
-  );
-  $("#assignProxyForm .assignee-details .assignee-details-form-no").text(
-    data["proxy_board"]["proxyBodFormNo"]
-  );
-  $("#assignProxyForm .assignee-details .assignee-details-assignor").html(
-    assignor
-  );
-  $("#assignProxyForm .assignee-details .assignee-details-assignee").html(
-    assignee
-  );
 }
 
 function showProxyAmendment(data) {
-  let assignor = "";
-  let assignee = "";
-  let objAssignor = data["proxy_amendment"]["assignor"];
-  let objAssignee = data["proxy_amendment"]["assignee"];
 
-  $("#btnCancelAmendmentProxy").attr(
-    "data-id",
-    data["proxy_amendment"]["proxyAmendmentId"]
-  );
+  const amendment = data["proxy_amendment"];
+  const objAssignor = amendment["assignor"];
+  const objAssignee = amendment["assignee"];
 
-  switch (objAssignor["role"]) {
+  const assignor = buildUserDisplay(objAssignor);
+  const assignee = buildUserDisplay(objAssignee);
+
+  const assigneeDetailForm = $("#assignProxyFormAmendment .assignee-details");
+  const amendmentFormNo = amendment["proxyAmendmentFormNo"];
+  const stockKey = data.accountKey + " " + data.stockholder.stockholder;
+
+  $("#btnCancelAmendmentProxy").attr("data-id", amendment["proxyAmendmentId"]);
+
+  assigneeDetailForm.find(".assignee-details-stock").text(stockKey);
+  assigneeDetailForm.find(".assignee-details-form-no").text(amendmentFormNo);
+  assigneeDetailForm.find(".assignee-details-assignor").html(assignor);
+  assigneeDetailForm.find(".assignee-details-assignee").html(assignee);
+
+}
+
+function buildUserDisplay(userObject) {
+  let displayName = "";
+  switch (userObject["role"]) {
     case "stockholder":
-      assignor = `${objAssignor["stockholder"]["accountNo"]} ${objAssignor["stockholder"]["stockholder"]} <span class="badge badge-success">stockholder</span>`;
+      displayName = `${userObject["stockholder"]["accountNo"]} ${userObject["stockholder"]["stockholder"]} <span class="badge badge-success">stockholder</span>`;
       break;
     case "corp-rep":
-      assignor = `${objAssignor["stockholder_account"]["accountKey"]} ${objAssignor["stockholder_account"]["corpRep"]} <span class="badge badge-success">corporate representative</span>`;
+      displayName = `${userObject["stockholder_account"]["accountKey"]} ${userObject["stockholder_account"]["corpRep"]} <span class="badge badge-success">corporate representative</span>`;
+      break;
+
+    case "non-member":
+      displayName = `${userObject["non_member_account"]["nonmemberAccountNo"]} ${userObject["non_member_account"]["firstName"]} ${userObject["non_member_account"]["lastName"]} <span class="badge badge-success">non-member</span>`;
       break;
   }
 
-  assignee = `${objAssignee["non_member_account"]["nonmemberAccountNo"]} ${objAssignee["non_member_account"]["firstName"]} ${objAssignee["non_member_account"]["lastName"]} <span class="badge badge-success">non-member</span>`;
-
-  $("#assignProxyFormAmendment .assignee-details .assignee-details-stock").text(
-    data.accountKey + " " + data.stockholder.stockholder
-  );
-  $(
-    "#assignProxyFormAmendment .assignee-details .assignee-details-form-no"
-  ).text("A-" + data["proxy_amendment"]["proxyAmendmentFormNo"]);
-  $(
-    "#assignProxyFormAmendment .assignee-details .assignee-details-assignor"
-  ).html(assignor);
-  $(
-    "#assignProxyFormAmendment .assignee-details .assignee-details-assignee"
-  ).html(assignee);
+  return displayName;
 }
 
-// done 2023-08-28
+
 function showAssignBodForm(id, data) {
+
   $("#assignProxyForm")[0].reset();
   $("#assignProxyForm select").trigger("chosen:updated");
 
-  let assignor = `<option value="${data["stockholder"]["userId"]}">${data["stockholder"]["stockholder"]}<option>`;
+  const stockholder = data["stockholder"]["stockholder"];
+  const accounrKey = data.accountKey + " " + data.stockholder.stockholder;
+  let assignor = `<option value="${data["stockholder"]["userId"]}">${stockholder}<option>`;
 
-  $("#assignProxyForm .account-to-assign").val(
-    data.accountKey + " " + data.stockholder.stockholder
-  );
+  $("#assignProxyForm .account-to-assign").val(accounrKey);
 
   if (data["stockholder"]["accountType"] == "corp") {
-    assignor = "<option></option>";
-    assignor += `<option value="${data["stockholder"]["userId"]}"> ${data["stockholder"]["accountNo"]}  ${data["stockholder"]["stockholder"]} (SH/CS)</option>`;
 
-    for (let account of data["stockholder"]["stockholder_accounts"]) {
-      assignor += `<option ${account["corpRep"] !== null ? "" : "disabled"
-        } value="${account["userId"]}"> ${account["accountKey"]} ${data["stockholder"]["stockholder"]
-        } | ${account["corpRep"] === null ? "---no corp rep---" : account["corpRep"]
-        } (CR)</option>`;
+    assignor = "<option></option>";
+    assignor += `<option value="${data["stockholder"]["userId"]}"> ${data["stockholder"]["accountNo"]}  ${stockholder} (SH/CS)</option>`;
+
+    const stockholderAccounts = data["stockholder"]["stockholder_accounts"];
+
+    for (let account of stockholderAccounts) {
+      let disabled = account["corpRep"] !== null ? "" : "disabled";
+      const displayName = `${account["accountKey"]} ${data["stockholder"]["stockholder"]} | ${account["corpRep"] === null ? "---no corp rep---" : account["corpRep"]}(CR)`;
+      assignor += `< option ${disabled} value = "${account["userId"]}" > ${displayName}</option > `;
     }
   }
 
   $("#assignProxyForm [name=accountToAssign]").val(id);
-  $("#assignProxyForm [name=assignor]")
-    .html(assignor)
-    .trigger("chosen:updated");
+  $("#assignProxyForm [name=assignor]").html(assignor).trigger("chosen:updated");
+
+
 }
 
 function showAssignAmendmentForm(id, data) {
   $("#assignProxyFormAmendment")[0].reset();
   $("#assignProxyFormAmendment select").trigger("chosen:updated");
 
-  let assignor = `<option value="${data["stockholder"]["userId"]}">${data["stockholder"]["stockholder"]}<option>`;
+  let assignor = `<option value = "${data["stockholder"]["userId"]}" > ${data["stockholder"]["stockholder"]} <option>`;
 
-  $("#assignProxyFormAmendment .account-to-assign").val(
-    data.accountKey + " " + data.stockholder.stockholder
-  );
+  const accountKey = data.accountKey + " " + data.stockholder.stockholder;
+
+  $("#assignProxyFormAmendment .account-to-assign").val(accountKey);
+
+
 
   if (data["stockholder"]["accountType"] == "corp") {
     assignor = "<option></option>";
     assignor += `<option value="${data["stockholder"]["userId"]}"> ${data["stockholder"]["accountNo"]}  ${data["stockholder"]["stockholder"]} (SH/CS)</option>`;
 
     for (let account of data["stockholder"]["stockholder_accounts"]) {
-      assignor += `<option ${account["corpRep"] !== null ? "" : "disabled"
-        } value="${account["userId"]}"> ${account["accountKey"]} ${data["stockholder"]["stockholder"]
+      assignor += `<option ${account["corpRep"] !== null ? "" : "disabled"}
+         value="${account["userId"]}"> ${account["accountKey"]} ${data["stockholder"]["stockholder"]
         } | ${account["corpRep"] === null ? "---no corp rep---" : account["corpRep"]
         } (CR)</option>`;
     }
   }
+
+
+  alert(assignor);
 
   $("#assignProxyFormAmendment [name=refNo]").val("A-" + data["accountKey"]);
   $("#assignProxyFormAmendment [name=accountToAssign]").val(id);
   $("#assignProxyFormAmendment [name=assignor]")
     .html(assignor)
     .trigger("chosen:updated");
+
+
+
 }
 
 // done 2023-08-28
@@ -931,7 +914,7 @@ function assign_bod_proxy(btn) {
         title: "Success",
         text: data.message,
       }).then(() => {
-        load_stockholder();
+        loadStockholders();
         $("#assignProxyBodModal").modal("hide");
       });
     },
@@ -961,7 +944,7 @@ function assign_amendment_proxy(btn) {
         title: "Success",
         text: data.message,
       }).then(() => {
-        load_stockholder();
+        loadStockholders();
         $("#assignProxyAmendmentModal").modal("hide");
       });
     },
@@ -1008,10 +991,10 @@ function cancel_bod_proxy(thisElem) {
       // Then show remarks input
       Swal.fire({
         title: "Add Remarks",
-        html: `<div class="text-left mb-3">
+        html: `< div class="text-left mb-3" >
                  <p><strong>Reason:</strong> ${reasonText}</p>
                  <label for="swal-input1" class="form-label">Remarks (Optional):</label>
-               </div>`,
+               </div > `,
         input: "textarea",
         inputPlaceholder: "Enter additional remarks or details about the cancellation...",
         inputAttributes: {
@@ -1033,7 +1016,7 @@ function cancel_bod_proxy(thisElem) {
           // Final confirmation with all details
           Swal.fire({
             title: "Confirm Proxy Cancellation",
-            html: `<div class="text-left">
+            html: `< div class="text-left" >
                      <p><strong>Reason:</strong> ${reasonText}</p>
                      <p><strong>Remarks:</strong> ${remarks || "None"}</p>
                      <br>
@@ -1048,7 +1031,7 @@ function cancel_bod_proxy(thisElem) {
           }).then((confirmResult) => {
             if (confirmResult.isConfirmed) {
               $.ajax({
-                url: BASE_URL + `admin/bod-proxy/${accountId}/cancel`,
+                url: BASE_URL + `admin / bod - proxy / ${accountId}/cancel`,
                 method: "POST",
                 dataType: "json",
                 data: {
@@ -1072,7 +1055,7 @@ function cancel_bod_proxy(thisElem) {
                              ${remarks ? `<p><strong>Remarks:</strong> ${remarks}</p>` : ""}
                            </div>`,
                   }).then(() => {
-                    load_stockholder();
+                    loadStockholders();
                     $("#assignProxyBodModal").modal("hide");
                   });
                 },
@@ -1191,7 +1174,7 @@ function cancel_amendment_proxy(thisElem) {
                              ${remarks ? `<p><strong>Remarks:</strong> ${remarks}</p>` : ""}
                            </div>`,
                   }).then(() => {
-                    load_stockholder();
+                    loadStockholders();
                     $("#assignProxyAmendmentModal").modal("hide");
                   });
                 },
