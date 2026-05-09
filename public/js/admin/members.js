@@ -68,7 +68,7 @@ $(document).ready(function () {
     });
   });
 
-  //done 2023-08-28
+
   $(document).on("change", "#filter_form select", function () {
     if ($(this).attr("name") !== "active_page") {
       $("#filter_form [name=active_page]").val(1).trigger("chosen:updated");
@@ -79,12 +79,12 @@ $(document).ready(function () {
 
   // //done 2023-08-28
   $(document).on("click", ".btn-proxyholder-bod", function () {
-    let id = $(this).closest("tr").attr("data-account-id");
+    const id = $(this).closest("tr").attr("data-account-id");
     load_proxyhoder_bod(id);
   });
 
   $(document).on("click", ".btn-proxyholder-amendment", function () {
-    let id = $(this).closest("tr").attr("data-account-id");
+    const id = $(this).closest("tr").attr("data-account-id");
     load_proxyhoder_amendment(id);
   });
 
@@ -494,29 +494,63 @@ function editMember(id) {
     beforeSend: function () {
       $("#form_edit_member").trigger("reset");
     },
-
     success: function (data) {
       try {
-        $("#edit_member_modal [name=id]").val(id);
-        $(".stock-details-wrapper").toggle(data["role"] === "corp-rep");
-
-        if (data["role"] === "corp-rep") {
-          populateCorpRepForm(data);
-        } else {
-          populateStockholderForm(data);
-        }
-
-        $("#edit_member_modal select").trigger("chosen:updated");
-
-        $("#edit_member_modal").modal("show");
+        validateEditMemberData(data);
+        setupEditMemberModal(data, id);
+        displayEditMemberModal();
       } catch (err) {
-        alert(err);
+        handleEditMemberError(err);
       }
     },
-
-    error: function () {
+    error: function (xhr) {
       handleError(xhr);
     },
+  });
+}
+
+// Validate data structure before processing
+function validateEditMemberData(data) {
+  if (!data || !data.role) {
+    throw new Error("Invalid response: missing role information");
+  }
+
+  if (data.role === "corp-rep" && !data.stockholder_account) {
+    throw new Error("Invalid response: missing corporate representative data");
+  }
+
+  if (data.role === "stockholder" && !data.stockholder) {
+    throw new Error("Invalid response: missing stockholder data");
+  }
+}
+
+// Orchestrate modal setup based on user role
+function setupEditMemberModal(data, id) {
+  $("#edit_member_modal [name=id]").val(id);
+  const isCorpRep = data.role === "corp-rep";
+
+  $(".stock-details-wrapper").toggle(isCorpRep);
+
+  if (isCorpRep) {
+    populateCorpRepForm(data);
+  } else {
+    populateStockholderForm(data);
+  }
+}
+
+// Display the modal with updated select options
+function displayEditMemberModal() {
+  $("#edit_member_modal select").trigger("chosen:updated");
+  $("#edit_member_modal").modal("show");
+}
+
+// Centralized error handling for edit member
+function handleEditMemberError(err) {
+  console.error("Edit member error:", err);
+  Swal.fire({
+    icon: "error",
+    title: "Error",
+    text: err.message || "Failed to load member data"
   });
 }
 
@@ -916,13 +950,13 @@ function assign_amendment_proxy(btn) {
   });
 }
 
-// done 2023-08-29
+
 function cancel_bod_proxy(thisElem) {
   const btnCancel = $(thisElem);
   const accountId = $(thisElem).attr("data-id");
 
-  // Hide the modal before showing SweetAlert
   $("#assignProxyBodModal").modal("hide");
+
 
   // First show reason selection
   Swal.fire({
