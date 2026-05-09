@@ -66,7 +66,7 @@ class EnsureUserIsAdmin
         $response->headers->set('X-Transaction-Id', $transactionId);
 
 
-        Log::info("EnsureUserIsAdmin passed, user authorized");
+        // Log::info("EnsureUserIsAdmin passed, user authorized");
 
         return $response;
     }

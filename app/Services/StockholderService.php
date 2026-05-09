@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
-
+use Illuminate\Validation\Rule;
 
 class StockholderService
 {
@@ -333,7 +333,7 @@ class StockholderService
     public function update(EditStockholderRequest $request)
     {
         try {
-            Log::info('Updating stockholder', ['user_id' => $request->id]);
+
             DB::beginTransaction();
 
             $user = User::with('stockholder')->findOrFail($request->id);
@@ -569,14 +569,14 @@ class StockholderService
 
 
         // Track non-member changes
-        $fieldsToTrack = ['corpRep', 'authSignatory'];
+        $fieldsToTrack = ['corpRep', 'authorizedSignatory'];
 
         $isDelinquentMap = ['1' => 'delinquent', '0' => 'active'];
 
         //map field names
         $fieldMap = [
             'corpRep' => 'corporate representative',
-            'authSignatory' => 'authorized signatory'
+            'authorizedSignatory' => 'authorized signatory'
         ];
 
         if ($stockholderAccount->isDelinquent !== $validatedData['isDelinquent']) {
@@ -627,36 +627,37 @@ class StockholderService
         }
     }
 
-    private function processStockholderRoleUpdate(Request $request)
+    private function processStockholderRoleUpdate(Request $request): array| \Illuminate\Http\JsonResponse
     {
 
+        $userId = $request->input('id');
 
-        $id = $request->input('id');
-        $userForStockholder = User::with('stockholder')->findOrFail($id);
+        $userForStockholder = User::with('stockholder', 'stockholderAccount')->where('id', $userId)->where('role', 'stockholder')->first();
+
         $this->validateStockholderUpdateBusinessRules($userForStockholder, $request);
 
-        // Build validated data array manually since Request doesn't have validated() method
+
         $validatedData = [
             'email' => $request->input('email'),
             'stockholder' => $request->input('stockholder'),
-            'voteInPerson' => $request->input('vote_in_person')
+            'voteInPerson' => $userForStockholder->stockholder->accountType === 'corp' ? $request->input('vote_in_person') : 'stockholder',
+            'authorizedSignatory' => $request->input('auth_signatory'),
         ];
 
         $changeTracker = $this->trackStockholderChanges($userForStockholder, $validatedData);
 
         if (empty($changeTracker)) {
-            Log::info('No changes detected for stockholder update', ['user_id' => $id]);
             return response()->json(['message' => 'No changes detected.'], 400);
         }
 
-        $this->updateStockholderEmail($userForStockholder, $request);
-        $this->updateStockholderInfo($userForStockholder, $request);
-        $this->logoutUpdatedUser($id);
+        $this->updateStockholderEmail($userForStockholder, $validatedData);
+        $this->updateStockholderInfo($userForStockholder, $validatedData);
+        $this->logoutUpdatedUser($userId);
 
         ActivityController::log([
             'activityCode' => '00029',
             'accountNo' => $userForStockholder->stockholder->accountNo,
-            'userId' => $id,
+            'userId' => $userId,
             'data' => json_encode($changeTracker)
         ]);
 
@@ -664,28 +665,71 @@ class StockholderService
     }
 
 
-    private function updateStockholderInfo($userForStockholder, $request)
+    private function updateStockholderInfo(User $userForStockholder, array $validatedData): void
     {
-        $voteInPerson   = $request->input('vote_in_person') === null ? null : strtolower($request->input('vote_in_person'));
-
 
         $stockholderInfo = $userForStockholder->stockholder;
 
-        $stockholderInfo->stockholder = $request->stockholder;
+        $stockholderInfo->stockholder = $validatedData['stockholder'];
+
+        // Only update the Authorized Signatory and Vote in Person if the account type is corporate. 
+        $stockholderInfo->authorizedSignatory = $userForStockholder->stockholder->accountType === 'corp' ? $validatedData['authorizedSignatory'] : null;
+
+        // Default the vote in person to 'stockholder' for individual accounts.
+        $voteInPerson   = $validatedData['voteInPerson'] === null ? null : strtolower($validatedData['voteInPerson']);
         $stockholderInfo->voteInPerson = $userForStockholder->stockholder->accountType === 'corp' ? $voteInPerson : 'stockholder';
 
         $stockholderInfo->save();
     }
 
-    private function updateStockholderEmail($userForStockholder, $request)
+    private function updateStockholderEmail(User $userForStockholder, array $validatedData)
     {
 
-        $email = $request->input('email') === null ? null : strtolower($request->input('email'));
+        Log::debug('Updating stockholder email');
+
+        $email = $validatedData['email'] === null ? null : strtolower($validatedData['email']);
+        $authorizedSignatory = $validatedData['authorizedSignatory'] ?? null;
 
         if ($userForStockholder->email !== $email) {
+
+            Log::debug('Stockholder email change detected', [
+                'user_id' => $userForStockholder->id,
+                'old_email' => $userForStockholder->email,
+                'new_email' => $email
+            ]);
+
             if (Auth::user()->cannot('edit stockholder email')) {
-                Log::warning("Stockholder: Unauthorized email edit attempt", ['user_id' => $userForStockholder->id, 'old_email' => $userForStockholder->email, 'new_email' => $email]);
                 throw new ValidationErrorException('You do not have permission to edit this stockholder email.');
+            }
+
+            $existingUsers = User::with('stockholder', 'stockholderAccount')->where('email', $email)->whereNot('id', $userForStockholder->id)->get();
+
+            foreach ($existingUsers as $existingUser) {
+
+
+                switch ($userForStockholder->role) {
+                    case 'stockholder':
+                        $accountOwner  = $existingUser->stockholder->accountType === 'corp' ? $existingUser->stockholder->authorizedSignatory : $existingUser->stockholder->stockholder;
+                        break;
+
+                    case 'corp-rep':
+                        $accountOwner  = $userForStockholder->stockholderAccount->corpRep ?? null;
+                        break;
+
+                    default:
+                        throw new \Exception('Invalid user role: ' . $userForStockholder->role);
+                }
+
+
+
+                Log::debug('Checking existing user for email conflict', [
+                    'existing_account_owner' => $accountOwner,
+                    'new_authorized_signatory' => $authorizedSignatory,
+                ]);
+
+                if ($accountOwner !== $authorizedSignatory) {
+                    throw new ValidationErrorException('The email address is already associated with another account that has a different authorized signatory. Please use a different email address or update the authorized signatory for the existing account. Existing email belongs to ' . $accountOwner);
+                }
             }
         }
 
@@ -696,7 +740,7 @@ class StockholderService
         $userForStockholder->save();
     }
 
-    private function logoutUpdatedUser($id)
+    private function logoutUpdatedUser(string $id): void
     {
 
         // Invalidate the session for the user
@@ -709,9 +753,8 @@ class StockholderService
         ]);
     }
 
-    private function validateStockholderUpdateBusinessRules($userForStockholder, $request)
+    private function validateStockholderUpdateBusinessRules(User $userForStockholder, Request $request)
     {
-
 
         $validator = Validator::make(
             $request->all(),
@@ -722,22 +765,18 @@ class StockholderService
                 'email'             => [
                     'required',
                     'email',
-                    'max:100',
-                    \Illuminate\Validation\Rule::unique('users')->ignore($request->input('id'))
+                    'max:100'
                 ],
                 'vote_in_person' => [
-                    function ($attribute, $value, $fail) use ($userForStockholder) {
-                        if ($userForStockholder->stockholder->accountType === 'corp' && empty($value)) {
-
-                            Log::info('Vote in person field is required for corporate accounts.', [
-                                'message' => 'Vote in person field is required for corporate accounts.',
-                                'field' => $attribute,
-                            ]);
-
-                            $fail('The vote in person field is required for corporate accounts.');
-                        }
-                    },
+                    Rule::requiredIf(
+                        $userForStockholder->stockholder->accountType === 'corp'
+                    ),
                     'in:stockholder,corp-rep'
+                ],
+                'auth_signatory' => [
+                    Rule::requiredIf(
+                        $userForStockholder->stockholder->accountType === 'corp'
+                    ),
                 ],
             ]
         );
@@ -748,7 +787,7 @@ class StockholderService
         }
     }
 
-    private function trackStockholderChanges($userForStockholder, $validatedData)
+    private function trackStockholderChanges(User $userForStockholder, array $validatedData)
     {
 
 
@@ -766,20 +805,17 @@ class StockholderService
 
 
         // Track non-member changes
-        $fieldsToTrack = ['stockholder', 'voteInPerson'];
+        $fieldsToTrack = ['stockholder', 'voteInPerson', 'authorizedSignatory'];
 
         //map field names
         $fieldMap = [
             'stockholder' => 'stockholder',
             'voteInPerson' => 'Online Voter',
+            'authorizedSignatory' => 'authorized signatory'
         ];
 
         foreach ($fieldsToTrack as $field) {
 
-            Log::debug("Checking field: ", [
-                'db' => $stockholderInfo->$field,
-                'validated' => $validatedData[$field]
-            ]);
             if ($stockholderInfo->$field !== $validatedData[$field]) {
                 $changes[$fieldMap[$field]] = [
                     'old' => $stockholderInfo->$field === null ? '(empty)' : $stockholderInfo->$field,

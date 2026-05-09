@@ -20,6 +20,7 @@ use App\Http\Requests\ExportStockholderRequest;
 use App\Http\Requests\GetStockholderRequest;
 use App\Http\Requests\IndexStockholderRequest;
 use App\Http\Requests\StoreStockholderRequest;
+use App\Services\AppHelper;
 use App\Services\StockholderService;
 use App\Services\UtilityService;
 
@@ -290,7 +291,7 @@ class StockholderController extends Controller
             return $userInfo;
         } catch (Exception $e) {
 
-            Log::error($e);
+            AppHelper::logServerError("");
 
             return response()->json([], 500);
         }
