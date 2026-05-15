@@ -19,7 +19,7 @@ class CreateStockholderAccountsTable extends Migration
             $table->string('accountKey', 10)->unique();
             $table->tinyInteger('suffix')->unsigned();
             $table->string('corpRep', 100)->nullable()->default(null);
-            $table->string('authSignatory', 255)->nullable()->default(null);
+            // $table->string('authSignatory', 255)->nullable()->default(null);
             $table->boolean('isDelinquent')->default(false);
             $table->unsignedBigInteger('userId');
             $table->unsignedBigInteger('stockholderId');

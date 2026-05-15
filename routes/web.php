@@ -26,6 +26,7 @@ use App\Http\Controllers\PublicDocumentViewerController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\DeveloperStockController;
+use App\Http\Controllers\OnlineAccountController;
 use App\Http\Controllers\StockholderController;
 use App\Http\Controllers\StockholderOnlineBallotController;
 use App\Http\Controllers\UserController;
@@ -71,6 +72,7 @@ Route::prefix('admin')->middleware([EnsureUserIsAdmin::class])->group(function (
     Route::resource('amendment', AmendmentController::class);
     Route::resource('agenda', AgendaController::class);
     Route::resource('candidate', CandidateController::class);
+    Route::resource('online-accounts', OnlineAccountController::class);
     Route::resource('non-member', NonMemberController::class);
     Route::resource('admin-account', AdminController::class);
 

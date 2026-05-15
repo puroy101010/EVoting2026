@@ -253,52 +253,63 @@ class StockholderService
     public function update(EditStockholderRequest $request)
     {
         try {
-
             DB::beginTransaction();
 
-            $user = User::with('stockholder')->where('id', $request->id)->firstOrFail();
+            $user = User::with('stockholder', 'stockholderAccount.stockholder')
+                ->where('id', $request->id)
+                ->firstOrFail();
 
-            if ($user->role === 'stockholder') {
-                $result = $this->processStockholderUpdate($request, $user);
-                DB::commit();
-                return $result;
-            }
+            $result = $this->processUpdateByUserRole($request, $user);
 
-            if ($user->stockholderAccount->stockholder->accountType === 'corp') {
-                $result = $this->processStockUpdate($request, $user);
-
-                DB::commit();
-
-                Log::info('Corporate representative account updated successfully', ['user_id' => $request->id]);
-                return $result;
-            }
-
-
-            $result = $this->processStockholderAccountIndvRoleUpdate($request);
             DB::commit();
 
-            Log::info('Stockholder account for individual updated successfully', ['user_id' => $request->id]);
             return $result;
         } catch (ValidationErrorException $e) {
             DB::rollBack();
-            Log::info('Validation error in stockholder creation', [
+            Log::warning('Validation error during stockholder update', [
                 'error' => $e->getMessage(),
-                'request_data' => $request->only(['account_number', 'stockholder', 'account_type'])
+                'user_id' => $request->id,
+                'request_data' => $request->only(['id', 'email', 'stockholder'])
             ]);
 
             return response()->json(['message' => $e->getMessage()], 400);
         } catch (Exception $e) {
-
-            UtilityService::logServerError($request, $e, "Error occurred while updating stockholder.");
+            DB::rollBack();
+            AppHelper::logServerError("Error occurred while updating stockholder.", $e, [
+                'user_id' => $request->id,
+                'user_role' => $user->role ?? 'unknown'
+            ]);
             return response()->json([], 500);
         }
     }
 
+    /**
+     * Route update request to appropriate processor based on user role and account type.
+     * 
+     * @param EditStockholderRequest $request
+     * @param User $user
+     * @return array|\Illuminate\Http\JsonResponse
+     * @throws ValidationErrorException
+     */
+    private function processUpdateByUserRole(EditStockholderRequest $request, User $user)
+    {
+        if ($user->role === 'stockholder') {
+            return $this->processStockholderUpdate($request, $user);
+        }
+
+        // For corp-rep role, check if managing corporate or individual account
+        if ($user->stockholderAccount->stockholder->accountType === 'corp') {
+            return $this->processStockUpdate($request, $user);
+        }
+
+        return $this->processStockholderAccountIndvRoleUpdate($request);
+    }
+
+
+
 
     private function processStockholderAccountIndvRoleUpdate(Request $request)
     {
-
-
 
         $this->validateStockholderAccountIndvUpdate($request);
 
@@ -403,14 +414,20 @@ class StockholderService
         $isDelinquent = (int) $request->input('delinquent');
 
         $authorizedSignatory = $isCorpAccount
-            ? $request->input('auth_signatory')
-            : $userForCorpRep->stockholderAccount->stockholder->stockholder;
+            ? $request->input('corp_rep')
+            : $request->input('stockholder');
+
+        Log::debug('signatory', [
+            'auth_signatory' => $request->input('auth_signatory'),
+            'corp_rep' => $request->input('corp_rep'),
+            'is_corp_account' => $isCorpAccount
+        ]);
 
         $validatedData = [
             'email' => $corpRepEmail,
             'corpRep' => $corpRep,
             'isDelinquent' => (int) $isDelinquent,
-            'authSignatory' =>  $authorizedSignatory
+            'authorizedSignatory' =>  $authorizedSignatory
         ];
 
 
@@ -551,6 +568,7 @@ class StockholderService
     {
 
         $userId = $userForStockholder->id;
+        $newStockholder = $request->input('stockholder');
 
         $this->validateStockholderUpdateBusinessRules($userForStockholder, $request);
         $isCorpAccount = $userForStockholder->stockholder->accountType === 'corp';
@@ -558,12 +576,18 @@ class StockholderService
 
         $validatedData = [
             'email' => $request->input('email'),
-            'stockholder' => $request->input('stockholder'),
+            'stockholder' => $newStockholder,
             'voteInPerson' => $isCorpAccount
                 ? $request->input('vote_in_person')
                 : 'stockholder',
-            'authorizedSignatory' => $isCorpAccount ? $request->input('auth_signatory') : $userForStockholder->stockholder->stockholder,
+            'authorizedSignatory' => $isCorpAccount
+                ? $request->input('auth_signatory')
+                : $newStockholder,
         ];
+
+        Log::debug(
+            'validated' . json_encode($validatedData)
+        );
 
         $changeTracker = $this->trackStockholderChanges($userForStockholder, $validatedData);
 
@@ -612,7 +636,6 @@ class StockholderService
      */
     private function updateStockholderEmail(User $userForStockholder, array $validatedData): void
     {
-        Log::debug('Updating stockholder email');
 
         $userId = $userForStockholder->id;
 
@@ -680,7 +703,7 @@ class StockholderService
             'stockholder' => $user->stockholder->accountType === 'corp'
                 ? $user->stockholder->authorizedSignatory
                 : $user->stockholder->stockholder,
-            'corp-rep' => $user->stockholder->accountType === 'corp'
+            'corp-rep' => $user->stockholderAccount->stockholder->accountType === 'corp'
                 ? $user->stockholderAccount->corpRep
                 : $user->stockholderAccount->stockholder->stockholder,
             default => throw new ValidationErrorException("Authorized signatory information is required to validate email changes for this account.")
@@ -713,6 +736,12 @@ class StockholderService
         foreach ($emailConflictUsers as $conflictingUser) {
             $conflictingUserSignatory = $this->getAuthorizedSignatory($conflictingUser);
             if ($conflictingUserSignatory !== $newSignatory) {
+
+                Log::warning('Email conflict detected during stockholder update', [
+                    'conflicting_signatory' => $conflictingUserSignatory,
+                    'new_signatory' => $newSignatory,
+                ]);
+
                 throw new ValidationErrorException(
                     'The email address is already associated with another account that has a different authorized signatory. '
                         . 'Please use a different email address or update the authorized signatory for the existing account. '
