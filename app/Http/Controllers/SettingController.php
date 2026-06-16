@@ -29,7 +29,7 @@ class SettingController extends Controller
         try {
 
             Log::info('Viewed settings page');
-            return view('admin.settings.settings', [
+            return view('admin.Settings.settings', [
                 "config" => AppController::app_setting(),
             ]);
         } catch (Exception $e) {
