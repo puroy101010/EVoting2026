@@ -1,0 +1,254 @@
+
+@font-face {
+	src: url(Chapaza.ttf);
+	font-family: chapaza-bold;
+  }
+  
+@font-face {
+	src: url(AvenirLTStd-Black.otf);
+	font-family: Avenir LT Std;
+  }
+  
+@font-face {
+	src: url(AvenirLTStd-Roman.otf);
+	font-family: AvenirLTStd-Roman;
+  }
+
+
+.card .card-header .card-title {
+  font-family: chapaza-bold;
+}
+
+
+.badge-mid-green {
+	color: #ffffff;
+	background-color:#6b8e4e;
+	padding-right: 0.6em;
+	padding-left: 0.6em;
+  }
+  
+.badge-dark-green {
+    color: #ffffff;
+    background-color:#304c40;
+  }
+
+  .btn-mid-green {
+	color: #ffffff;
+	background-color:#6b8e4e;;
+  }
+  
+  .btn-mid-green:hover {
+	color: #304c40;
+	background-color:#6b8e4e;
+	border-color: #304c40;
+  }
+
+.active {
+	background-color: #6b8e4e!important;
+  }
+
+/*------------Media Query-------------*/
+
+/* (1366x768) WXGA Display */
+@media  screen and (max-width: 1366px) {
+
+    .card .card-header {
+        padding: 3px;
+    } 
+    
+    .card-header .card-title {
+        font-size: 18px;
+        margin: 2px;
+    }
+
+    #proxy_holders_table .th-padding {
+        font-size: 12px;
+        padding: 5px;
+    }
+
+    #proxy_holders_table .td-padding {
+        font-size: 12px;
+        padding: 5px;
+    }
+
+}
+
+/* For 1024 Resolution */  
+@media only screen   
+and (min-device-width : 768px)   
+and (max-device-width : 1024px) {
+ 
+    .card .card-header {
+        padding: 3px;
+    } 
+    
+    .card-header .card-title {
+        font-size: 18px;
+        margin: 2px;
+    }
+
+    #proxy_holders_table .th-padding {
+        font-size: 12px;
+        padding: 5px;
+    }
+
+    #proxy_holders_table .td-padding {
+        font-size: 12px;
+        padding: 5px;
+    }
+
+}
+
+/* ----------- iPhone X ----------- */
+/* Portrait and Landscape */
+@media only screen 
+  and (min-device-width: 375px) 
+  and (max-device-width: 812px) 
+  and (-webkit-min-device-pixel-ratio: 3) { 
+
+    .breadcrumb .breadcrumb-item {
+        font-size: 12px;
+    }
+
+    .dflex-button {
+		display: flex!important;
+		justify-content: center!important;
+		margin: 2px;
+	}
+
+    #proxy_holders_table .th-modal {
+		font-size: 11px;
+		padding: 4px;
+	}
+
+	#proxy_holders_table .td-padding {
+		font-size: 10px;
+		padding: 5px;
+	}
+
+}
+
+/* ----------- iPhone 6, 6S, 7 and 8 ----------- */
+/* Portrait and Landscape */
+@media only screen 
+  and (min-device-width: 375px) 
+  and (max-device-width: 667px) 
+  and (-webkit-min-device-pixel-ratio: 2) { 
+
+    .breadcrumb .breadcrumb-item {
+        font-size: 12px;
+    }
+
+    .dflex-button {
+		display: flex!important;
+		justify-content: center!important;
+		margin: 2px;
+	}
+
+    #proxy_holders_table .th-modal {
+		font-size: 11px;
+		padding: 4px;
+	}
+
+	#proxy_holders_table .td-padding {
+		font-size: 10px;
+		padding: 5px;
+	}
+
+}
+
+/* ----------- iPhone 5, 5S, 5C and 5SE ----------- */
+/* Portrait and Landscape */
+@media only screen 
+  and (min-device-width: 320px) 
+  and (max-device-width: 568px)
+  and (-webkit-min-device-pixel-ratio: 2) {
+
+    .breadcrumb .breadcrumb-item {
+        font-size: 12px;
+    }
+
+    .dflex-button {
+		display: flex!important;
+		justify-content: center!important;
+		margin: 2px;
+	}
+
+    .card .card-title {
+        font-size: 14px;
+    }
+
+    #proxy_holders_table .th-modal {
+		font-size: 11px;
+		padding: 4px;
+	}
+
+	#proxy_holders_table .td-padding {
+		font-size: 10px;
+		padding: 5px;
+	}
+
+}
+
+/*------JioPhone 2--------*/
+@media only screen and (max-device-width: 240px) {
+
+    .breadcrumb .breadcrumb-item {
+        font-size: 12px;
+    }
+
+    .dflex-button {
+		display: flex!important;
+		justify-content: center!important;
+		margin: 2px;
+	}
+
+    .card .card-title {
+        font-size: 14px;
+    }
+
+    #proxy_holders_table .th-modal {
+		font-size: 11px;
+		padding: 4px;
+	}
+
+	#proxy_holders_table .td-padding {
+		font-size: 10px;
+		padding: 5px;
+	}
+
+}
+
+/*---------Galaxy Fold-----------*/
+@media only screen 
+  and (min-device-width: 280px) 
+  and (max-device-width: 653px)
+  and (-webkit-min-device-pixel-ratio: 2) {
+
+    .breadcrumb .breadcrumb-item {
+        font-size: 12px;
+    }
+
+    .dflex-button {
+		display: flex!important;
+		justify-content: center!important;
+		margin: 2px;
+	}
+
+    .card .card-title {
+        font-size: 14px;
+    }
+
+    #proxy_holders_table .th-modal {
+		font-size: 11px;
+		padding: 4px;
+	}
+
+	#proxy_holders_table .td-padding {
+		font-size: 10px;
+		padding: 5px;
+	}
+
+
+}
+

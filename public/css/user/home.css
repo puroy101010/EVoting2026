@@ -1,0 +1,1531 @@
+@font-face {
+  src: url(Chapaza.ttf);
+  font-family: chapaza-bold;
+}
+
+@font-face {
+  src: url(AvenirLTStd-Black.otf);
+  font-family: Avenir LT Std;
+}
+
+@font-face {
+  src: url(AvenirLTStd-Roman.otf);
+  font-family: AvenirLTStd-Roman;
+  
+}
+
+
+* {
+  box-sizing: border-box;
+}
+
+.h3-name {
+  font-family: chapaza-bold;
+}
+
+.h5-email, .h4-acct {
+  font-family: Avenir LT Std;
+}
+
+.h5-email, .h4-acct {
+  color: #b0d182;
+}
+
+.h3-name, .h4-acct, .h5-email {
+  text-align: right;
+}
+
+.h2-annual-title {
+  font-family: chapaza-bold;
+  font-size: 2.5em !important;
+}
+
+.card-title {
+  font-size: 1.563em;
+  font-family: chapaza-bold;
+}
+
+.card-header .card-title {
+  color: #ffffff;
+}
+
+.card .th-head {
+  font-family: 'Avenir LT Std';
+}
+
+#Calendar_table .th-head, .td-head {
+  font-family: AvenirLTStd-Roman;
+  color: #ffffff;
+}
+
+.wrimagecard .h4-label {
+  font-family: AvenirLTStd-Roman;
+}
+
+.wrimagecard-topimage_title .h4-label {
+  color: #6b8e4e;
+}
+
+
+.grow {
+/*  display: inline-block;*/
+  transition-duration: 0.3s;
+  transition-property: transform;
+  -webkit-tap-highlight-color: transparent;
+  transform: translateZ(0);
+  box-shadow: 0 0 1px transparent;
+}
+.grow:hover {
+  transform: scale(1.1);
+  color: #ffffff;
+}
+
+.card-nav {
+  color: #000000;
+}
+
+.h4-label {
+  text-align: center;
+}
+
+.wrimagecard .fas-i-con {
+  font-size: 4em;
+}
+
+
+.wrimagecard{ 
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  text-align: left;
+  position: relative;
+  background: #fff;
+  box-shadow: 12px 15px 20px 0px rgba(46,61,73,0.15);
+  border-radius: 4px;
+  width: 100%;
+  transition: all 0.3s ease;
+}
+
+.wrimagecard .fa{
+  position: relative;
+  font-size: 70px;
+}
+
+.wrimagecard-topimage_header{
+  padding: 15px;
+}
+
+a.wrimagecard:hover, .wrimagecard-topimage:hover {
+    box-shadow: 2px 4px 8px 0px rgba(46,61,73,0.2);
+}
+
+.wrimagecard-topimage a {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.wrimagecard-topimage_title {
+    padding: 20px 24px;
+    height: 80px;
+    padding-bottom: 0.75rem;
+    position: relative;
+    background-color: #ffffff;
+}
+
+.wrimagecard-topimage a {
+    border-bottom: none;
+    text-decoration: none;
+    color: #525c65;
+    transition: color 0.3s ease;
+}
+
+.blink-a{
+    font-size: 29px;
+    font-family: cursive;
+    color: #fbe9e7;
+    border-bottom: 2px solid #fff;
+  }
+
+  .blink-a:hover {
+    color: #e0f2f1;
+    text-decoration: none;
+  }
+
+  .blink {
+    animation: blink 1s linear infinite;
+  }
+
+  @keyframes blink{
+    0%{opacity: 0;}
+    50%{opacity: .5;}
+    100%{opacity: 1;}
+  }
+
+/* .h4-content {
+  color: #000000;
+  font-size: 20px;
+  text-align: justify;
+  font-family: Arial, Helvetica, sans-serif;
+  
+} */
+
+
+.span_pseudo, .chiller_cb .span-box:before, .chiller_cb .span-box:after {
+  content: "";
+  display: inline-block;
+  background: #fff;
+  width: 0;
+  height: 0.2rem;
+  position: absolute;
+  transform-origin: 0% 0%;
+}
+
+.chiller_cb {
+  position: relative;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+}
+.chiller_cb input {
+  display: none;
+}
+.chiller_cb input:checked ~ .span-box {
+  background: #304c40;
+  border-color: #304c40;
+}
+.chiller_cb input:checked ~ .span-box:before {
+  width: 1rem;
+  height: 0.15rem;
+  transition: width 0.1s;
+  transition-delay: 0.3s;
+}
+.chiller_cb input:checked ~ .span-box:after {
+  width: 0.4rem;
+  height: 0.15rem;
+  transition: width 0.1s;
+  transition-delay: 0.2s;
+}
+.chiller_cb input:disabled ~ .span-box {
+  background: #ececec;
+  border-color: #dcdcdc;
+}
+.chiller_cb input:disabled ~ label {
+  color: #dcdcdc;
+}
+.chiller_cb input:disabled ~ label:hover {
+  cursor: default;
+}
+.chiller_cb label {
+  padding-left: 2rem;
+  position: relative;
+  z-index: 2;
+  font-family: Avenir LT Std;
+  color: #b0d182;
+  cursor: pointer;
+  font-size: 17px;
+  margin-bottom:0;
+}
+.chiller_cb .span-box {
+  display: inline-block;
+  width: 1.2rem;
+  height: 1.2rem;
+  border: 2px solid #ccc;
+  position: absolute;
+  left: 0;
+  transition: all 0.2s;
+  z-index: 1;
+  box-sizing: content-box;
+}
+.chiller_cb .span-box:before {
+  transform: rotate(-55deg);
+  top: 1rem;
+  left: 0.37rem;
+}
+.chiller_cb .span-box:after {
+  transform: rotate(35deg);
+  bottom: 0.35rem;
+  left: 0.2rem;
+}
+
+/*--------All files Modal-------------*/
+#allFilesModal .close {
+  float: right;
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #ffffff !important;
+  text-shadow: 0 1px 0 #fff;
+  opacity: 0.5;
+}
+
+#allFilesModal .modal-header {
+  background-color: #304c40;
+  border: 1px solid #304c40;
+}
+
+#allFilesModal .modal-title {
+  color: #ffffff;
+  font-family: chapaza-bold;
+}
+
+#allFilesModal .list-a {
+  color: #6b8e4e;
+  font-family: Avenir LT Std;
+}
+
+#allFilesModal .btn-custom {
+  color: #fff;
+  background-color: #6b8e4e;
+  border-color: #6b8e4e;
+  font-family: Avenir LT Std;
+}
+
+/*-----Download Proxy Form--------*/
+
+#downloadProxyModal .close {
+  float: right;
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #ffffff !important;
+  text-shadow: 0 1px 0 #fff;
+  opacity: 0.5;
+}
+
+#downloadProxyModal .modal-header {
+  background-color: #304c40;
+  border: 1px solid #304c40;
+}
+
+#downloadProxyModal .modal-title {
+  color: #ffffff;
+  font-family: chapaza-bold;
+}
+
+#downloadProxyModal .th-prox-head {
+  color: #ffffff;
+  font-family: Avenir LT Std;
+}
+
+#downloadProxyModal .td-prox-head {
+  color: #6b8e4e;
+  font-family: Avenir LT Std;
+}
+
+#downloadProxyModal .btn-custom2 {
+  color: #fff;
+  background-color: #304c40;
+  border-color: #304c40;
+  font-family: Avenir LT Std;
+}
+
+#downloadProxyModal .btn-custom {
+  color: #fff;
+  background-color: #6b8e4e;
+  border-color: #6b8e4e;
+  font-family: Avenir LT Std;
+}
+
+/*----------Casting in Person CSS---------------*/
+#in_person_agreement_modal .close {
+  float: right;
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #ffffff !important;
+  text-shadow: 0 1px 0 #fff;
+  opacity: 0.5;
+}
+
+#in_person_agreement_modal .modal-title {
+  color: #ffffff;
+  font-family: chapaza-bold;
+}
+
+#in_person_agreement_modal .modal-header {
+  background-color: #304c40;
+  border: 1px solid #304c40;
+}
+
+#in_person_agreement_modal .modal-body .h4-content {
+  color: #6b8e4e;
+  font-size: 1.25em;
+  text-align: justify;
+  font-family: AvenirLTStd-Roman;
+}
+
+#in_person_agreement_modal .h5-title-terms {
+  color: #304c40;
+  font-family: chapaza-bold;
+  font-weight: bold;
+  font-size: 1.375em;
+}
+
+#in_person_agreement_modal .modal-body .input_person_user {
+  color: #304c40;
+  font-family: Avenir LT Std;
+}
+
+#in_person_agreement_modal .btn-custom {
+  color: #fff;
+  background-color: #6b8e4e;
+  border-color: #6b8e4e;
+  font-family: Avenir LT Std;
+}
+
+/*----------Casting in Proxy CSS---------------*/
+#proxy_agreement_modal .close {
+  float: right;
+  font-size: 1.35rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #ffffff !important;
+  text-shadow: 0 1px 0 #fff;
+  opacity: 0.5;
+}
+
+#proxy_agreement_modal .modal-title {
+  color: #ffffff;
+  font-family: chapaza-bold;
+}
+
+#proxy_agreement_modal .modal-header {
+  background-color: #304c40;
+  border: 1px solid #304c40;
+}
+
+#proxy_agreement_modal .modal-body .h4-content {
+  color: #6b8e4e;
+  font-size: 1.25em;
+  text-align: justify;
+  font-family: AvenirLTStd-Roman;
+}
+
+#proxy_agreement_modal .h5-title-terms {
+  color: #304c40;
+  font-family: chapaza-bold;
+  font-weight: bold;
+  font-size: 1.375em;
+}
+
+#proxy_agreement_modal .modal-body .input_person_user {
+  color: #304c40;
+  font-family: Avenir LT Std;
+}
+
+#proxy_agreement_modal .btn-custom {
+  color: #fff;
+  background-color: #6b8e4e;
+  border-color: #6b8e4e;
+  font-family: Avenir LT Std;
+}
+
+
+/* ----------- iPad Pro 12.9" ----------- */
+
+/* Portrait and Landscape */
+@media only screen 
+  and (min-device-width: 1024px) 
+  and (max-device-width: 1366px)
+  and (-webkit-min-device-pixel-ratio: 2) {
+
+
+    /* .image-logo {
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+      width: 100%;
+  } */
+
+  .i-con {
+    font-size: 30px;
+  }
+
+  .h4-label {
+    font-size: 14px;
+    text-align: center;
+  }
+
+  .h3-name, .h4-acct {
+    margin-right: 30px;
+  }
+  
+}
+
+
+/* ----------- iPad 1, 2, Mini and Air ----------- */
+
+/* Portrait and Landscape */
+@media only screen 
+  and (min-device-width: 768px) 
+  and (max-device-width: 1024px) 
+  and (-webkit-min-device-pixel-ratio: 1) {
+
+    .col-left-content, .col-right-content {
+      flex: 0 0 100% !important;
+      max-width: 100% !important
+    }
+
+   .h2-annual-title {
+    font-size: 20px;
+   }
+
+  .i-con {
+    font-size: 35px;
+  }
+
+  .h4-label {
+    font-size: 13px;
+    text-align: center
+  }
+
+  .wrimagecard {
+       margin-top: 13px;
+    }
+   
+
+}
+
+/* iPhone X Portrait and Landscape */
+@media only screen 
+  and (min-device-width: 375px) 
+  and (max-device-width: 812px) 
+  and (-webkit-min-device-pixel-ratio: 3) { 
+
+    #div-info .h2-annual-title {
+      text-align: center;
+      font-size: 1.563em !important;
+    }
+
+    #div-info .h3-name {
+      text-align: center;
+      font-size: 1.25em !important;
+    }
+
+    #div-info .h4-acct, .h5-email{
+      text-align: center;
+      font-size: 15px;
+    }
+
+    .card-size .card-title {
+      font-size: 20px;
+      font-weight: bold;
+      margin: 0px;
+    }
+
+    .card-size .th-head {
+      font-size: 12px;
+    }
+
+    .wrimagecard .fas-i-con {
+      font-size: 2em;
+    }
+
+    .wrimagecard .wrimagecard-topimage_header {
+      padding: 10px;
+    }
+
+    .wrimagecard .h4-label {
+      font-size: 12px;
+    }
+
+    #in_person_agreement_modal .modal-body .input_person_user {
+      font-size: 1.25em;
+    }
+
+    #in_person_agreement_modal #input-proxy {
+      width: 230px;
+    }
+
+    #in_person_agreement_modal .h5-title-terms {
+      font-size: 1.063em;
+    }
+
+    #in_person_agreement_modal .modal-body .h4-content {
+      font-size: 0.938em;
+    }
+  
+
+    #in_person_agreement_modal #input-inperson {
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    #in_person_agreement_modal .modal-header {
+      padding: 10px;
+    }
+
+    #in_person_agreement_modal .modal-footer {
+      padding: 2px;
+    }
+
+    #in_person_agreement_modal .modal-title {
+      font-size: 16px;
+    }
+
+    #in_person_agreement_modal .inper_br {
+      display: none;
+    }
+
+    /* #in_person_agreement_modal .chiller_cb label {
+      padding-left: 2rem;
+      font-size: 14px;
+    } */
+
+    #in_person_agreement_modal .chiller_cb label {
+      font-size: 0.875em;
+    }
+
+    #in_person_agreement_modal .btn-custom {
+      padding: 0.188rem 0.5rem;
+      font-size: 0.813rem;
+    }
+    
+
+    /*----------CASTING PROXY-------*/
+    #proxy_agreement_modal .modal-body .input_person_user {
+      font-size: 1.25em;
+    }
+
+    #proxy_agreement_modal #input-proxy {
+      width: 230px;
+    }
+
+    #proxy_agreement_modal .h5-title-terms {
+      font-size: 1.063em;
+    }
+
+    #proxy_agreement_modal .modal-body .h4-content {
+      font-size: 0.938em;
+    }
+  
+    #proxy_agreement_modal .chiller_cb label {
+      font-size: 0.875em;
+    }
+    
+    /* #proxy_agreement_modal #input-proxy {
+      font-size: 16px;
+      font-weight: bold;
+    } */
+
+    #proxy_agreement_modal .modal-header {
+      padding: 10px;
+    }
+
+    #proxy_agreement_modal .modal-footer {
+      padding: 2px;
+    }
+
+    #proxy_agreement_modal .modal-title {
+      font-size: 16px;
+    }
+    
+    #proxy_agreement_modal .inper_br {
+      display: none;
+    }
+
+    #proxy_agreement_modal .btn-custom {
+      padding: 0.188rem 0.5rem;
+      font-size: 0.813rem;
+    }
+
+}
+
+/* iPhone 6, 6S, 7 and 8 Portrait and Landscape */
+@media only screen 
+  and (min-device-width: 375px) 
+  and (max-device-width: 667px) 
+  and (-webkit-min-device-pixel-ratio: 2) {
+
+
+    #div-info .h2-annual-title {
+      text-align: center;
+      font-size: 1.563em !important;
+    }
+
+    #div-info .h3-name {
+      text-align: center;
+      font-size: 1.25em !important;
+    }
+
+    #div-info .h4-acct, .h5-email{
+      text-align: center;
+      font-size: 15px;
+    }
+
+    .card-size .card-title {
+      font-size: 20px;
+      font-weight: bold;
+      margin: 0px;
+    }
+
+    .card-size .th-head {
+      font-size: 12px;
+    }
+
+    .wrimagecard .fas-i-con {
+      font-size: 2em;
+    }
+
+    .wrimagecard .wrimagecard-topimage_header {
+      padding: 10px;
+    }
+
+    .wrimagecard .h4-label {
+      font-size: 12px;
+    }
+     
+    /*----------CASTING INPERSON------*/
+    
+    #in_person_agreement_modal .modal-body .input_person_user {
+      font-size: 1.25em;
+    }
+
+    #in_person_agreement_modal #input-proxy {
+      width: 230px;
+    }
+
+    #in_person_agreement_modal .h5-title-terms {
+      font-size: 1.063em;
+    }
+
+    #in_person_agreement_modal .modal-body .h4-content {
+      font-size: 0.938em;
+    }
+
+    #in_person_agreement_modal .chiller_cb label {  
+      font-size: 0.875em
+    }
+
+    #in_person_agreement_modal #input-inperson {
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    #in_person_agreement_modal .modal-header {
+      padding: 10px;
+    }
+
+    #in_person_agreement_modal .modal-footer {
+      padding: 2px;
+    }
+
+    #in_person_agreement_modal .modal-title {
+      font-size: 16px;
+    }
+
+    #in_person_agreement_modal .inper_br {
+      display: none;
+    }
+
+    #in_person_agreement_modal .btn-custom {
+      padding: 0.188rem 0.5rem;
+      font-size: 0.813rem;
+    }
+
+    /*---------CASTING PROXY-----------*/
+    #proxy_agreement_modal .modal-body .input_person_user {
+      font-size: 1.25em;
+    }
+
+    #proxy_agreement_modal #input-proxy {
+      width: 230px;
+    }
+
+    #proxy_agreement_modal .h5-title-terms {
+      font-size: 1.063em;
+    }
+
+    #proxy_agreement_modal .modal-body .h4-content {
+      font-size: 0.938em;
+    }
+  
+    #proxy_agreement_modal .chiller_cb label {
+      font-size: 0.875em;
+    }
+
+    /* #proxy_agreement_modal #input-proxy {
+      font-size: 16px;
+      font-weight: bold;
+    } */
+
+    #proxy_agreement_modal .modal-header {
+      padding: 10px;
+    }
+
+    #proxy_agreement_modal .modal-footer {
+      padding: 2px;
+    }
+
+    #proxy_agreement_modal .modal-title {
+      font-size: 16px;
+    }
+
+    #proxy_agreement_modal .inper_br {
+      display: none;
+    }
+
+    #proxy_agreement_modal .btn-custom {
+      padding: 0.188rem 0.5rem;
+      font-size: 0.813rem;
+    }
+  
+}
+
+/* iPhone 5, 5S, 5C and 5SE Portrait and Landscape */
+@media only screen 
+  and (min-device-width: 320px) 
+  and (max-device-width: 568px)
+  and (-webkit-min-device-pixel-ratio: 2) {
+
+    #div-info .h2-annual-title {
+      text-align: center;
+      font-size: 1.313em !important;
+    }
+
+    #div-info .h3-name {
+      text-align: center;
+      font-size: 1.125em !important;
+    }
+
+    #div-info .h4-acct, .h5-email{
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .card-size .card-title {
+      font-size: 15px;
+      font-weight: bold;
+      margin: 0px;
+    }
+
+    .card-size .th-head {
+      font-size: 10px;
+    }
+
+    .card-size .td-head {
+      font-size: 11px;
+    }
+
+    .wrimagecard .fas-i-con {
+      font-size: 2em;
+    }
+
+    .wrimagecard .wrimagecard-topimage_header {
+      padding: 8px;
+    }
+
+    .wrimagecard .h4-label {
+      font-size: 12px;
+    }
+
+    /*---------DOWNLOAD PROXY MODAL-------------*/
+    #downloadProxyModal .modal-title {
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    #downloadProxyModal .modal-header {
+      padding: 10px;
+    }
+
+    #downloadProxyModal .modal-footer {
+      padding: 1px;
+    }
+
+    #downloadProxyModal .modal-footer .btn-danger {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.7875rem;
+    }
+
+
+    #downloadProxyModal .th-prox-head {
+      font-size: 12px;
+      text-align: center;
+    }
+
+    #downloadProxyModal .td-prox-head {
+      font-size: 11px;
+    }
+
+    #downloadProxyModal .btn-download-proxy-form {
+      padding: 0;
+      margin: 0;
+      font-size: 8px;
+    }
+
+    /*---------DOWNLOAD SPA MODAL----------*/
+    #download_spa_modal .modal-title {
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    #download_spa_modal .modal-header {
+      padding: 10px;
+    }
+
+    #download_spa_modal .modal-footer {
+      padding: 1px;
+    }
+
+    #download_spa_modal .modal-footer .btn-danger {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.7875rem;
+    }
+
+    #download_spa_modal .th-prox-head {
+      font-size: 12px;
+      text-align: center;
+    }
+
+    #download_spa_modal .td-prox-head {
+      font-size: 11px;
+    }
+
+    #download_spa_modal .btn-download-proxy-form {
+      padding: 0;
+      margin: 0;
+      font-size: 8px;
+    }
+
+    /*-----------CASTING INPERSON----------*/
+    #in_person_agreement_modal .modal-body .input_person_user {
+      font-size: 1.25em;
+    }
+
+    #in_person_agreement_modal #input-proxy {
+      width: 230px;
+    }
+
+    #in_person_agreement_modal .h5-title-terms {
+      font-size: 1.063em;
+    }
+
+    #in_person_agreement_modal .modal-body .h4-content {
+      font-size: 0.938em;
+    }
+
+    #in_person_agreement_modal .btn-custom {
+      padding: 0.188rem 0.5rem;
+      font-size: 0.813rem;
+    }
+  
+    #in_person_agreement_modal .chiller_cb label {
+      font-size: 0.875em;
+    }
+
+    #in_person_agreement_modal #input-inperson {
+      font-size: 16px;
+      font-weight: bold;
+    }
+
+    #in_person_agreement_modal .modal-header {
+      padding: 10px;
+    }
+
+    #in_person_agreement_modal .modal-footer {
+      padding: 2px;
+    }
+
+    #in_person_agreement_modal .modal-title {
+      font-size: 16px;
+    }
+
+    #in_person_agreement_modal .inper_br {
+      display: none;
+    }
+
+    /*-----------CASTING PROXY----------*/
+    #proxy_agreement_modal .modal-body .input_person_user {
+      font-size: 1.25em;
+    }
+
+    #proxy_agreement_modal #input-proxy {
+      width: 230px;
+    }
+
+    #proxy_agreement_modal .h5-title-terms {
+      font-size: 1.063em;
+    }
+
+    #proxy_agreement_modal .chiller_cb label {
+      padding: 0;
+      font-size: 0.875em!important;
+      margin-top: 10px;
+    }
+
+    #proxy_agreement_modal .modal-body .h4-content {
+      font-size: 0.938em;
+    }
+  
+    #proxy_agreement_modal .chiller_cb label {
+      font-size: 0.875em;
+    }
+/* 
+    #proxy_agreement_modal #input-proxy {
+      font-size: 16px;
+      font-weight: bold;
+    } */
+
+    #proxy_agreement_modal .modal-header {
+      padding: 10px;
+    }
+
+    #proxy_agreement_modal .modal-footer {
+      padding: 2px;
+    }
+
+    #proxy_agreement_modal .modal-title {
+      font-size: 16px;
+    }
+
+    #proxy_agreement_modal .inper_br {
+      display: none;
+    }
+
+    #proxy_agreement_modal .btn-custom {
+      padding: 0.188rem 0.5rem;
+      font-size: 0.813rem;
+    }
+  
+}
+
+
+/*---------Galaxy Fold-----------*/
+@media only screen 
+  and (min-device-width: 280px) 
+  and (max-device-width: 653px)
+  and (-webkit-min-device-pixel-ratio: 2) {
+
+    #div-info .h2-annual-title {
+      text-align: center;
+      font-size: 1.313em !important;
+    }
+
+
+    #div-info .h3-name {
+      text-align: center;
+      font-size: 1.125em !important;
+    }
+
+    .h4-acct {
+      text-align: center;
+      font-size: 18px;
+    }
+
+    .wrimagecard {
+      margin: 10px;
+    }
+
+    #div-info .h2-annual-title {
+      text-align: center;
+      font-size: 17px;
+    }
+  
+    #div-info .h3-name {
+      text-align: center;
+      font-size: 19px;
+    }
+  
+    #div-info .h4-acct, .h5-email{
+      text-align: center;
+      font-size: 14px;
+    }
+  
+    .card-size .card-title {
+      font-size: 15px;
+      font-weight: bold;
+      margin: 0px;
+    }
+  
+    .card-size .th-head {
+      font-size: 10px;
+    }
+  
+    .card-size .td-head {
+      font-size: 11px;
+    }
+
+    /*-----------CASTING INPERSON----------*/
+    #in_person_agreement_modal .modal-body .input_person_user {
+      font-size: 1.25em;
+    }
+
+    #in_person_agreement_modal #input-proxy {
+      width: 180px;
+    }
+
+    #in_person_agreement_modal .h5-title-terms {
+      font-size: 1.063em;
+    }
+
+    #in_person_agreement_modal .modal-body .h4-content {
+      font-size: 0.938em;
+    }
+
+    #in_person_agreement_modal .btn-custom {
+      padding: 0.188rem 0.5rem;
+      font-size: 0.813rem;
+    }
+  
+    #in_person_agreement_modal .chiller_cb label {
+      font-size: 0.875em;
+    }
+
+    #in_person_agreement_modal .modal-header {
+      padding: 10px;
+    }
+
+    #in_person_agreement_modal .modal-footer {
+      padding: 2px;
+    }
+
+    #in_person_agreement_modal .modal-title {
+      font-size: 16px;
+    }
+
+    
+    #in_person_agreement_modal .btn-custom {
+      padding: 0.188rem 0.5rem;
+      font-size: 0.813rem;
+    }
+
+
+     /*-----------CASTING PROXY----------*/
+     #proxy_agreement_modal .modal-body .input_person_user {
+      font-size: 1.25em;
+    }
+
+    #proxy_agreement_modal #input-proxy {
+      width: 180px;
+    }
+
+    #proxy_agreement_modal .h5-title-terms {
+      font-size: 1.063em;
+    }
+
+
+    #proxy_agreement_modal .modal-body .h4-content {
+      font-size: 0.938em;
+    }
+  
+    #proxy_agreement_modal .chiller_cb label {
+      font-size: 0.875em;
+    }
+
+
+    #proxy_agreement_modal .btn-custom {
+      padding: 0.188rem 0.5rem;
+      font-size: 0.813rem;
+    }
+
+
+}
+
+@media only screen and (min-width: 428px) and (max-width: 767px) { 
+   
+
+ }
+ 
+
+ /*-------Microsoft Lumia 640 XL-------*/
+ @media only screen 
+   and (max-width : 720px) 
+   and (max-height : 1280px) {
+   
+
+   .col-right-content .col-col {
+      margin: 0 auto;
+      display: block;
+   }
+
+   .wrimagecard .h4-label {
+      font-size: 10px;
+  }
+
+  .wrimagecard .fas-i-con {
+      font-size: 2em;
+  }
+}
+
+
+/*------JioPhone 2--------*/
+@media only screen and (max-device-width: 240px)  {
+
+  #div-info .h2-annual-title {
+    text-align: center;
+    font-size: 1.313em !important;
+  }
+
+
+  #div-info .h3-name {
+    text-align: center;
+    font-size: 1.125em !important;
+  }
+
+
+  #div-info .h4-acct, .h5-email{
+    text-align: center;
+    font-size: 10px;
+  }
+
+  .card-size .card-title {
+    font-size: 15px;
+  }
+
+  .card-size .th-head {
+    font-size: 9px;
+    padding: 2px;
+  }
+
+  .card-size .td-head {
+    font-size: 9px;
+    padding: 2px;
+  }
+
+  .wrimagecard {
+    margin: 7px;
+  }
+
+  #downloadProxyModal .modal-title {
+    font-size: 10px;
+    font-weight: bold;
+  }
+
+  #downloadProxyModal .modal-header {
+    padding: 5px;
+  }
+
+  #downloadProxyModal .modal-footer {
+    padding: 0px;
+  }
+
+  #downloadProxyModal .th-prox-head, .td-prox-head {
+    font-size: 10px;
+  }
+
+  #downloadProxyModal .btn-download-proxy-form {
+    padding: 2px;
+    margin: 0;
+    font-size: 7px;
+  }
+
+  #downloadProxyModal .modal-body {
+    padding: 4px;
+  }
+
+  #downloadProxyModal .btn-danger {
+    padding: 4px;
+    margin: 2px;
+    font-size: 8px;
+    border-radius: 0;
+  }
+
+
+  #download_spa_modal .modal-title {
+    font-size: 10px;
+    font-weight: bold;
+  }
+
+  #download_spa_modal .modal-header {
+    padding: 5px;
+  }
+
+  #download_spa_modal .modal-footer {
+    padding: 0px;
+  }
+
+  #download_spa_modal .th-prox-head, .td-prox-head {
+    font-size: 10px;
+  }
+
+  #download_spa_modal .btn-download-proxy-form {
+    padding: 2px;
+    margin: 0;
+    font-size: 7px;
+  }
+
+  #download_spa_modal .modal-body {
+    padding: 4px;
+  }
+
+  #download_spa_modal .btn-danger {
+    padding: 4px;
+    margin: 2px;
+    font-size: 8px;
+    border-radius: 0;
+  }
+
+  #in_person_agreement_modal .modal-header {
+    padding: 5px;
+  }  
+
+  #in_person_agreement_modal .modal-footer {
+    padding: 0px;
+  }
+
+  #in_person_agreement_modal .modal-title {
+    font-size: 10px;
+    font-weight: bold;
+  }
+
+  #in_person_agreement_modal .modal-body .input_person_user {
+    font-size: 1.25em;
+  }
+
+  #in_person_agreement_modal #input-proxy {
+    width: 180px;
+  }
+
+  #in_person_agreement_modal .h5-title-terms {
+    font-size: 1.063em;
+  }
+
+  #in_person_agreement_modal .modal-body .h4-content {
+    font-size: 0.938em;
+  }
+
+  #in_person_agreement_modal .btn-custom {
+    padding: 0.188rem 0.5rem;
+    font-size: 0.813rem;
+  }
+
+  #in_person_agreement_modal .chiller_cb label {
+    font-size: 0.875em;
+  }
+
+  /* #in_person_agreement_modal .h4-content {
+    font-size: 10px;
+  }
+
+  #in_person_agreement_modal #input-inperson {
+    font-size: 12px;
+    font-weight: bold;
+  }
+
+  #in_person_agreement_modal .chiller_cb label {
+    padding-left: 2rem;
+    font-size: 10px;
+  } */
+
+  #in_person_agreement_modal .modal-footer .btn-danger, .btn-success {
+    font-size: 10px;
+    border-radius: 0;
+    padding: 5px;
+  }
+
+  #in_person_agreement_modal .inper_br {
+    display: none;
+  }
+
+  /*------CASTING IN PROXY-------*/
+
+  #proxy_agreement_modal .modal-body .input_person_user {
+    font-size: 1.25em;
+  }
+
+  #proxy_agreement_modal #input-proxy {
+    width: 180px;
+  }
+
+  #proxy_agreement_modal .h5-title-terms {
+    font-size: 1.063em;
+  }
+
+
+  #proxy_agreement_modal .modal-body .h4-content {
+    font-size: 0.938em;
+  }
+
+  #proxy_agreement_modal .chiller_cb label {
+    font-size: 0.875em !important;
+  }
+
+
+  #proxy_agreement_modal .btn-custom {
+    padding: 0.188rem 0.5rem;
+    font-size: 0.813rem;
+  }
+
+
+  #proxy_agreement_modal .modal-header {
+    padding: 5px;
+  }  
+
+  #proxy_agreement_modal .modal-footer {
+    padding: 0px;
+  }
+
+  #proxy_agreement_modal .modal-title {
+    font-size: 10px;
+    font-weight: bold;
+  }
+
+  /* #proxy_agreement_modal .h4-content {
+    font-size: 10px;
+  } */
+
+  /* #proxy_agreement_modal #input-proxy {
+    font-size: 12px;
+    font-weight: bold;
+  } */
+
+  /* #proxy_agreement_modal .chiller_cb label {
+    padding-left: 2rem;
+    font-size: 10px;
+  } */
+
+  /* #proxy_agreement_modal .modal-footer .btn-danger, .btn-success {
+    font-size: 10px;
+    border-radius: 0;
+    padding: 5px;
+  } */
+
+  #proxy_agreement_modal .inper_br {
+    display: none;
+  }  
+}
+
+/*------------Media Query Breakpoints----------*/
+/* smartphones, iPhone, portrait 480x320 phones */
+@media (min-width:320px)  { 
+
+ }
+
+ /*portrait e-readers (Nook/Kindle), smaller tablets @ 600 or @ 640 wide.*/
+@media (min-width:481px)  { 
+
+ }
+
+ /* portrait tablets, portrait iPad, landscape e-readers, landscape 800x480 or 854x480 phones */
+@media (min-width:641px)  { 
+
+  #div-info .h2-annual-title {
+    font-size: 21px;
+  }
+
+  .wrimagecard .wrimagecard-topimage_title {
+    padding: 10px 14px;
+    height: 60px;
+    padding-bottom: 0.75rem;
+  }
+
+  .wrimagecard .h4-label {
+    font-size: 9px;
+  }
+
+  .wrimagecard .fas-i-con {
+      font-size: 2em;
+  }
+
+ }
+
+/* tablet, landscape iPad, lo-res laptops ands desktops */
+@media (min-width:961px)  { 
+
+  .wrimagecard .h4-label {
+    font-size: 10px;
+  }
+
+  .wrimagecard .fas-i-con {
+      font-size: 2em;
+  }
+
+
+ }
+
+ /* big landscape tablets, laptops, and desktops */
+@media (min-width:1025px) { 
+ 
+ 
+ }
+
+ /* hi-res laptops and desktops */
+@media (min-width:1281px) { 
+
+  .wrimagecard .h4-label {
+    font-size: 14px;
+  }
+
+  .wrimagecard .fas-i-con {
+      font-size: 3em;
+  }
+
+  #div-info .h2-annual-title {
+    font-size: 29px;
+  }
+
+ }
+
+ /* (1366x768) WXGA Display */
+@media  screen and (max-width: 1366px) {
+
+  .h2-annual-title {
+    font-size: 1.563em !important;
+  }
+
+  .h3-name {
+   font-size: 1.125em;
+  }
+  
+  .h5-email, .h4-acct {
+    font-size: 0.813em;
+  }
+
+  .wrimagecard .fas-i-con {
+    font-size: 1.875em;
+  }
+
+  .wrimagecard .h4-label {
+   font-size: 0.813em;
+  }
+
+  .wrimagecard-topimage_header{
+    padding: 8px;
+  }
+
+  .wrimagecard-topimage_title {
+    height: 55px!important;
+    padding-bottom: 0.75rem;
+    position: relative;
+ }
+
+ /*--------------Cast in Inperson---------------*/
+ #in_person_agreement_modal .modal-body .h4-content {
+  font-size: 0.875em;
+}
+
+#in_person_agreement_modal .h5-title-terms {
+  font-size: 0.938em;
+}
+
+#in_person_agreement_modal .modal-body .input_person_user {
+  font-size: 1.125em;
+}
+
+.chiller_cb label {
+  font-size: 0.875em;
+}
+
+.modal .modal-title {
+  font-size: 1em;
+}
+
+.modal .modal-footer {
+  padding: 0.438rem;
+}
+
+ /*--------------Cast in Inperson---------------*/
+ #proxy_agreement_modal .modal-body .h4-content {
+  font-size: 0.875em;
+}
+
+#proxy_agreement_modal .h5-title-terms {
+  font-size: 0.938em;
+}
+
+#proxy_agreement_modal .modal-body .input_person_user {
+  font-size: 1.125em;
+}
+}
+

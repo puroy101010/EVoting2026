@@ -1,0 +1,90 @@
+@font-face {
+	src: url(Chapaza.ttf);
+	font-family: chapaza-bold;
+  }
+  
+@font-face {
+	src: url(AvenirLTStd-Black.otf);
+	font-family: Avenir LT Std;
+  }
+  
+@font-face {
+	src: url(AvenirLTStd-Roman.otf);
+	font-family: AvenirLTStd-Roman;
+  }
+
+.card .card-header {
+    background-color:#6b8e4e;
+}
+
+.card .card-header .card-title {
+    font-family: AvenirLTStd-Roman;
+    color: #ffffff;
+}
+
+.btn-custom-darkg {
+    background-color: #304c40;
+    color: #ffffff;
+    border: 1px solid #ffffff;
+  }
+  
+.btn-custom-darkg:hover {
+    color: #b0d182;;
+  }
+
+#candidatesTable td {
+    color:  #6b8e4e;;
+    font-family: AvenirLTStd-Roman;
+    font-size: 1em;
+}
+
+#candidatesTable th {
+	/* background-color:#304c40;
+	color: #fff; */
+	font-family: Avenir LT Std;
+}
+
+#amendmetsTable td {
+    color:  #6b8e4e;;
+    font-family: AvenirLTStd-Roman;
+    font-size: 1em;
+}
+
+#amendmetsTable th {
+	background-color:#304c40;
+	color: #fff;
+	font-family: Avenir LT Std;
+}
+
+.total-number {
+    font-size: 1.25em!important;
+    color: #304c40!important;
+    font-weight: bold;
+  }
+
+.badge-mid-green {
+	color: #ffffff;
+	background-color:#6b8e4e;
+	padding-right: 0.6em;
+	padding-left: 0.6em;
+  }
+  
+.badge-dark-green {
+    color: #ffffff;
+    background-color:#304c40;
+  }
+
+  .btn-mid-green {
+	color: #ffffff;
+	background-color:#6b8e4e;;
+  }
+  
+  .btn-mid-green:hover {
+	color: #304c40;
+	background-color:#6b8e4e;
+	border-color: #304c40;
+  }
+
+.active {
+	background-color: #6b8e4e!important;
+  }

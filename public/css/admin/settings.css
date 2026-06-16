@@ -1,0 +1,429 @@
+@font-face {
+	src: url(Chapaza.ttf);
+	font-family: chapaza-bold;
+  }
+  
+@font-face {
+	src: url(AvenirLTStd-Black.otf);
+	font-family: Avenir LT Std;
+  }
+  
+@font-face {
+	src: url(AvenirLTStd-Roman.otf);
+	font-family: AvenirLTStd-Roman;
+  }
+
+
+.card .card-header .card-title {
+  font-family: chapaza-bold;
+}
+
+.text-dark-green {
+  color: #304c40;
+}
+
+.btn-custom-darkg {
+    background-color: #304c40;
+    color: #ffffff;
+    border: 1px solid #ffffff;
+  }
+  
+.btn-custom-darkg:hover {
+    color: #b0d182;;
+  }
+
+#events_key_dates td {
+    color:  #6b8e4e;;
+    font-family: AvenirLTStd-Roman;
+    font-size: 1em;
+}
+
+
+#events_key_dates th {
+	background-color:#304c40;
+	color: #fff;
+	font-family: Avenir LT Std;
+}
+
+#cast_vote_inperson td {
+    color:  #6b8e4e;;
+    font-family: AvenirLTStd-Roman;
+    font-size: 1em;
+}
+
+#cast_vote_by_proxy th {
+	background-color:#304c40;
+	color: #fff;
+	font-family: Avenir LT Std;
+}
+
+#cast_vote_by_proxy th {
+	background-color:#304c40;
+	color: #fff;
+	font-family: Avenir LT Std;
+}
+
+#proxy_submission_tb th {
+	background-color:#304c40;
+	color: #fff;
+	font-family: Avenir LT Std;
+}
+
+#proxy_submission_tb th {
+	background-color:#304c40;
+	color: #fff;
+	font-family: Avenir LT Std;
+}
+
+#proxy_download_tb th {
+	background-color:#304c40;
+	color: #fff;
+	font-family: Avenir LT Std;
+}
+
+#proxy_download_tb th {
+	background-color:#304c40;
+	color: #fff;
+	font-family: Avenir LT Std;
+}
+
+#spa_submission_tb th {
+	background-color:#304c40;
+	color: #fff;
+	font-family: Avenir LT Std;
+}
+
+#spa_submission_tb th {
+	background-color:#304c40;
+	color: #fff;
+	font-family: Avenir LT Std;
+}
+
+#spa_download_tb th {
+	background-color:#304c40;
+	color: #fff;
+	font-family: Avenir LT Std;
+}
+
+#spa_download_tb th {
+	background-color:#304c40;
+	color: #fff;
+	font-family: Avenir LT Std;
+}
+
+.badge-mid-green {
+	color: #ffffff;
+	background-color:#6b8e4e;
+	padding-right: 0.6em;
+	padding-left: 0.6em;
+  }
+  
+.badge-dark-green {
+    color: #ffffff;
+    background-color:#304c40;
+  }
+
+.btn-mid-green {
+	color: #ffffff;
+	background-color:#6b8e4e;;
+  }
+  
+  .btn-mid-green:hover {
+	color: #304c40;
+	background-color:#6b8e4e;
+	border-color: #304c40;
+  }
+
+.active {
+	background-color: #6b8e4e!important;
+  }
+
+
+[data-toggle="collapse"] .fa:before {  
+    content: "\f139";
+  }
+
+  [data-toggle="collapse"].collapsed .fa:before {
+    content: "\f13a";
+  }
+
+ .btn {
+    font-size: 1.1rem;
+  }
+
+  .btn-custom {
+    width: 50%;
+  }
+
+
+/* ----------- iPhone X ----------- */
+/* Portrait and Landscape */
+@media only screen 
+  and (min-device-width: 375px) 
+  and (max-device-width: 812px) 
+  and (-webkit-min-device-pixel-ratio: 3) {
+
+    .card-header {
+      padding: 0;
+    }
+
+    .card-header .card-title {
+      font-size: 1.25em;
+      margin: 4px;
+    }
+
+    .card-settings .btn {
+      font-size: 0.813em;
+    }
+
+    .card-settings .th-padding {
+      padding: 3px;
+      font-size: 0.75em;
+      text-align: center;
+    }
+
+    .card-settings .td-padding {
+      padding: 3px;
+      font-size: 0.75em;
+      vertical-align: middle;
+    }
+
+    .btn-custom {
+      display: block;
+      margin: 0 auto;
+      /* border-radius: 0; */
+      padding: 0.188rem 0.25rem;
+      font-size: 0.625rem;
+      line-height: 1.5;
+      border-radius: 0.2rem;
+    }
+
+    .btn-sm {
+      padding: .25rem .5rem;
+      font-size: 0.625rem;
+      line-height: 1.52;
+      border-radius: .2rem;
+      margin-top: 2px;
+      display: block;
+      margin: 0 auto;
+    }
+
+  }
+
+
+    /* ----------- iPhone 6, 6S, 7 and 8 ----------- */
+/* Portrait and Landscape */
+@media only screen 
+and (min-device-width: 375px) 
+and (max-device-width: 667px) 
+and (-webkit-min-device-pixel-ratio: 2) {
+
+  .card-header {
+    padding: 0;
+  }
+
+  .card-header .card-title {
+    font-size: 1.25em;
+    margin: 4px;
+  }
+
+  .card-settings .btn {
+    font-size: 0.813em;
+  }
+
+  .card-settings .th-padding {
+    padding: 3px;
+    font-size: 0.75em;
+    text-align: center;
+  }
+
+  .card-settings .td-padding {
+    padding: 3px;
+    font-size: 0.75em;
+    vertical-align: middle;
+  }
+
+  .btn-custom {
+    display: block;
+    margin: 0 auto;
+    /* border-radius: 0; */
+    padding: 0.188rem 0.25rem;
+    font-size: 0.625rem;
+    line-height: 1.5;
+    border-radius: 0.2rem;
+  }
+
+  .btn-sm {
+    padding: .25rem .5rem;
+    font-size: 0.625rem;
+    line-height: 1.52;
+    border-radius: .2rem;
+    margin-top: 2px;
+    display: block;
+    margin: 0 auto;
+  }
+
+}
+
+
+/* ----------- iPhone 5, 5S, 5C and 5SE ----------- */
+/* Portrait and Landscape */
+@media only screen 
+  and (min-device-width: 320px) 
+  and (max-device-width: 568px)
+  and (-webkit-min-device-pixel-ratio: 2) {
+
+    .card-header {
+      padding: 0;
+    }
+  
+    .card-header .card-title {
+      font-size: 1.25em;
+      margin: 4px;
+    }
+  
+    .card-settings .btn {
+      font-size: 0.813em;
+    }
+  
+    .card-settings .th-padding {
+      padding: 3px;
+      font-size: 0.75em;
+      text-align: center;
+    }
+  
+    .card-settings .td-padding {
+      padding: 3px;
+      font-size: 0.75em;
+      vertical-align: middle;
+    }
+  
+    .btn-custom {
+      display: block;
+      margin: 0 auto;
+      /* border-radius: 0; */
+      padding: 0.188rem 0.25rem;
+      font-size: 0.625rem;
+      line-height: 1.5;
+      border-radius: 0.2rem;
+    }
+  
+    .btn-sm {
+      padding: .25rem .5rem;
+      font-size: 0.625rem;
+      line-height: 1.52;
+      border-radius: .2rem;
+      margin-top: 2px;
+      display: block;
+      margin: 0 auto;
+    }
+
+  }
+
+
+    /*------JioPhone 2--------*/
+@media only screen and (max-device-width: 240px) {
+
+  .card-header {
+    padding: 0;
+  }
+
+  .card-header .card-title {
+    font-size: 1.25em;
+    margin: 4px;
+  }
+
+  .card-settings .btn {
+    font-size: 0.813em;
+  }
+
+  .card-settings .th-padding {
+    padding: 3px;
+    font-size: 0.75em;
+    text-align: center;
+  }
+
+  .card-settings .td-padding {
+    padding: 3px;
+    font-size: 0.75em;
+    vertical-align: middle;
+  }
+
+  .btn-custom {
+    display: block;
+    margin: 0 auto;
+    /* border-radius: 0; */
+    padding: 0.188rem 0.25rem;
+    font-size: 0.625rem;
+    line-height: 1.5;
+    border-radius: 0.2rem;
+  }
+
+  .btn-sm {
+    padding: .25rem .5rem;
+    font-size: 0.625rem;
+    line-height: 1.52;
+    border-radius: .2rem;
+    margin-top: 2px;
+    display: block;
+    margin: 0 auto;
+  }
+
+}
+
+
+/*---------Galaxy Fold-----------*/
+@media only screen 
+  and (min-device-width: 280px) 
+  and (max-device-width: 653px)
+  and (-webkit-min-device-pixel-ratio: 2) {
+
+    .card-header {
+      padding: 0;
+    }
+  
+    .card-header .card-title {
+      font-size: 1.25em;
+      margin: 4px;
+    }
+  
+    .card-settings .btn {
+      font-size: 0.813em;
+    }
+  
+    .card-settings .th-padding {
+      padding: 3px;
+      font-size: 0.75em;
+      text-align: center;
+    }
+  
+    .card-settings .td-padding {
+      padding: 3px;
+      font-size: 0.75em;
+      vertical-align: middle;
+    }
+  
+    .btn-custom {
+      display: block;
+      margin: 0 auto;
+      /* border-radius: 0; */
+      padding: 0.188rem 0.25rem;
+      font-size: 0.625rem;
+      line-height: 1.5;
+      border-radius: 0.2rem;
+    }
+  
+    .btn-sm {
+      padding: .25rem .5rem;
+      font-size: 0.625rem;
+      line-height: 1.52;
+      border-radius: .2rem;
+      margin-top: 2px;
+      display: block;
+      margin: 0 auto;
+    }
+
+  }
+
+
+

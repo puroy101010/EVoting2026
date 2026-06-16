@@ -1,0 +1,749 @@
+@font-face {
+	src: url(Chapaza.ttf);
+	font-family: chapaza-bold;
+  }
+  
+@font-face {
+	src: url(AvenirLTStd-Black.otf);
+	font-family: Avenir LT Std;
+  }
+  
+@font-face {
+	src: url(AvenirLTStd-Roman.otf);
+	font-family: AvenirLTStd-Roman;
+  }
+
+.card .card-header {
+    background-color:#6b8e4e;
+}
+
+.card .card-header .card-title {
+    font-family: AvenirLTStd-Roman;
+    color: #ffffff;
+}
+
+#memberTable td {
+    color:  #6b8e4e;;
+    font-family: AvenirLTStd-Roman;
+    font-size: 1em;
+}
+
+#memberTable th {
+	background-color:#304c40;
+	color: #fff;
+	font-family: Avenir LT Std;
+}
+
+.badge-mid-green {
+	color: #ffffff;
+	background-color:#6b8e4e;
+	padding-right: 0.6em;
+	padding-left: 0.6em;
+  }
+  
+.badge-dark-green {
+    color: #ffffff;
+    background-color:#304c40;
+  }
+
+  .btn-mid-green {
+	color: #ffffff;
+	background-color:#6b8e4e;;
+  }
+  
+  .btn-mid-green:hover {
+	color: #304c40;
+	background-color:#6b8e4e;
+	border-color: #304c40;
+  }
+
+.active {
+	background-color: #6b8e4e!important;
+  }
+
+
+
+#spa_uploads_modal .modal-set-size {
+    max-width: 1200px;
+}
+
+input[type=checkbox] {
+    cursor: pointer;
+}
+
+.btn-group-sm>.btn, .btn-button {
+    padding: .25rem .5rem;
+    font-size: .875rem;
+    line-height: 1.5;
+    border-radius: .2rem;
+}
+
+/*------------Media Query----------*/
+
+/* (1366x768) WXGA Display */
+@media  screen and (max-width: 1366px) {
+
+    .div-text {
+		font-size: 13px;
+	}
+
+	.col-md2-size {
+		flex: 0 0 30%;
+		max-width: 30%;
+	}
+
+	.offset-md-4 {
+		margin-left: 0;
+	}
+
+    
+    .card .card-header {
+        padding: 3px;
+    } 
+    
+    .card-header .card-title {
+        font-size: 18px;
+        margin: 2px;
+    }
+
+    #memberTable .th-padding {
+        padding: 5px;
+        font-size: 11px;
+    }
+  
+    #memberTable .td-padding {
+        padding: 5px;
+        font-size: 10px;
+    }
+
+    .btn-group-sm>.btn, .btn-button {
+        padding: .15rem .2rem;
+        font-size: .600rem;
+        line-height: 1.5;
+        border-radius: .2rem;
+    }
+
+    #spa_uploads_modal .modal-header {
+        padding: 5px;
+    }
+
+    #spa_uploads_modal .modal-footer {
+        padding: 5px;
+    }
+
+    #spa_uploads_modal .th-padding {
+        font-size: 10px;
+        padding: 5px;
+    }
+
+    #spa_uploads_modal .td-padding {
+        font-size: 10px;
+        padding: 5px;
+    }
+
+    #spa_uploads_modal .label-text {
+        font-size: 10px;
+        padding: 5px;
+    }
+
+    .btn-group-sm>.btn, .btn-button {
+        padding: .15rem .2rem;
+        font-size: .600rem;
+        line-height: 1.5;
+        border-radius: .2rem;
+    }
+
+    #spa_uploads_modal .modal-set-size {
+        max-width: 700px;
+    
+    }
+
+    #spa_uploads_modal input[type=checkbox] {
+        -ms-transform: scale(1); /* IE */
+        -moz-transform: scale(1); /* FF */
+        -webkit-transform: scale(1); /* Safari and Chrome */
+        -o-transform: scale(1); /* Opera */
+        transform: scale(1);
+        padding: 0;
+    }
+
+}
+
+
+ /* For 1024 Resolution */  
+ @media only screen   
+ and (min-device-width : 768px)   
+ and (max-device-width : 1024px) {
+
+    .div-text {
+		font-size: 13px;
+	}
+
+	.col-md2-size {
+		flex: 0 0 30%;
+		max-width: 30%;
+	}
+
+	.offset-md-4 {
+		margin-left: 0;
+	}
+
+    
+    .card .card-header {
+        padding: 3px;
+    } 
+    
+    .card-header .card-title {
+        font-size: 18px;
+        margin: 2px;
+    }
+
+    #memberTable .th-padding {
+        padding: 5px;
+        font-size: 11px;
+    }
+  
+    #memberTable .td-padding {
+        padding: 5px;
+        font-size: 10px;
+    }
+
+    .btn-group-sm>.btn, .btn-button {
+        padding: .15rem .2rem;
+        font-size: .600rem;
+        line-height: 1.5;
+        border-radius: .2rem;
+    }
+
+    #spa_uploads_modal .modal-header {
+        padding: 5px;
+    }
+
+    #spa_uploads_modal .modal-footer {
+        padding: 5px;
+    }
+
+    #spa_uploads_modal .th-padding {
+        font-size: 10px;
+        padding: 5px;
+    }
+
+    #spa_uploads_modal .td-padding {
+        font-size: 10px;
+        padding: 5px;
+    }
+
+    #spa_uploads_modal .label-text {
+        font-size: 10px;
+        padding: 5px;
+    }
+
+    .btn-group-sm>.btn, .btn-button {
+        padding: .15rem .2rem;
+        font-size: .600rem;
+        line-height: 1.5;
+        border-radius: .2rem;
+    }
+
+    #spa_uploads_modal .modal-set-size {
+        max-width: 700px;
+    
+    }
+
+    #spa_uploads_modal input[type=checkbox] {
+        -ms-transform: scale(1); /* IE */
+        -moz-transform: scale(1); /* FF */
+        -webkit-transform: scale(1); /* Safari and Chrome */
+        -o-transform: scale(1); /* Opera */
+        transform: scale(1);
+    }
+    
+ }
+
+/* ----------- iPhone X ----------- */
+/* Portrait and Landscape */
+@media only screen 
+  and (min-device-width: 375px) 
+  and (max-device-width: 812px) 
+  and (-webkit-min-device-pixel-ratio: 3) { 
+
+    .dflex-button {
+		display: flex!important;
+		justify-content: center!important;
+		margin: 2px;
+	}
+
+    .breadcrumb-item {
+		font-size: 12px;
+	}
+
+    .col-md2-size {
+		flex: 0 0 60%;
+		max-width: 60%;
+	}
+
+    .div-text {
+		font-size: 12px;
+		flex: 0 0 40%;
+		max-width: 40%;
+	}
+
+	.offset-md-4 {
+		margin-left: 0;
+	}
+
+    .card .card-header {
+        padding: 3px;
+    } 
+    
+    .card-header .card-title {
+        font-size: 18px;
+        margin: 2px;
+    }
+
+    #memberTable .th-padding {
+        padding: 3px;
+        font-size: 12px;
+    }
+  
+    #memberTable .td-padding {
+        padding: 3px;
+        margin: 2px;
+        font-size: 11px;
+    }
+
+    .btn-group-sm>.btn, .btn-button {
+        padding: .15rem .2rem;
+        font-size: .600rem;
+        line-height: 1.5;
+        border-radius: .2rem;
+    }
+
+    #spa_uploads_modal .modal-header {
+        padding: 5px;
+    }
+
+    #spa_uploads_modal .modal-footer {
+        padding: 5px;
+    }
+
+    #spa_uploads_modal .th-padding {
+        font-size: 10px;
+        padding: 5px;
+    }
+
+    #spa_uploads_modal .td-padding {
+        font-size: 10px;
+        padding: 5px;
+    }
+
+    #spa_uploads_modal .label-text {
+        font-size: 10px;
+        padding: 5px;
+    }
+
+    #spa_uploads_modal input[type=checkbox] {
+        -ms-transform: scale(1); /* IE */
+        -moz-transform: scale(1); /* FF */
+        -webkit-transform: scale(1); /* Safari and Chrome */
+        -o-transform: scale(1); /* Opera */
+        transform: scale(1);
+        padding: 2px;
+    }
+
+    #spa_uploads_modal .modal-set-size {
+        max-width: 700px;
+    
+    }
+
+}
+
+/* ----------- iPhone 6, 6S, 7 and 8 ----------- */
+/* Portrait and Landscape */
+@media only screen 
+  and (min-device-width: 375px) 
+  and (max-device-width: 667px) 
+  and (-webkit-min-device-pixel-ratio: 2) { 
+
+    .dflex-button {
+		display: flex!important;
+		justify-content: center!important;
+		margin: 2px;
+	}
+
+    .breadcrumb-item {
+		font-size: 12px;
+	}
+
+    .col-md2-size {
+		flex: 0 0 60%;
+		max-width: 60%;
+	}
+
+    .div-text {
+		font-size: 12px;
+		flex: 0 0 40%;
+		max-width: 40%;
+	}
+
+	.offset-md-4 {
+		margin-left: 0;
+	}
+
+    .card .card-header {
+        padding: 3px;
+    } 
+    
+    .card-header .card-title {
+        font-size: 18px;
+        margin: 2px;
+    }
+
+    #memberTable .th-padding {
+        padding: 3px;
+        font-size: 12px;
+    }
+  
+    #memberTable .td-padding {
+        padding: 3px;
+        margin: 2px;
+        font-size: 11px;
+    }
+
+    .btn-group-sm>.btn, .btn-button {
+        padding: .15rem .2rem;
+        font-size: .600rem;
+        line-height: 1.5;
+        border-radius: .2rem;
+    }
+
+    #spa_uploads_modal .modal-header {
+        padding: 5px;
+    }
+
+    #spa_uploads_modal .modal-footer {
+        padding: 5px;
+    }
+
+    #spa_uploads_modal .th-padding {
+        font-size: 10px;
+        padding: 5px;
+    }
+
+    #spa_uploads_modal .td-padding {
+        font-size: 10px;
+        padding: 5px;
+    }
+
+    #spa_uploads_modal .label-text {
+        font-size: 10px;
+        padding: 5px;
+    }
+
+    #spa_uploads_modal input[type=checkbox] {
+        -ms-transform: scale(1); /* IE */
+        -moz-transform: scale(1); /* FF */
+        -webkit-transform: scale(1); /* Safari and Chrome */
+        -o-transform: scale(1); /* Opera */
+        transform: scale(1);
+        padding: 2px;
+    }
+
+    #spa_uploads_modal .modal-set-size {
+        max-width: 700px;
+    
+    }
+
+}
+
+/* ----------- iPhone 5, 5S, 5C and 5SE ----------- */
+/* Portrait and Landscape */
+@media only screen 
+  and (min-device-width: 320px) 
+  and (max-device-width: 568px)
+  and (-webkit-min-device-pixel-ratio: 2) {
+
+    .dflex-button {
+		display: flex!important;
+		justify-content: center!important;
+		margin: 2px;
+	}
+
+    .breadcrumb-item {
+		font-size: 12px;
+	}
+
+    .col-md2-size {
+		flex: 0 0 60%;
+		max-width: 60%;
+	}
+
+    .div-text {
+		font-size: 12px;
+		flex: 0 0 40%;
+		max-width: 40%;
+	}
+
+	.offset-md-4 {
+		margin-left: 0;
+	}
+
+    .card .card-header {
+        padding: 3px;
+    } 
+    
+    .card-header .card-title {
+        font-size: 18px;
+        margin: 2px;
+    }
+
+    #memberTable .th-padding {
+        padding: 3px;
+        font-size: 12px;
+    }
+  
+    #memberTable .td-padding {
+        padding: 3px;
+        margin: 2px;
+        font-size: 11px;
+    }
+
+    .btn-group-sm>.btn, .btn-button {
+        padding: .15rem .2rem;
+        font-size: .600rem;
+        line-height: 1.5;
+        border-radius: .2rem;
+    }
+
+    #spa_uploads_modal .modal-header {
+        padding: 5px;
+    }
+
+    #spa_uploads_modal .modal-footer {
+        padding: 5px;
+    }
+
+    #spa_uploads_modal .th-padding {
+        font-size: 10px;
+        padding: 5px;
+    }
+
+    #spa_uploads_modal .td-padding {
+        font-size: 10px;
+        padding: 5px;
+    }
+
+    #spa_uploads_modal .label-text {
+        font-size: 10px;
+        padding: 5px;
+    }
+
+    #spa_uploads_modal input[type=checkbox] {
+        -ms-transform: scale(1); /* IE */
+        -moz-transform: scale(1); /* FF */
+        -webkit-transform: scale(1); /* Safari and Chrome */
+        -o-transform: scale(1); /* Opera */
+        transform: scale(1);
+        padding: 2px;
+    }
+
+    #spa_uploads_modal .modal-set-size {
+        max-width: 700px;
+    
+    }
+
+}
+
+/*------JioPhone 2--------*/
+@media only screen and (max-device-width: 240px) {
+
+    .dflex-button {
+		display: flex!important;
+		justify-content: center!important;
+		margin: 2px;
+	}
+
+    .breadcrumb-item {
+		font-size: 12px;
+	}
+
+    .col-md2-size {
+		flex: 0 0 60%;
+		max-width: 60%;
+	}
+
+    .div-text {
+		font-size: 12px;
+		flex: 0 0 40%;
+		max-width: 40%;
+	}
+
+	.offset-md-4 {
+		margin-left: 0;
+	}
+
+    .card .card-header {
+        padding: 3px;
+    } 
+    
+    .card-header .card-title {
+        font-size: 18px;
+        margin: 2px;
+    }
+
+    #memberTable .th-padding {
+        padding: 3px;
+        font-size: 12px;
+    }
+  
+    #memberTable .td-padding {
+        padding: 3px;
+        margin: 2px;
+        font-size: 11px;
+    }
+
+    .btn-group-sm>.btn, .btn-button {
+        padding: .15rem .2rem;
+        font-size: .500rem;
+        line-height: 1.5;
+        border-radius: .2rem;
+    }
+
+    #spa_uploads_modal .modal-header {
+        padding: 5px;
+    }
+
+    #spa_uploads_modal .modal-footer {
+        padding: 5px;
+    }
+
+    #spa_uploads_modal .th-padding {
+        font-size: 10px;
+        padding: 5px;
+    }
+
+    #spa_uploads_modal .td-padding {
+        font-size: 10px;
+        padding: 5px;
+    }
+
+    #spa_uploads_modal .label-text {
+        font-size: 10px;
+        padding: 5px;
+    }
+
+    #spa_uploads_modal input[type=checkbox] {
+        -ms-transform: scale(1); /* IE */
+        -moz-transform: scale(1); /* FF */
+        -webkit-transform: scale(1); /* Safari and Chrome */
+        -o-transform: scale(1); /* Opera */
+        transform: scale(1);
+        padding: 2px;
+    }
+
+    #spa_uploads_modal .modal-set-size {
+        max-width: 700px;
+    }
+
+}
+
+/*---------Galaxy Fold-----------*/
+@media only screen 
+  and (min-device-width: 280px) 
+  and (max-device-width: 653px)
+  and (-webkit-min-device-pixel-ratio: 2) {
+
+    .dflex-button {
+		display: flex!important;
+		justify-content: center!important;
+		margin: 2px;
+	}
+
+    .breadcrumb-item {
+		font-size: 12px;
+	}
+
+    .col-md2-size {
+		flex: 0 0 60%;
+		max-width: 60%;
+	}
+
+    .div-text {
+		font-size: 12px;
+		flex: 0 0 40%;
+		max-width: 40%;
+	}
+
+	.offset-md-4 {
+		margin-left: 0;
+	}
+
+    .card .card-header {
+        padding: 3px;
+    } 
+    
+    .card-header .card-title {
+        font-size: 18px;
+        margin: 2px;
+    }
+
+    #memberTable .th-padding {
+        padding: 3px;
+        font-size: 12px;
+    }
+  
+    #memberTable .td-padding {
+        padding: 3px;
+        margin: 2px;
+        font-size: 11px;
+    }
+
+    .btn-group-sm>.btn, .btn-button {
+        padding: .15rem .2rem;
+        font-size: .500rem;
+        line-height: 1.5;
+        border-radius: .2rem;
+    }
+
+    #spa_uploads_modal .modal-header {
+        padding: 3px;
+    }
+
+    #spa_uploads_modal .modal-header {
+        padding: 3px;
+    }
+
+    #spa_uploads_modal .modal-title {
+        font-size: 13px;
+        margin: 2px;
+    }
+
+    #spa_uploads_modal .th-padding {
+        font-size: 10px;
+        padding: 5px;
+    }
+
+    #spa_uploads_modal .td-padding {
+        font-size: 10px;
+        padding: 5px;
+    }
+
+    #spa_uploads_modal .label-text {
+        font-size: 10px;
+        padding: 5px;
+    }
+
+    #spa_uploads_modal input[type=checkbox] {
+        -ms-transform: scale(1); /* IE */
+        -moz-transform: scale(1); /* FF */
+        -webkit-transform: scale(1); /* Safari and Chrome */
+        -o-transform: scale(1); /* Opera */
+        transform: scale(1);
+        padding: 2px;
+    }
+
+    #spa_uploads_modal .modal-set-size {
+        max-width: 700px;
+    }
+
+  }

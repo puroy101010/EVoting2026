@@ -1,0 +1,545 @@
+@font-face {
+  src: url(Chapaza.ttf);
+  font-family: chapaza-bold;
+}
+
+@font-face {
+  src: url(AvenirLTStd-Black.otf);
+  font-family: Avenir LT Std;
+}
+
+@font-face {
+  src: url(AvenirLTStd-Roman.otf);
+  font-family: AvenirLTStd-Roman;
+}
+
+
+* {
+	box-sizing: border-box;
+}
+.uploaded-file {
+	cursor: pointer;
+}
+
+.bg-valley-darkgreen {
+  background-color: #6b8e4e;
+  color: #ffffff;
+}
+
+.title-dash {
+  font-family: chapaza-bold;
+  color: #304c40;
+}
+
+.h1-votes {
+  font-family: chapaza-bold;
+  margin-top: 30px;
+}
+
+.info-box {
+  /* background-color: #304c40; */
+}
+
+.info-box .info-box-content .info-box-text {
+	margin-bottom: .5rem;
+  font-family: Avenir LT Std;
+  /* color: #ffffff; */
+	font-size: 1.2rem;
+}
+
+.info-box .info-box-content .info-box-number {
+	margin-bottom: .5rem;
+  font-family: AvenirLTStd-Roman;
+  color: #b0d182;
+	font-size: 1.2rem;
+}
+
+
+
+    
+.info-box .info-box-content {
+
+  text-align: center;
+
+}
+
+
+.border-custom {
+	border-right: 2px solid  #6b8e4e;
+}
+
+.card .card-title {
+  font-family: AvenirLTStd-Roman;
+}
+
+.active {
+  background-color: #6b8e4e!important;
+}
+
+table .th-upload {
+  color:#ffffff;
+  font-family: Avenir LT Std;
+}
+
+table .td-upload {
+  color:  #6b8e4e;;
+  font-family: AvenirLTStd-Roman;
+}
+
+.table .th-upload {
+  position: sticky;
+  top:0;
+}
+
+
+/* (1366x768) WXGA Display */
+@media  screen and (max-width: 1366px) {
+
+  .content-header {
+    padding: 3px .5rem;
+  }
+
+  .content-header .title-dash {
+    font-size: 20px;
+  }
+  
+  .info-box .info-box-content .info-box-text {
+    margin-bottom: .5rem;
+    font-size: 0.9rem;
+
+  }
+
+
+    
+  .info-box .info-box-content {
+
+    text-align: center;
+
+  }
+
+ .info-box .info-box-content .info-box-number {
+    margin-bottom: .5rem;
+    font-size: 1rem;
+  }
+
+  .info-box .info-box-icon {
+    font-size: 1.100rem;
+    width: 50px;
+    height: 50px;
+    margin-top: 5px;
+  }
+
+  .card .card-header {
+    padding: 5px;
+  }
+
+  .card-header .card-title {
+      font-size: 15px;
+      margin: 2px;
+  }
+
+  #table_recent_upload .th-upload {
+    padding: 5px;
+    font-size: 12px;
+  }
+
+  #table_recent_upload .td-upload {
+    padding: 5px;
+    font-size: 12px;
+  }
+  
+
+}
+
+/* (1280x1024) SXGA Display */
+@media  screen and (max-width: 1280px) {
+  
+
+}
+
+/* For 1024 Resolution */  
+@media only screen   
+and (min-device-width : 768px)   
+and (max-device-width : 1024px) {
+
+  .content-header {
+    padding: 4px .5rem;
+  }
+
+  .content-header .title-dash {
+    font-size: 20px;
+    font-weight: bold;
+  }
+
+  .info-box .info-box-content .info-box-text {
+    margin-bottom: .5rem;
+    font-size: 1rem;
+  }
+
+ .info-box .info-box-content .info-box-number {
+    margin-bottom: .5rem;
+    font-size: 1rem;
+  }
+
+  .card .card-header {
+    padding: 5px;
+  }
+
+  .card-header .card-title {
+      font-size: 15px;
+      margin: 2px;
+  }
+
+  #table_recent_upload .th-upload {
+    padding: 5px;
+    font-size: 12px;
+  }
+
+  #table_recent_upload .td-upload {
+    padding: 5px;
+    font-size: 12px;
+  }
+
+}
+
+
+
+/* ----------- iPhone X ----------- */
+
+/* Portrait and Landscape */
+@media only screen 
+  and (min-device-width: 375px) 
+  and (max-device-width: 812px) 
+  and (-webkit-min-device-pixel-ratio: 3) { 
+
+    .content-header .title-dash {
+      font-size: 18px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .info-box .info-box-icon {
+      font-size: 1.200rem;
+      width: 70px;
+    }
+
+    .info-box .info-box-text {
+      font-size: 1em;
+    }
+
+    .info-box .info-box-content .info-box-text {
+      margin-bottom: .5rem;
+      font-size: 1.2rem;
+   }
+
+   .info-box .info-box-content .info-box-number {
+      margin-bottom: .5rem;
+      font-size: 1.2rem;
+  }
+
+   .info-box .col-updl {
+      flex: 0 0 50%;
+      max-width: 50%;
+   }
+
+   #table_recent_upload .th-upload {
+     font-size: 13px;
+     padding: 5px;
+   }
+
+   #table_recent_upload .td-upload {
+     font-size: 12px;
+     padding: 5px;
+   }
+
+ 
+
+}
+
+/* ----------- iPhone 6, 6S, 7 and 8 ----------- */
+
+/* Portrait and Landscape */
+@media only screen 
+  and (min-device-width: 375px) 
+  and (max-device-width: 667px) 
+  and (-webkit-min-device-pixel-ratio: 2) { 
+
+    .content-header {
+      padding: 4px .5rem;
+  }
+
+    .content-header .title-dash {
+      font-size: 18px;
+      font-weight: bold;
+      text-align: center;
+  }
+
+  .info-box .info-box-icon {
+    border-radius: .25rem;
+    -ms-flex-align: center;
+    font-size: 1.100rem;
+    width: 50px;
+    max-height: 50px;
+    margin-top: 5px;
+  }
+
+  .info-box .info-box-content .info-box-text {
+    margin-bottom: .5rem;
+    font-size: 1.2rem;
+  }
+
+ .info-box .info-box-content .info-box-number {
+    margin-bottom: .5rem;
+    font-size: 1.2rem;
+  }
+
+  .info-box .col-updl {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+
+  #table_recent_upload .th-upload {
+    font-size: 13px;
+    padding: 5px;
+  }
+
+  #table_recent_upload .td-upload {
+    font-size: 12px;
+    padding: 5px;
+  }
+
+
+}
+
+/* ----------- iPhone 5, 5S, 5C and 5SE ----------- */
+
+/* Portrait and Landscape */
+@media only screen 
+  and (min-device-width: 320px) 
+  and (max-device-width: 568px)
+  and (-webkit-min-device-pixel-ratio: 2) {
+
+    .content-header {
+      padding: 6px .5rem;
+  }
+
+  .content-header .title-dash {
+    font-size: 20px;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  .info-box .info-box-icon {
+    border-radius: .25rem;
+    -ms-flex-align: center;
+    font-size: 1.100rem;
+    width: 50px;
+    max-height: 50px;
+    margin-top: 5px;
+  }
+
+  .info-box .info-box-content .info-box-text {
+    margin-bottom: .5rem;
+    font-size: 1.2rem;
+  }
+
+ .info-box .info-box-content .info-box-number {
+    margin-bottom: .5rem;
+    font-size: 1.2rem;
+  }
+
+  .info-box .col-updl {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+
+  #table_recent_upload .th-upload {
+    font-size: 13px;
+    padding: 5px;
+  }
+
+  #table_recent_upload .td-upload {
+    font-size: 12px;
+    padding: 5px;
+  }
+
+  .card-header {
+    background-color: transparent;
+    border-bottom: 1px solid rgba(0,0,0,.125);
+    padding: .50rem 1rem;
+}
+
+}
+
+/* Galay Fold */
+@media only screen 
+  and (min-device-width: 280px) 
+  and (max-device-width: 653px)
+  and (-webkit-min-device-pixel-ratio: 2) {
+
+    .content-header {
+      padding: 6px .5rem;
+    }
+
+    .content-header .title-dash {
+      font-size: 20px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .info-box .info-box-icon {
+      font-size: 1.100rem;
+      width: 40px;
+      max-height: 40px;
+      margin-top: 12px;
+    }
+
+    .info-box .info-box-content .info-box-text {
+      margin-bottom: .5rem;
+      font-size: 1rem;
+    }
+  
+   .info-box .info-box-content .info-box-number {
+      margin-bottom: .5rem;
+      font-size: 1rem;
+    }
+  
+    .info-box .col-updl {
+      flex: 0 0 50%;
+      max-width: 50%;
+    }
+
+    #table_recent_upload .th-upload {
+      font-size: 13px;
+      padding: 5px;
+    }
+ 
+    #table_recent_upload .td-upload {
+      font-size: 12px;
+      padding: 5px;
+    }
+  
+    .card-header {
+      background-color: transparent;
+      border-bottom: 1px solid rgba(0,0,0,.125);
+      padding: .50rem 1rem;
+  }
+
+  }
+
+  /* Microsoft Lumia 640 XL */
+  @media only screen 
+   and (max-width : 720px) 
+   and (max-height : 1280px) {
+   
+    .info-box .col-updl {
+      flex: 0 0 50%;
+      max-width: 50%;
+    }
+    
+}
+
+/*------JioPhone 2--------*/
+@media only screen and (max-device-width: 240px) {
+  .content-header {
+    padding: 6px .5rem;
+  }
+
+  .content-header .title-dash {
+    font-size: 20px;
+    font-weight: bold;
+    text-align: center;
+  }
+
+  .info-box .info-box-icon {
+    font-size: 1.100rem;
+    width: 40px;
+    max-height: 40px;
+    margin-top: 12px;
+  }
+
+  .info-box .info-box-content .info-box-text {
+    margin-bottom: .5rem;
+    font-size: 1rem;
+  }
+
+ .info-box .info-box-content .info-box-number {
+    margin-bottom: .5rem;
+    font-size: 1rem;
+  }
+
+  #table_recent_upload .th-upload {
+    font-size: 13px;
+    padding: 5px;
+  }
+
+  #table_recent_upload .td-upload {
+    font-size: 12px;
+    padding: 5px;
+  }
+
+  .card-header {
+    background-color: transparent;
+    border-bottom: 1px solid rgba(0,0,0,.125);
+    padding: .50rem 1rem;
+}
+}
+
+/* ----------- iPad 1, 2, Mini and Air ----------- */
+
+/* Portrait and Landscape */
+@media only screen 
+  and (min-device-width: 768px) 
+  and (max-device-width: 1024px) 
+  and (-webkit-min-device-pixel-ratio: 1) {
+
+    .info-box .info-box-icon {
+      font-size: 1.100rem;
+      width: 40px;
+      max-height: 40px;
+      margin-top: 12px;
+  }
+}
+
+
+/* smartphones, iPhone, portrait 480x320 phones */ 
+@media (min-width:320px)  { 
+  /* .content-header {
+    border: 10px solid red;
+  } */
+}
+
+/* portrait e-readers (Nook/Kindle), smaller tablets @ 600 or @ 640 wide. */ 
+@media (min-width:481px)  {
+  /* .content-header {
+    border: 10px solid blue;
+  }
+} */
+
+/* portrait tablets, portrait iPad, landscape e-readers, landscape 800x480 or 854x480 phones */
+@media (min-width:641px)  { 
+  /* .content-header {
+    border: 10px solid green;
+  } */
+}
+
+/* tablet, landscape iPad, lo-res laptops ands desktops */ 
+@media (min-width:961px)  {
+  /* .content-header {
+    border: 10px solid pink;
+  } */
+}
+
+ /* big landscape tablets, laptops, and desktops */ 
+@media (min-width:1025px) { 
+  /* .content-header {
+    border: 10px solid cyan;
+  } */
+}
+
+/* hi-res laptops and desktops */ 
+@media (min-width:1281px) { 
+  /* .content-header {
+    border: 10px solid yellow;
+  } */
+}

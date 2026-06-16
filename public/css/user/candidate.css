@@ -1,0 +1,227 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+section {
+    padding: 40px 0;
+}
+
+section .section-title {
+    text-align: center;
+    color: #ffffff;
+    margin-bottom: 30px;
+    text-transform: uppercase;
+}
+
+#team .card {
+    border: none;
+    background: #ffffff;
+}
+
+
+.mainflip {
+    cursor: pointer;
+    -webkit-transition: 1s;
+    -webkit-transform-style: preserve-3d;
+    -ms-transition: 1s;
+    -moz-transition: 1s;
+    -moz-transform: perspective(1000px);
+    -moz-transform-style: preserve-3d;
+    -ms-transform-style: preserve-3d;
+    transition: 1s;
+    transform-style: preserve-3d;
+    position: relative;
+}
+
+.frontside {
+    position: relative;
+    -webkit-transform: rotateY(0deg);
+    -ms-transform: rotateY(0deg);
+    z-index: 2;
+    margin-bottom: 30px;
+}
+
+
+
+.frontside {
+    -webkit-backface-visibility: hidden;
+    -moz-backface-visibility: hidden;
+    -ms-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-transition: 1s;
+    -webkit-transform-style: preserve-3d;
+    -moz-transition: 1s;
+    -moz-transform-style: preserve-3d;
+    -o-transition: 1s;
+    -o-transform-style: preserve-3d;
+    -ms-transition: 1s;
+    -ms-transform-style: preserve-3d;
+    transition: 1s;
+    transform-style: preserve-3d;
+}
+
+.frontside .card {
+    min-height: 250px;
+}
+
+
+.frontside .card .card-title  {
+    color: #007b5e !important;
+}
+
+ .card-title {
+    margin-top: 40px;
+    font-size: 20px;
+}
+
+.frontside .card .card-body img {
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+}
+
+
+
+/*----------Media Query--------------*/
+/* iPad Pro 12.9 Portrait and Landscape */
+@media only screen 
+  and (min-device-width: 1024px) 
+  and (max-device-width: 1366px)
+  and (-webkit-min-device-pixel-ratio: 2) {
+   
+   .navbar {
+      width: 100%;
+    }
+
+    .image-logo {
+       display: block;
+       margin-left: auto;
+       margin-right: auto;
+       width: 100%;
+    }
+   
+}
+
+/* Portrait and Landscape */
+@media only screen 
+  and (min-device-width: 768px) 
+  and (max-device-width: 1024px) 
+  and (-webkit-min-device-pixel-ratio: 1) {
+
+   .navbar {
+      width: 100%;
+    }
+
+    .image-logo {
+       display: block;
+       margin-left: auto;
+       margin-right: auto;
+       width: 100%;
+    }
+
+    .frontside .card {
+      min-height: 280px;
+    }
+
+}
+
+
+/* iPhone X Portrait and Landscape */
+@media only screen 
+  and (min-device-width: 375px) 
+  and (max-device-width: 812px) 
+  and (-webkit-min-device-pixel-ratio: 3) { 
+
+     .navbar {
+          width: 100%;
+        }
+
+    .image-logo {
+       display: block;
+       margin-left: auto;
+       margin-right: auto;
+       width: 100%;
+    }
+
+    .span-details {
+      text-align: center;
+      width: 100%;
+    }
+   
+
+}
+
+
+/* iPhone 6, 6S, 7 and 8 Portrait and Landscape */
+@media only screen 
+  and (min-device-width: 375px) 
+  and (max-device-width: 667px) 
+  and (-webkit-min-device-pixel-ratio: 2) { 
+
+  .navbar {
+          width: 100%;
+        }
+
+    .image-logo {
+       display: block;
+       margin-left: auto;
+       margin-right: auto;
+       width: 100%;
+    }
+
+    .span-details {
+      text-align: center;
+      width: 100%;
+    }
+
+}
+
+/* iPhone 5, 5S, 5C and 5SE Portrait and Landscape */
+@media only screen 
+  and (min-device-width: 320px) 
+  and (max-device-width: 568px)
+  and (-webkit-min-device-pixel-ratio: 2) {
+
+    .navbar {
+          width: 100%;
+        }
+
+    .image-logo {
+       display: block;
+       margin-left: auto;
+       margin-right: auto;
+       width: 100%;
+    }
+
+    .span-details {
+      text-align: center;
+      width: 100%;
+    }
+
+}
+
+
+@media only screen 
+  and (min-device-width: 240px) 
+  and (max-device-width: 320px)
+  and (-webkit-min-device-pixel-ratio: 1) {
+  
+  .navbar {
+          width: 100%;
+        }
+
+    .image-logo {
+       display: block;
+       margin-left: auto;
+       margin-right: auto;
+       width: 100%;
+    }
+
+     .span-details {
+      text-align: center;
+      width: 100%;
+    }
+
+
+}
