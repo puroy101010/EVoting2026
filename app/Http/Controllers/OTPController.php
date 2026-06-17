@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Exception;
 use App\Models\User;
 use App\Services\ConfigService;
+use App\Services\OTPService;
 use App\Services\UtilityService;
 use Dflydev\DotAccessData\Util;
 use Illuminate\Support\Facades\Log;
@@ -23,138 +24,24 @@ class OTPController extends Controller
 {
 
 
+    protected OTPService $otpService;
 
-    // done 2021-08-31
+    public function __construct(OTPService $otpService)
+    {
+        $this->otpService = $otpService;
+    }
 
     public function store(SendOTPRequest $request)
     {
 
-        try {
-
-            $datetime   = EApp::datetime();
-            $email      = $request->input('email');
-
-            // Find user
-            $userInfo = User::where('email', $email)
-                ->whereIn('role', ['stockholder', 'corp-rep', 'non-member'])
-                ->first();
-
-
-            if ($userInfo === null) {
-
-                Log::info("OTP: Email not found", ['email' => $email]);
-
-                ActivityController::log(['activityCode' => '00006', 'email' => $email]);
-
-                return response()->json(['message' => 'Email is not registered.'], 400);
-            }
-
-            Log::info("OTP: User info by email retrieved successfully.", ['email' => $email, 'userId' => $userInfo->id]);
-
-
-            $accountInfo = $userInfo;
-
-
-            if ($accountInfo === null) {
-
-                Log::info("OTP: User not found", ['email' => $email]);
-
-                ActivityController::log(['activityCode' => '00006', 'email' => $email]);
-
-                return response()->json(['message' => 'Email is not registered.'], 400);
-            }
-
-            // Check if there's an existing OTP that's still valid (sent less than 5 minutes ago)
-            if ($accountInfo->otpCreatedAt) {
-                $createdAt = strtotime($accountInfo->otpCreatedAt);
-                $now = strtotime($datetime);
-                $timeDifference = $now - $createdAt;
-                
-                // 300 seconds = 5 minutes
-                if ($timeDifference < 300) {
-                    $waitTime = 300 - $timeDifference;
-                    Log::info("OTP: Resend request too soon", ['email' => $email, 'waitTime' => $waitTime]);
-                    ActivityController::log(['activityCode' => '00006', 'email' => $email]);
-                    return response()->json(['message' => "Please wait {$waitTime} seconds before requesting another OTP."], 429);
-                }
-            }
-
-            $otp =  $otp = $this->generateOTP();
-
-            $authUserDetails = ["id" => $accountInfo->id, "email" => $email, "otp" => $otp];
-
-            $this->sendOTP($email, $authUserDetails, $otp);
-
-            DB::beginTransaction();
-
-            $this->setOTP($accountInfo, $datetime, $authUserDetails, $otp);
-
-            ActivityController::log(['activityCode' => '00005', 'email' => $email, 'data' => json_encode(['userId' => $accountInfo->id])]);
-
-            DB::commit();
-
-            return response()->json(['message' => 'OTP has been sent to your email.', 'otpCreatedAt' => $datetime], 200);
-        } catch (Exception $e) {
-
-
-            if (strpos($e->getMessage(), 'No Such User Here') !== false) {
-                Log::error('OTP: The OTP could not be sent because the email address is not registered or does not exist.', [
-                    "email" => $request->email
-                ]);
-                ActivityController::log(['activityCode' => '00126', 'email' => $request->email]);
-                return response()->json(['message' => 'Unable to send OTP. The email address is not registered or inactive.'], 400);
-            }
-
-            UtilityService::logServerError($request, $e, "Sending OTP failed");
-
-
-            return response()->json([], 500);
-        }
+        return $this->otpService->generateAndStoreOTP($request);
     }
 
-    private function setOTP($accountInfo, $datetime, $authUserDetails, $otp)
-    {
-        $options = ['cost' => 12];
-        $encOtp = password_hash($otp, PASSWORD_BCRYPT, $options);
 
-        $updateOtp = User::where('id', $accountInfo->id)
-            ->where('email', $accountInfo->email)
-            ->update([
-                'password' => $encOtp,
-                'otpValid' => 1,
-                'otpCreatedAt' => $datetime
-            ]);
 
-        if (!$updateOtp) {
-            Log::error("OTP: Failed to update OTP in the database", $authUserDetails);
-            return response()->json([], 500);
-        }
 
-        Log::info("OTP: OTP has been updated in the database", $authUserDetails);
-    }
 
-    private function sendOTP($email, $authUserDetails, $otp)
-    {
 
-        $subject = "ONE TIME PIN - Valley Golf and Country Club, Inc.";
-
-        $otpEnabled = (int)ConfigService::getConfig('otp_login_enabled') === 1;
-
-        Log::info("OTP: OTP login is " . ($otpEnabled ? "enabled" : "disabled"), $authUserDetails);
-
-        if ($otpEnabled) {
-
-            Log::info("OTP: Sending OTP to email {$email}", $authUserDetails);
-            Mail::to($email)->send(new SendOtpMail($otp, $subject));
-            Log::info("OTP: The OTP has been sent to email {$email}", $authUserDetails);
-        }
-    }
-
-    private function generateOTP(): int
-    {
-
-        return rand(10000, 99999);
-    }
 
     private function getUserInfo($userInfo, $email, $accountNo): ?User
     {
@@ -244,7 +131,7 @@ class OTPController extends Controller
                 $createdAt = strtotime($accountInfo->otpCreatedAt);
                 $now = strtotime(EApp::datetime());
                 $timeDifference = $now - $createdAt;
-                
+
                 if ($timeDifference > 300) {
                     Log::warning("Verify OTP: OTP expired", ["email" => $email, "createdAt" => $accountInfo->otpCreatedAt, "timeDifference" => $timeDifference]);
                     ActivityController::log(['activityCode' => '00007', 'email' => $email]);

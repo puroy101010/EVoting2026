@@ -65,7 +65,7 @@
     <div class="container container-Div">
         <div class="row">
             <div class="col-md-12">
-                <h1 class="h2-annual-title text-center" style="">2025 Annual Meeting of Stockholders</h1>
+                <h1 class="h2-annual-title text-center" style="">2026 Annual Meeting of Stockholders</h1>
             </div>
         </div>
         <div class="row">
@@ -74,30 +74,30 @@
                 <?php
 
                 use Illuminate\Support\Facades\Auth;
-?>
-                @if(Auth::check()) 
+                ?>
+                @if(Auth::check())
 
-                    @if(Auth::user()->isVoterGroup())
-                            <div class="divButton vote-button-prominent" onclick="vote()">
-                            <i class="fas fa-vote-yea"></i> VOTE HERE
-                            <div class="button-glow"></div>
-                          </div>
-                    @endif
-                @else 
-                                   <div class="alert alert-info text-center mb-4" style="background-color: #d1ecf1; border-color: #bee5eb; color: #0c5460; font-size: 1.1em; font-weight: 500; border-radius: 8px; padding: 15px;">
-                            <i class="fas fa-info-circle"></i> You need to login before you can cast your vote
-                          </div>
-                    <div class="divButton login-button-prominent" onclick="login()">
-                            <i class="fas fa-sign-in-alt"></i> LOGIN HERE
-                            <div class="button-glow"></div>
-                          </div>
+                @if(Auth::user()->isVoterGroup())
+                <div class="divButton vote-button-prominent" onclick="vote()">
+                    <i class="fas fa-vote-yea"></i> VOTE HERE
+                    <div class="button-glow"></div>
+                </div>
                 @endif
-            <div class="text-center mt-5">
-                        <div class="divButton register-link-style" onclick="register()">
-                            <i class="fas fa-user-plus"></i> REGISTER FOR ONSITE MEETING
-                        </div>
-                      </div>
-                
+                @else
+                <div class="alert alert-info text-center mb-4" style="background-color: #d1ecf1; border-color: #bee5eb; color: #0c5460; font-size: 1.1em; font-weight: 500; border-radius: 8px; padding: 15px;">
+                    <i class="fas fa-info-circle"></i> You need to login before you can cast your vote
+                </div>
+                <div class="divButton login-button-prominent" onclick="login()">
+                    <i class="fas fa-sign-in-alt"></i> LOGIN HERE
+                    <div class="button-glow"></div>
+                </div>
+                @endif
+                <div class="text-center mt-5">
+                    <div class="divButton register-link-style" onclick="register()">
+                        <i class="fas fa-user-plus"></i> REGISTER FOR ONSITE MEETING
+                    </div>
+                </div>
+
 
             </div>
         </div>

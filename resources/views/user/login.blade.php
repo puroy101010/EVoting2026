@@ -49,6 +49,14 @@
 			<span style="font-size:.9em;font-weight:500;">A 5-digit numeric OTP has been sent to</span>
 			<strong id="user-email" style="color:#304c40;font-size:1.08em;font-family:'Segoe UI','Roboto','Arial',sans-serif;"></strong>
 		</div>
+
+		<div id="otp-rate-limit-alert" class="alert alert-warning alert-dismissible fade show" role="alert" style="display: none;">
+			<!-- <strong>Please Wait</strong> -->
+			<!-- <div id="otp-wait-message">This is a message</div> -->
+
+		</div>
+
+
 		<div style="text-align: center; margin-bottom: 15px; font-size: 0.85em; color: #ff6b6b;">
 			<span id="otp-expiration-text">OTP expires in <strong id="otp-expiration-timer">05:00</strong></span>
 		</div>
@@ -153,28 +161,38 @@
 						return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 					}
 
-					// Start OTP expiration timer (5 minutes = 300 seconds)
-					let otpExpirationSeconds = 300;
+					// Calculate OTP expiration seconds from server expiry time
+					const expiryTime = new Date(data.otpExpiresAt);
+					const now = new Date();
+					let otpExpirationSeconds = Math.floor((expiryTime - now) / 1000);
+
+					// Ensure it's not negative
+					if (otpExpirationSeconds < 0) {
+						otpExpirationSeconds = 0;
+					}
+
+					// Display initial timer value
+					$('#otp-expiration-timer').text(formatTime(otpExpirationSeconds));
+
+					// Start OTP expiration timer
 					let otpExpirationInterval = setInterval(function() {
 						otpExpirationSeconds--;
 						$('#otp-expiration-timer').text(formatTime(otpExpirationSeconds));
 
 						if (otpExpirationSeconds <= 0) {
 							clearInterval(otpExpirationInterval);
-							$('#otp-expiration-text').html('<span style="color: #ff6b6b;">OTP has expired. Please request a new OTP.</span>');
+							// Hide the counter when expired
+							$('#otp-expiration-text').hide();
+							// Disable OTP input and submit button
 							$('[name=otp]').prop('disabled', true);
 							$('#btn_sumbit_otp').prop('disabled', true);
+							// Show and enable the resend button
 							$('#btn_resend_otp').prop('disabled', false).show();
 						}
 					}, 1000);
 
 					// Store interval ID for cleanup
 					$(document).data('otpExpirationInterval', otpExpirationInterval);
-
-					// Show resend button and enable it after 30 seconds to resend
-					setTimeout(function() {
-						$('#btn_resend_otp').show();
-					}, 30000);
 
 					// Success feedback
 					Swal.fire({
@@ -197,13 +215,89 @@
 					});
 				},
 
-				429: function(data) {
+				404: function(data) {
 					Swal.fire({
-						icon: 'warning',
-						title: 'Please Wait',
+						icon: 'info',
+						title: 'Info',
 						text: data["responseJSON"]["message"],
 						confirmButtonColor: '#304c40'
 					});
+				},
+
+				429: function(data) {
+
+					// Get the email value and display it
+					const userEmail = $('[name=email]').val();
+					$('#user-email').text(userEmail);
+
+					// Simple transition without fade effect
+					$('#login_form_wrapper').hide();
+					$('#formContent2').show();
+
+					// Reset OTP input
+					$('[name=otp]').val('');
+
+					// Helper function to format seconds to mm:ss
+					function formatTime(seconds) {
+						const mins = Math.floor(seconds / 60);
+						const secs = seconds % 60;
+						return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+					}
+
+
+
+
+					// Calculate OTP expiration seconds from server expiry time
+					const expiryTime = new Date(data.responseJSON.otpExpiresAt);
+					const createdAt = new Date(data.responseJSON.otpCreatedAt);
+					const now = new Date();
+
+
+					console.log("Expiry Time: ", expiryTime);
+					console.log("Created At: ", data.responseJSON.otpCreatedAt);
+					console.log("Created At formatted: ", createdAt);
+					console.log("Now: ", now);
+
+					console.log("Elapsed Seconds Since Creation: ", Math.floor(((now - createdAt) / 1000)));
+
+
+					// let otpExpirationSeconds = Math.floor((now - createdAt) / 1000);
+					let otpExpirationSeconds = Math.floor((expiryTime - now) / 1000);
+
+
+					// Ensure it's not negative
+					if (otpExpirationSeconds < 0) {
+						otpExpirationSeconds = 0;
+					}
+
+					// Display initial timer value
+					$('#otp-expiration-timer').text(formatTime(otpExpirationSeconds));
+
+					// Start OTP expiration timer
+					let otpExpirationInterval = setInterval(function() {
+						otpExpirationSeconds--;
+						$('#otp-expiration-timer').text(formatTime(otpExpirationSeconds));
+						console.log("OTP Expiration Seconds: ", otpExpirationSeconds);
+
+						if (otpExpirationSeconds <= 0) {
+							clearInterval(otpExpirationInterval);
+							// Hide the counter when expired
+							// $('#otp-expiration-text').hide();
+							// Disable OTP input and submit button
+							$('[name=otp]').prop('disabled', true);
+							$('#btn_sumbit_otp').prop('disabled', true);
+							// Show and enable the resend button
+							$('#btn_resend_otp').prop('disabled', false).show();
+						}
+					}, 1000);
+
+					// Store interval ID for cleanup
+					$(document).data('otpExpirationInterval', otpExpirationInterval);
+
+					$('#otp-rate-limit-alert').text(data["responseJSON"]["message"]).show();
+
+
+
 				},
 
 				401: function() {
@@ -225,14 +319,32 @@
 				},
 
 				419: function() {
-					Swal.fire({
-						icon: 'warning',
-						title: 'Session Timeout',
-						text: 'Your session has expired. Please refresh the page.',
-						confirmButtonColor: '#304c40'
-					}).then(() => {
-						location.reload();
-					});
+					// Get the email from the form
+					const userEmail = $('[name=email]').val();
+
+					if (userEmail) {
+						// Show OTP form
+						$('#user-email').text(userEmail);
+						$('#login_form_wrapper').hide();
+						$('#formContent2').show();
+
+						Swal.fire({
+							icon: 'info',
+							title: 'Session Refreshed',
+							text: 'Your session has been refreshed. Please enter the OTP to continue.',
+							confirmButtonColor: '#304c40'
+						});
+					} else {
+						// Fallback to reload if no email
+						Swal.fire({
+							icon: 'warning',
+							title: 'Session Timeout',
+							text: 'Your session has expired. Please refresh the page.',
+							confirmButtonColor: '#304c40'
+						}).then(() => {
+							location.reload();
+						});
+					}
 				},
 
 				500: function() {
@@ -344,122 +456,6 @@
 		})
 	})
 
-	// Resend OTP button handler
-	$(document).on('click', '#btn_resend_otp', function(e) {
-		e.preventDefault();
-
-		const email = $('[name=email]').val();
-
-		if (!email) {
-			Swal.fire({
-				icon: 'error',
-				title: 'Error',
-				text: 'Email is required to resend OTP.',
-				confirmButtonColor: '#304c40'
-			});
-			return;
-		}
-
-		// Clear existing timer
-		const otpExpirationInterval = $(document).data('otpExpirationInterval');
-		if (otpExpirationInterval) clearInterval(otpExpirationInterval);
-
-		$.ajax({
-			url: "{{asset('otp/request')}}",
-			method: 'POST',
-			dataType: 'json',
-			data: {
-				email: email,
-				_token: '{{ csrf_token() }}'
-			},
-			beforeSend: function() {
-				setLoadingState($('#btn_resend_otp'), true);
-			},
-			complete: function() {
-				setLoadingState($('#btn_resend_otp'), false);
-			},
-			statusCode: {
-				200: function(data) {
-					// Reset OTP input
-					$('[name=otp]').val('').prop('disabled', false);
-					$('#btn_sumbit_otp').prop('disabled', false);
-					$('#btn_resend_otp').hide();
-					$('#otp-expiration-text').html('OTP expires in <strong id="otp-expiration-timer">05:00</strong>');
-
-					// Clear old timer
-					const oldInterval = $(document).data('otpExpirationInterval');
-					if (oldInterval) clearInterval(oldInterval);
-
-					// Helper function to format seconds to mm:ss
-					function formatTime(seconds) {
-						const mins = Math.floor(seconds / 60);
-						const secs = seconds % 60;
-						return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-					}
-
-					// Start OTP expiration timer (5 minutes = 300 seconds)
-					let otpExpirationSeconds = 300;
-					let otpExpirationInterval = setInterval(function() {
-						otpExpirationSeconds--;
-						$('#otp-expiration-timer').text(formatTime(otpExpirationSeconds));
-
-						if (otpExpirationSeconds <= 0) {
-							clearInterval(otpExpirationInterval);
-							$('#otp-expiration-text').html('<span style="color: #ff6b6b;">OTP has expired. Please request a new OTP.</span>');
-							$('[name=otp]').prop('disabled', true);
-							$('#btn_sumbit_otp').prop('disabled', true);
-							$('#btn_resend_otp').prop('disabled', false).show();
-						}
-					}, 1000);
-
-					$(document).data('otpExpirationInterval', otpExpirationInterval);
-
-					// Show resend button after 30 seconds to allow resend
-					setTimeout(function() {
-						$('#btn_resend_otp').show();
-					}, 30000);
-
-					Swal.fire({
-						icon: 'success',
-						title: 'OTP Resent!',
-						text: 'A new OTP has been sent to your email.',
-						timer: 2000,
-						showConfirmButton: false,
-						confirmButtonColor: '#304c40'
-					});
-				},
-
-				400: function(data) {
-					Swal.fire({
-						icon: 'info',
-						title: 'Info',
-						text: data["responseJSON"]["message"],
-						confirmButtonColor: '#304c40'
-					});
-				},
-
-				429: function(data) {
-					Swal.fire({
-						icon: 'warning',
-						title: 'Please Wait',
-						text: data["responseJSON"]["message"],
-						confirmButtonColor: '#304c40'
-					});
-				},
-
-				500: function() {
-					Swal.fire({
-						icon: 'error',
-						title: 'Server Error',
-						text: 'An unexpected error occurred. Please try again.',
-						confirmButtonColor: '#304c40'
-					});
-				}
-			}
-		});
-	});
-
-	//
 
 	particlesJS("particles-js", {
 		"particles": {

@@ -141,7 +141,10 @@ class ActivityCodeSeeder extends Seeder
 ('00144', 'Disabled amendment restriction', 'Settings', 'warning', 'update', 1), 
 
 ('00145', 'Edited a corporate representative', 'stockholder', 'warning', 'update', 1),
-('00146', 'Edited an online account', 'online account', 'warning', 'update', 1);
+('00146', 'Edited an online account', 'online account', 'warning', 'update', 1),
+('00147', 'OTP is still valid', 'OTP', 'warning', 'update', 1)
+
+;
 
         ");
     }

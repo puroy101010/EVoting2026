@@ -98,7 +98,7 @@ class EApp extends Controller
     }
 
 
-    public static function datetime()
+    public static function datetime(): string
     {
 
         date_default_timezone_set('Asia/Manila');
