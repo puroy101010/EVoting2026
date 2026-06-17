@@ -33,7 +33,6 @@ class OTPController extends Controller
 
             $datetime   = EApp::datetime();
             $email      = $request->input('email');
-            $accountNo  = $request->input('account_no');
 
             // Find user
             $userInfo = User::where('email', $email)
@@ -43,26 +42,41 @@ class OTPController extends Controller
 
             if ($userInfo === null) {
 
-                Log::info("OTP: Email not found", ['email' => $email, 'accountNo' => $accountNo]);
+                Log::info("OTP: Email not found", ['email' => $email]);
 
-                ActivityController::log(['activityCode' => '00006', 'accountNo' => $accountNo, 'email' => $email]);
+                ActivityController::log(['activityCode' => '00006', 'email' => $email]);
 
-                return response()->json(['message' => 'Account number or email is incorrect.'], 400);
+                return response()->json(['message' => 'Email is not registered.'], 400);
             }
 
-            Log::info("OTP: User info by email retrieved successfully.", ['email' => $email, 'accountNo' => $accountNo, 'userId' => $userInfo->id]);
+            Log::info("OTP: User info by email retrieved successfully.", ['email' => $email, 'userId' => $userInfo->id]);
 
 
-            $accountInfo = $this->getUserInfo($userInfo, $email, $accountNo);
+            $accountInfo = $userInfo;
 
 
             if ($accountInfo === null) {
 
-                Log::info("OTP: Account number not found", ['email' => $email, 'accountNo' => $accountNo]);
+                Log::info("OTP: User not found", ['email' => $email]);
 
-                ActivityController::log(['activityCode' => '00006', 'accountNo' => $accountNo, 'email' => $email]);
+                ActivityController::log(['activityCode' => '00006', 'email' => $email]);
 
-                return response()->json(['message' => 'Account number or email is incorrect.'], 400);
+                return response()->json(['message' => 'Email is not registered.'], 400);
+            }
+
+            // Check if there's an existing OTP that's still valid (sent less than 5 minutes ago)
+            if ($accountInfo->otpCreatedAt) {
+                $createdAt = strtotime($accountInfo->otpCreatedAt);
+                $now = strtotime($datetime);
+                $timeDifference = $now - $createdAt;
+                
+                // 300 seconds = 5 minutes
+                if ($timeDifference < 300) {
+                    $waitTime = 300 - $timeDifference;
+                    Log::info("OTP: Resend request too soon", ['email' => $email, 'waitTime' => $waitTime]);
+                    ActivityController::log(['activityCode' => '00006', 'email' => $email]);
+                    return response()->json(['message' => "Please wait {$waitTime} seconds before requesting another OTP."], 429);
+                }
             }
 
             $otp =  $otp = $this->generateOTP();
@@ -75,20 +89,19 @@ class OTPController extends Controller
 
             $this->setOTP($accountInfo, $datetime, $authUserDetails, $otp);
 
-            ActivityController::log(['activityCode' => '00005', 'accountNo' => $accountNo, 'email' => $email, 'data' => json_encode(['userId' => $accountInfo->id])]);
+            ActivityController::log(['activityCode' => '00005', 'email' => $email, 'data' => json_encode(['userId' => $accountInfo->id])]);
 
             DB::commit();
 
-            return response()->json(['message' => 'OTP has been sent to your email.'], 200);
+            return response()->json(['message' => 'OTP has been sent to your email.', 'otpCreatedAt' => $datetime], 200);
         } catch (Exception $e) {
 
 
             if (strpos($e->getMessage(), 'No Such User Here') !== false) {
                 Log::error('OTP: The OTP could not be sent because the email address is not registered or does not exist.', [
-                    "email" => $request->email,
-                    'account_no' => $request->account_no
+                    "email" => $request->email
                 ]);
-                ActivityController::log(['activityCode' => '00126', 'accountNo' => $request->account_no, 'email' => $request->email]);
+                ActivityController::log(['activityCode' => '00126', 'email' => $request->email]);
                 return response()->json(['message' => 'Unable to send OTP. The email address is not registered or inactive.'], 400);
             }
 
@@ -209,7 +222,6 @@ class OTPController extends Controller
 
         try {
 
-            $accountNo = $request->input('account_no');
             $email     = $request->input('email');
             $otp       = $request->input('otp');
 
@@ -221,21 +233,32 @@ class OTPController extends Controller
 
 
             if ($userInfo === null) {
-                Log::error("Verify OTP: User not found", ["email" => $email, "accountNo" => $accountNo, "otp" => $otp]);
+                Log::error("Verify OTP: User not found", ["email" => $email, "otp" => $otp]);
                 return response()->json([], 500);
             }
 
-            $accountInfo = $this->getUserInfo($userInfo, $email, $accountNo);
+            $accountInfo = $userInfo;
 
-
+            // Check if OTP is expired (5 minutes = 300 seconds)
+            if ($accountInfo->otpCreatedAt) {
+                $createdAt = strtotime($accountInfo->otpCreatedAt);
+                $now = strtotime(EApp::datetime());
+                $timeDifference = $now - $createdAt;
+                
+                if ($timeDifference > 300) {
+                    Log::warning("Verify OTP: OTP expired", ["email" => $email, "createdAt" => $accountInfo->otpCreatedAt, "timeDifference" => $timeDifference]);
+                    ActivityController::log(['activityCode' => '00007', 'email' => $email]);
+                    return response()->json(['message' => 'The OTP has expired. Please request a new OTP.'], 400);
+                }
+            }
 
             if (password_verify($otp, $accountInfo->password)) {
 
-                Log::info("Verify OTP: OTP matched", ["email" => $email, "accountNo" => $accountNo, "otp" => $otp]);
+                Log::info("Verify OTP: OTP matched", ["email" => $email, "otp" => $otp]);
 
                 if ($accountInfo->otpValid !== 1) {
 
-                    Log::warning("Verify OTP: OTP is invalid", ["email" => $email, "accountNo" => $accountNo, "otp" => $otp]);
+                    Log::warning("Verify OTP: OTP is invalid", ["email" => $email, "otp" => $otp]);
                     return response()->json(['message' => 'The OTP you entered is incorrect.'], 400);
                 }
 
@@ -243,21 +266,24 @@ class OTPController extends Controller
 
                 Auth::loginUsingId($accountInfo->id, FALSE);
 
+                // Clear the OTP after successful verification
                 $accountInfo->otpValid = false;
+                $accountInfo->password = null;
+                $accountInfo->otpCreatedAt = null;
                 $accountInfo->save();
 
-                ActivityController::log(['activityCode' => '00001', 'accountNo' => $accountNo, 'email' => $email, 'userId' => $accountInfo->id]);
+                ActivityController::log(['activityCode' => '00001', 'email' => $email, 'userId' => $accountInfo->id]);
 
                 DB::commit();
 
-                Log::info("Verify OTP: OTP verified successfully", ["email" => $email, "accountNo" => $accountNo, "otp" => $otp]);
+                Log::info("Verify OTP: OTP verified successfully", ["email" => $email, "otp" => $otp]);
 
                 return response()->json(['message' => 'Success'], 200);
             }
 
-            Log::info("Verify OTP: OTP did not match", ["email" => $email, "accountNo" => $accountNo, "otp" => $otp]);
+            Log::info("Verify OTP: OTP did not match", ["email" => $email, "otp" => $otp]);
 
-            ActivityController::log(['activityCode' => '00007', 'accountNo' => $accountNo, 'email' => $email]);
+            ActivityController::log(['activityCode' => '00007', 'email' => $email]);
 
             return response()->json(["message" => "The OTP you entered is incorrect"], 400);
         } catch (Exception $e) {

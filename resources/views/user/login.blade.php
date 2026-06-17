@@ -9,37 +9,15 @@
 <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
 
 <style>
-	/* .div-wrapper {
-			background-image: url("{{asset('images/background.jpg')}}"); 
-			background-position: center center;
-			background-repeat: no-repeat;
-			background-attachment: fixed;
-			background-size: cover;
-	   
-		}
-
-		*/
 </style>
 @endsection
 
 @section('content')
 
-<!-- <nav class="navbar navbar-expand-lg py-3 bg-dark-green shadow-sm border border-danger">
-		<div class="container">
-			<a href="#" class="navbar-brand">
-				<img src="{{asset('images/new_logo.png')}}" alt="Image" class="d-inline-block align-middle image-logo">
-			</a>
-		</div>
-	</nav> -->
 <div id="particles-js"></div>
 <div class="div-wrapper" id="login_form_wrapper">
-
 	<div class="wrapper fadeInDown">
-
-
-
 		<div id="formContent">
-
 			<div class="fadeIn first">
 				<img src="{{asset('images/logo-login.png')}}" id="icon" alt="User Icon" class="m-1 login-logo">
 			</div>
@@ -49,45 +27,37 @@
 			</div>
 
 			<div class="login-helper fadeIn second mb-3" style="display:flex;align-items:center;justify-content:center;gap:0.6em;">
-				<span style="color:#2F4A3C;font-size:1.04em;font-weight:500;">Enter your 4-digit account number and email to log in</span>
+				<span style="color:#2F4A3C;font-size:1.04em;font-weight:500;">Enter your email to log in</span>
 			</div>
-
-
 			<form id="login_form" method="POST">
-
 				@csrf
-
-				<input type="text" name="account_no" class="fadeIn third" placeholder="Account Number" autocomplete="off" required maxlength="4" minlength="4">
 				<input type="email" name="email" id="date" class="fadeIn fourth input-time" placeholder="Email" autocomplete="off" required>
-
 				<button type="submit" class="mt-3 fadeIn fourth" value="SUBMIT" id="btn_request_otp">Request OTP <img src="{{asset('images/loading.gif')}}" class="ml-2 login-verify-otp" style="display: none"></button> <br><br>
-
 			</form>
-
-
 			<div id="formFooter">
-				<p style="color: #fff">Login with your account number and registered email address.</p>
+				<p style="color: #fff">Login with your registered email address.</p>
 				<p style="color: #fff; font-size: 0.85em; margin-top: 10px;">Need assistance? Call <strong>8658-4901</strong></p>
 			</div>
-
 		</div>
-
 	</div>
-
 </div>
 
 <div id="formContent2" class="wrappers mx-auto" style="display: none;">
-
 	<form id="form_login_otp" method="POST"><br>
 		<div class="lable-otp text-center mb-3" style="display:flex;flex-direction:column;align-items:center;gap:0.5em;font-family:'Segoe UI', 'Roboto', 'Arial', sans-serif;">
 			<span style="font-size:.9em;"><i class="fas fa-envelope-open-text"></i></span>
 			<span style="font-size:.9em;font-weight:500;">A 5-digit numeric OTP has been sent to</span>
 			<strong id="user-email" style="color:#304c40;font-size:1.08em;font-family:'Segoe UI','Roboto','Arial',sans-serif;"></strong>
 		</div>
+		<div style="text-align: center; margin-bottom: 15px; font-size: 0.85em; color: #ff6b6b;">
+			<span id="otp-expiration-text">OTP expires in <strong id="otp-expiration-timer">05:00</strong></span>
+		</div>
 		<input type="text" name="otp" class="fadeIn second" placeholder="Enter 5-digit OTP" autocomplete="off" maxlength="5" required>
 
-		<!-- <button type="button" class="btn btn-green btn-md rounded-0 mb-4 mt-4">I didn't get the OTP</button> -->
 		<button type="submit" class="btn btn-green btn-md rounded-0 mb-4 mt-4" id="btn_sumbit_otp">Submit</button>
+		<div style="text-align: center; margin-top: 10px;">
+			<button type="button" class="btn btn-outline-secondary btn-sm" id="btn_resend_otp" style="display:none;">Resend OTP</button>
+		</div>
 	</form>
 
 	<div id="formFooter">
@@ -95,10 +65,7 @@
 			Your OTP has been sent from Valley’s authorized email address. If you do not receive the email, please check your spam folder or call <strong>8658-4901</strong> for assistance.
 		</p>
 	</div>
-
 </div>
-
-
 
 <script type="text/javascript">
 	// Add loading state management
@@ -156,22 +123,17 @@
 		}
 
 		$.ajax({
-
 			url: "{{asset('otp/request')}}",
 			method: "POST",
 			dataType: 'json',
 			data: $(this).serialize(),
-
 			beforeSend: function() {
 				setLoadingState($('#btn_request_otp'), true);
 			},
-
 			complete: function() {
 				setLoadingState($('#btn_request_otp'), false);
 			},
-
 			statusCode: {
-
 				200: function(data) {
 					// Get the email value and display it
 					const userEmail = $('[name=email]').val();
@@ -180,6 +142,39 @@
 					// Simple transition without fade effect
 					$('#login_form_wrapper').hide();
 					$('#formContent2').show();
+
+					// Reset OTP input
+					$('[name=otp]').val('');
+
+					// Helper function to format seconds to mm:ss
+					function formatTime(seconds) {
+						const mins = Math.floor(seconds / 60);
+						const secs = seconds % 60;
+						return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+					}
+
+					// Start OTP expiration timer (5 minutes = 300 seconds)
+					let otpExpirationSeconds = 300;
+					let otpExpirationInterval = setInterval(function() {
+						otpExpirationSeconds--;
+						$('#otp-expiration-timer').text(formatTime(otpExpirationSeconds));
+
+						if (otpExpirationSeconds <= 0) {
+							clearInterval(otpExpirationInterval);
+							$('#otp-expiration-text').html('<span style="color: #ff6b6b;">OTP has expired. Please request a new OTP.</span>');
+							$('[name=otp]').prop('disabled', true);
+							$('#btn_sumbit_otp').prop('disabled', true);
+							$('#btn_resend_otp').prop('disabled', false).show();
+						}
+					}, 1000);
+
+					// Store interval ID for cleanup
+					$(document).data('otpExpirationInterval', otpExpirationInterval);
+
+					// Show resend button and enable it after 30 seconds to resend
+					setTimeout(function() {
+						$('#btn_resend_otp').show();
+					}, 30000);
 
 					// Success feedback
 					Swal.fire({
@@ -197,6 +192,15 @@
 					Swal.fire({
 						icon: 'info',
 						title: 'Info',
+						text: data["responseJSON"]["message"],
+						confirmButtonColor: '#304c40'
+					});
+				},
+
+				429: function(data) {
+					Swal.fire({
+						icon: 'warning',
+						title: 'Please Wait',
 						text: data["responseJSON"]["message"],
 						confirmButtonColor: '#304c40'
 					});
@@ -226,6 +230,8 @@
 						title: 'Session Timeout',
 						text: 'Your session has expired. Please refresh the page.',
 						confirmButtonColor: '#304c40'
+					}).then(() => {
+						location.reload();
 					});
 				},
 
@@ -262,28 +268,19 @@
 		}
 
 		$.ajax({
-
 			url: "{{asset('otp/verify')}}",
 			method: 'POST',
 			dataType: 'json',
-
 			data: {
 				email: $('[name=email]').val(),
-				otp: $('[name=otp]').val(),
-				account_no: $('[name=account_no]').val()
+				otp: $('[name=otp]').val()
 			},
-
-			beforeSend: function() {
-				setLoadingState($('#btn_sumbit_otp'), true);
-			},
-
-			complete: function() {
-				setLoadingState($('#btn_sumbit_otp'), false);
-			},
-
 			statusCode: {
-
 				200: function(data) {
+					// Clear timer
+					const otpExpirationInterval = $(document).data('otpExpirationInterval');
+					if (otpExpirationInterval) clearInterval(otpExpirationInterval);
+
 					Swal.fire({
 						icon: 'success',
 						title: 'Login Successful!',
@@ -346,6 +343,121 @@
 			setLoadingState($('#btn_sumbit_otp'), false);
 		})
 	})
+
+	// Resend OTP button handler
+	$(document).on('click', '#btn_resend_otp', function(e) {
+		e.preventDefault();
+
+		const email = $('[name=email]').val();
+
+		if (!email) {
+			Swal.fire({
+				icon: 'error',
+				title: 'Error',
+				text: 'Email is required to resend OTP.',
+				confirmButtonColor: '#304c40'
+			});
+			return;
+		}
+
+		// Clear existing timer
+		const otpExpirationInterval = $(document).data('otpExpirationInterval');
+		if (otpExpirationInterval) clearInterval(otpExpirationInterval);
+
+		$.ajax({
+			url: "{{asset('otp/request')}}",
+			method: 'POST',
+			dataType: 'json',
+			data: {
+				email: email,
+				_token: '{{ csrf_token() }}'
+			},
+			beforeSend: function() {
+				setLoadingState($('#btn_resend_otp'), true);
+			},
+			complete: function() {
+				setLoadingState($('#btn_resend_otp'), false);
+			},
+			statusCode: {
+				200: function(data) {
+					// Reset OTP input
+					$('[name=otp]').val('').prop('disabled', false);
+					$('#btn_sumbit_otp').prop('disabled', false);
+					$('#btn_resend_otp').hide();
+					$('#otp-expiration-text').html('OTP expires in <strong id="otp-expiration-timer">05:00</strong>');
+
+					// Clear old timer
+					const oldInterval = $(document).data('otpExpirationInterval');
+					if (oldInterval) clearInterval(oldInterval);
+
+					// Helper function to format seconds to mm:ss
+					function formatTime(seconds) {
+						const mins = Math.floor(seconds / 60);
+						const secs = seconds % 60;
+						return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+					}
+
+					// Start OTP expiration timer (5 minutes = 300 seconds)
+					let otpExpirationSeconds = 300;
+					let otpExpirationInterval = setInterval(function() {
+						otpExpirationSeconds--;
+						$('#otp-expiration-timer').text(formatTime(otpExpirationSeconds));
+
+						if (otpExpirationSeconds <= 0) {
+							clearInterval(otpExpirationInterval);
+							$('#otp-expiration-text').html('<span style="color: #ff6b6b;">OTP has expired. Please request a new OTP.</span>');
+							$('[name=otp]').prop('disabled', true);
+							$('#btn_sumbit_otp').prop('disabled', true);
+							$('#btn_resend_otp').prop('disabled', false).show();
+						}
+					}, 1000);
+
+					$(document).data('otpExpirationInterval', otpExpirationInterval);
+
+					// Show resend button after 30 seconds to allow resend
+					setTimeout(function() {
+						$('#btn_resend_otp').show();
+					}, 30000);
+
+					Swal.fire({
+						icon: 'success',
+						title: 'OTP Resent!',
+						text: 'A new OTP has been sent to your email.',
+						timer: 2000,
+						showConfirmButton: false,
+						confirmButtonColor: '#304c40'
+					});
+				},
+
+				400: function(data) {
+					Swal.fire({
+						icon: 'info',
+						title: 'Info',
+						text: data["responseJSON"]["message"],
+						confirmButtonColor: '#304c40'
+					});
+				},
+
+				429: function(data) {
+					Swal.fire({
+						icon: 'warning',
+						title: 'Please Wait',
+						text: data["responseJSON"]["message"],
+						confirmButtonColor: '#304c40'
+					});
+				},
+
+				500: function() {
+					Swal.fire({
+						icon: 'error',
+						title: 'Server Error',
+						text: 'An unexpected error occurred. Please try again.',
+						confirmButtonColor: '#304c40'
+					});
+				}
+			}
+		});
+	});
 
 	//
 

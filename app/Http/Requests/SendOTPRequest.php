@@ -25,8 +25,7 @@ class SendOTPRequest extends FormRequest
     public function rules()
     {
         return [
-            'email'      => 'required|email',
-            'account_no' => 'required|string|max:4',
+            'email' => 'required|email',
         ];
     }
 
