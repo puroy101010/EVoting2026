@@ -5,8 +5,8 @@
 
 <script src="{{asset('js/admin/corporate-ui.js') }}"></script>
 <script src="{{asset('js/admin/corporate-ui.modal.js') }}"></script>
-<script src="{{asset('js/admin/members.js')}}?v={{ filemtime(public_path('js/admin/members.js')) }}"></script>
-<script src="{{asset('js/admin/proxy-history.js')}}?v={{ filemtime(public_path('js/admin/proxy-history.js')) }}"></script>
+<script src="{{asset('js/admin/members.js')}}?v={{ filemtime('js/admin/members.js') }}"></script>
+<script src="{{asset('js/admin/proxy-history.js')}}?v={{ filemtime('js/admin/proxy-history.js') }}"></script>
 <style type="text/css">
   #filter_box {
     padding: 0.5rem !important;
