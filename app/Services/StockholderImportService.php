@@ -363,7 +363,7 @@ class StockholderImportService
             Stockholder::insert($insertPayload['stockholders']);
 
             StockholderAccount::insert($insertPayload['accounts']);
-            // DB::commit();
+            DB::commit();
         } catch (Exception $e) {
             DB::rollBack();
             throw $e;
