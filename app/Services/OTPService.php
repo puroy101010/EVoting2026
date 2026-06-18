@@ -48,9 +48,7 @@ class OTPService
 
         try {
 
-            $userInfo = User::where('email', $email)
-                ->whereIn('role', ['stockholder', 'corp-rep', 'non-member'])
-                ->first();
+            $userInfo = UserService::findUserByEmail($email);
 
             if ($userInfo === null) {
                 Log::info("OTP: Email not found", ['email' => $email]);
@@ -60,10 +58,6 @@ class OTPService
             }
 
             Log::info("OTP: User info by email retrieved successfully.", ['email' => $email, 'userId' => $userInfo->id]);
-
-
-            // Calculate expiry time (5 minutes from creation)
-            $expiryTime = date('Y-m-d H:i:s', strtotime($datetime) + 300);
 
 
             // Rate limit: do not resend within 5 minutes.
@@ -76,11 +70,11 @@ class OTPService
                     $waitTime = self::OTP_RESEND_WAIT_SECONDS - $elapsedSeconds;
                     $formattedWaitTime = $this->convertSecondsToMinutesAndSeconds($waitTime);
                     Log::info("OTP: Resend request too soon", ['email' => $email, 'waitTime' => $formattedWaitTime]);
-                    ActivityController::log(['activityCode' => '00147', 'email' => $email]);
+                    ActivityController::log(['activityCode' => '00147', 'email' => $email, 'remarks' => json_encode(['waitTime' => $formattedWaitTime])]);
                     return response()->json([
-                        'message' => "Please wait {$formattedWaitTime} before requesting another OTP.",
+                        'message' => "Please wait before requesting a new OTP.",
                         'otpCreatedAt' => $userInfo->otpCreatedAt,
-                        'otpExpiresAt' => date('Y-m-d H:i:s', strtotime($userInfo->otpCreatedAt) + 300),
+                        'otpExpiresAt' => date('Y-m-d H:i:s', strtotime($userInfo->otpCreatedAt) + self::OTP_RESEND_WAIT_SECONDS),
                         'waitTime' => $waitTime
                     ], 429);
                 }
@@ -99,32 +93,25 @@ class OTPService
             $this->setOTP($userInfo, $datetime, $authUserDetails, $otp);
             ActivityController::log([
                 'activityCode' => '00005',
+                'accountNo' => $userInfo->account_no,
+                'userId' => $userInfo->id,
                 'email' => $email,
                 'data' => json_encode(['userId' => $userInfo->id])
             ]);
 
 
-            //$this->sendOTP($email, $authUserDetails, $otp);
-
-
-
-
+            $this->sendOTP($email, $authUserDetails, $otp);
 
             DB::commit();
 
             return response()->json([
                 'message' => 'OTP has been sent to your email.',
                 'otpCreatedAt' => $datetime,
-                'otpExpiresAt' => $expiryTime
+                'otpExpiresAt' => date('Y-m-d H:i:s', strtotime($datetime) + self::OTP_RESEND_WAIT_SECONDS)
             ], 200);
         } catch (Exception $e) {
-            try {
-                if (DB::transactionLevel() > 0) {
-                    DB::rollBack();
-                }
-            } catch (Exception $rollbackException) {
-                // ignore rollback failures
-            }
+
+            DB::rollback();
 
             if (strpos($e->getMessage(), 'No Such User Here') !== false) {
                 Log::error('OTP: The OTP could not be sent because the email address is not registered or does not exist.', [
@@ -206,5 +193,78 @@ class OTPService
         }
 
         Log::info("OTP: OTP has been updated in the database", $authUserDetails);
+    }
+
+
+
+
+    public function verify(VerifyOtpRequest $request)
+    {
+        try {
+            $email = $request->input('email');
+            $otp = $request->input('otp');
+
+            $userInfo = UserService::findUserByEmail($email);
+
+            if ($userInfo === null) {
+                Log::error("Verify OTP: User not found", ["email" => $email, "otp" => $otp]);
+                return response()->json([], 500);
+            }
+
+            $accountInfo = $userInfo;
+
+            // Check if OTP is expired (5 minutes = 300 seconds)
+            if ($accountInfo->otpCreatedAt) {
+                $createdAt = strtotime($accountInfo->otpCreatedAt);
+                $now = strtotime(EApp::datetime());
+                $timeDifference = $now - $createdAt;
+
+                if ($timeDifference > self::OTP_RESEND_WAIT_SECONDS) {
+                    Log::warning("Verify OTP: OTP expired", ["email" => $email, "createdAt" => $accountInfo->otpCreatedAt, "timeDifference" => $timeDifference]);
+                    ActivityController::log(['activityCode' => '00007', 'email' => $email]);
+                    return response()->json(['message' => 'The OTP has expired. Please request a new OTP.'], 400);
+                }
+            }
+
+            if (password_verify($otp, $accountInfo->password)) {
+
+                Log::info("Verify OTP: OTP matched", ["email" => $email, "otp" => $otp]);
+
+                if ($accountInfo->otpValid !== 1) {
+
+                    Log::warning("Verify OTP: OTP is invalid", ["email" => $email, "otp" => $otp]);
+                    return response()->json(['message' => 'The OTP you entered is incorrect.'], 400);
+                }
+
+                DB::beginTransaction();
+
+                Auth::loginUsingId($accountInfo->id, FALSE);
+
+                // Clear the OTP after successful verification
+                $accountInfo->otpValid = false;
+                $accountInfo->password = null;
+                $accountInfo->otpCreatedAt = null;
+                $accountInfo->save();
+
+                ActivityController::log(['activityCode' => '00001', 'email' => $email, 'userId' => $accountInfo->id]);
+
+                DB::commit();
+
+                Log::info("Verify OTP: OTP verified successfully", ["email" => $email, "otp" => $otp]);
+
+                return response()->json(['message' => 'Success'], 200);
+            }
+
+            Log::info("Verify OTP: OTP did not match", ["email" => $email, "otp" => $otp]);
+
+            ActivityController::log(['activityCode' => '00007', 'email' => $email]);
+
+            return response()->json(["message" => "The OTP you entered is incorrect"], 400);
+        } catch (Exception $e) {
+
+            UtilityService::logServerError($request, $e, "OTP verification failed");
+
+            return response()->json([], 500);
+        }
     }
 }

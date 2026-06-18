@@ -9,6 +9,54 @@
 <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
 
 <style>
+/* OTP form alignment and resend button styles */
+#formContent2 form {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 10px;
+	padding: 8px 24px 18px;
+}
+
+#formContent2 input[name=otp] {
+	width: 76%;
+	max-width: 360px;
+	text-align: center;
+	padding: 12px 14px;
+	border-radius: 8px;
+	border: 1px solid #e6e6e6;
+	box-shadow: none;
+	font-size: 1rem;
+}
+
+.btn-resend-otp {
+	background: #ffffff;
+	border: none;
+	padding: 8px 18px;
+	border-radius: 6px;
+	cursor: pointer;
+	color: #304c40;
+	font-weight: 600;
+	box-shadow: none;
+}
+.btn-resend-otp:disabled { opacity: 0.6; cursor: not-allowed; }
+
+#otp-rate-limit-alert {
+	display: none;
+	background: #fff4ce;
+	color: #7a5b00;
+	border-radius: 8px;
+	padding: 10px 12px;
+	margin: 6px auto 0;
+	width: 88%;
+	max-width: 420px;
+	text-align: center;
+	font-size: 0.95em;
+}
+
+#otp-expiration-text { color: #ff6b6b; font-weight:600; }
+
+.lable-otp strong { display:block; margin-top:4px; }
 </style>
 @endsection
 
@@ -61,11 +109,11 @@
 			<span id="otp-expiration-text">OTP expires in <strong id="otp-expiration-timer">05:00</strong></span>
 		</div>
 		<input type="text" name="otp" class="fadeIn second" placeholder="Enter 5-digit OTP" autocomplete="off" maxlength="5" required>
-
-		<button type="submit" class="btn btn-green btn-md rounded-0 mb-4 mt-4" id="btn_sumbit_otp">Submit</button>
-		<div style="text-align: center; margin-top: 10px;">
-			<button type="button" class="btn btn-outline-secondary btn-sm" id="btn_resend_otp" style="display:none;">Resend OTP</button>
+		<div style="text-align: center; margin-top: 10px; width:100%;">
+			<button type="button" class="btn-resend-otp" id="btn_resend_otp">Request new OTP</button>
 		</div>
+		<button type="submit" class="btn btn-green btn-md rounded-0 mb-4 mt-4" id="btn_sumbit_otp">Submit</button>
+		
 	</form>
 
 	<div id="formFooter">
@@ -130,11 +178,53 @@
 			return;
 		}
 
+		handleRequestOTP($(this));
+	})
+
+
+	$(document).on('click', '#btn_resend_otp', function() {
+		// Clear alerts and request a new OTP
+		$('#otp-rate-limit-alert').hide().text('');
+		handleRequestOTP($('#login_form'));
+	})
+
+
+	// Helper function to format seconds to mm:ss
+	function formatTime(seconds) {
+		const mins = Math.floor(seconds / 60);
+		const secs = seconds % 60;
+		return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+	}
+
+	// Start OTP expiration timer and handle expiry UI changes
+	function startOtpExpirationTimer(initialSeconds) {
+		let otpExpirationSeconds = parseInt(initialSeconds, 10) || 0;
+		$('#otp-expiration-timer').text(formatTime(otpExpirationSeconds));
+
+		const otpExpirationInterval = setInterval(function() {
+			otpExpirationSeconds--;
+			$('#otp-expiration-timer').text(formatTime(otpExpirationSeconds));
+
+			if (otpExpirationSeconds <= 0) {
+				clearInterval(otpExpirationInterval);
+				$('#otp-rate-limit-alert').text('OTP has expired. Please click resend to request a new OTP.').show();
+				$('#otp-expiration-text').hide();
+				$('[name=otp]').val('').attr('disabled', false);
+				$('#btn_resend_otp').attr('disabled', false).show();
+				$('#btn_sumbit_otp').attr('disabled', true);
+			}
+		}, 1000);
+
+		// Store interval ID for cleanup
+		$(document).data('otpExpirationInterval', otpExpirationInterval);
+	}
+
+	function handleRequestOTP(form) {
 		$.ajax({
 			url: "{{asset('otp/request')}}",
 			method: "POST",
 			dataType: 'json',
-			data: $(this).serialize(),
+			data: form.serialize(),
 			beforeSend: function() {
 				setLoadingState($('#btn_request_otp'), true);
 			},
@@ -151,48 +241,22 @@
 					$('#login_form_wrapper').hide();
 					$('#formContent2').show();
 
-					// Reset OTP input
-					$('[name=otp]').val('');
+					$('#otp-rate-limit-alert').hide().text('');
+			
+					$('#otp-expiration-text').show();
+					$('[name=otp]').val('').attr('disabled', false);
+					$('#btn_resend_otp').attr('disabled', true);
+					$('#btn_sumbit_otp').attr('disabled', false);
 
-					// Helper function to format seconds to mm:ss
-					function formatTime(seconds) {
-						const mins = Math.floor(seconds / 60);
-						const secs = seconds % 60;
-						return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-					}
 
-					// Calculate OTP expiration seconds from server expiry time
+
+
+					// Calculate OTP expiration seconds from server expiry time and start timer
 					const expiryTime = new Date(data.otpExpiresAt);
 					const now = new Date();
 					let otpExpirationSeconds = Math.floor((expiryTime - now) / 1000);
-
-					// Ensure it's not negative
-					if (otpExpirationSeconds < 0) {
-						otpExpirationSeconds = 0;
-					}
-
-					// Display initial timer value
-					$('#otp-expiration-timer').text(formatTime(otpExpirationSeconds));
-
-					// Start OTP expiration timer
-					let otpExpirationInterval = setInterval(function() {
-						otpExpirationSeconds--;
-						$('#otp-expiration-timer').text(formatTime(otpExpirationSeconds));
-
-						if (otpExpirationSeconds <= 0) {
-							clearInterval(otpExpirationInterval);
-							// Hide the counter when expired
-							$('#otp-expiration-text').hide();
-							// Disable OTP input and submit button
-							$('[name=otp]').prop('disabled', true);
-							$('#btn_sumbit_otp').prop('disabled', true);
-							// Show and enable the resend button
-							$('#btn_resend_otp').prop('disabled', false).show();
-						}
-					}, 1000);
-
-					// Store interval ID for cleanup
-					$(document).data('otpExpirationInterval', otpExpirationInterval);
+					if (otpExpirationSeconds < 0) otpExpirationSeconds = 0;
+					startOtpExpirationTimer(otpExpirationSeconds);
 
 					// Success feedback
 					Swal.fire({
@@ -238,63 +302,27 @@
 					$('[name=otp]').val('');
 
 					// Helper function to format seconds to mm:ss
-					function formatTime(seconds) {
-						const mins = Math.floor(seconds / 60);
-						const secs = seconds % 60;
-						return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-					}
+					// function formatTime(seconds) {
+					// 	const mins = Math.floor(seconds / 60);
+					// 	const secs = seconds % 60;
+					// 	return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+					// }
 
 
 
 
-					// Calculate OTP expiration seconds from server expiry time
+					// Calculate expiry and start timer
 					const expiryTime = new Date(data.responseJSON.otpExpiresAt);
-					const createdAt = new Date(data.responseJSON.otpCreatedAt);
 					const now = new Date();
-
-
-					console.log("Expiry Time: ", expiryTime);
-					console.log("Created At: ", data.responseJSON.otpCreatedAt);
-					console.log("Created At formatted: ", createdAt);
-					console.log("Now: ", now);
-
-					console.log("Elapsed Seconds Since Creation: ", Math.floor(((now - createdAt) / 1000)));
-
-
-					// let otpExpirationSeconds = Math.floor((now - createdAt) / 1000);
 					let otpExpirationSeconds = Math.floor((expiryTime - now) / 1000);
-
-
-					// Ensure it's not negative
-					if (otpExpirationSeconds < 0) {
-						otpExpirationSeconds = 0;
-					}
-
-					// Display initial timer value
-					$('#otp-expiration-timer').text(formatTime(otpExpirationSeconds));
-
-					// Start OTP expiration timer
-					let otpExpirationInterval = setInterval(function() {
-						otpExpirationSeconds--;
-						$('#otp-expiration-timer').text(formatTime(otpExpirationSeconds));
-						console.log("OTP Expiration Seconds: ", otpExpirationSeconds);
-
-						if (otpExpirationSeconds <= 0) {
-							clearInterval(otpExpirationInterval);
-							// Hide the counter when expired
-							// $('#otp-expiration-text').hide();
-							// Disable OTP input and submit button
-							$('[name=otp]').prop('disabled', true);
-							$('#btn_sumbit_otp').prop('disabled', true);
-							// Show and enable the resend button
-							$('#btn_resend_otp').prop('disabled', false).show();
-						}
-					}, 1000);
-
-					// Store interval ID for cleanup
-					$(document).data('otpExpirationInterval', otpExpirationInterval);
+					if (otpExpirationSeconds < 0) otpExpirationSeconds = 0;
+					startOtpExpirationTimer(otpExpirationSeconds);
 
 					$('#otp-rate-limit-alert').text(data["responseJSON"]["message"]).show();
+					$('#otp-expiration-text').show();
+					$('[name=otp]').val('').attr('disabled', false);
+					$('#btn_resend_otp').hide().attr('disabled', true);
+					$('#btn_sumbit_otp').attr('disabled', false);
 
 
 
@@ -360,8 +388,10 @@
 
 		}).done(function() {
 			setLoadingState($('#btn_request_otp'), false);
-		})
-	})
+		});
+	}
+
+
 
 	$(document).on('submit', '#form_login_otp', function(e) {
 

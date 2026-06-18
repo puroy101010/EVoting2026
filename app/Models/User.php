@@ -207,12 +207,15 @@ class User extends Authenticatable
         switch ($this->role) {
 
             case 'stockholder':
+                $this->loadMissing('stockholder');
                 return $this->stockholder->accountNo;
 
             case 'corp-rep':
+                $this->loadMissing('stockholderAccount.stockholder');
                 return $this->stockholderAccount->stockholder->accountNo;
 
             case 'non-member':
+                $this->loadMissing('nonMemberAccount');
                 return $this->nonMemberAccount->nonmemberAccountNo;
 
 

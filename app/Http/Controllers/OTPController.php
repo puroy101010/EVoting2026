@@ -7,18 +7,16 @@ use App\Models\ActivityLog;
 use App\Http\Requests\SendOTPRequest;
 use App\Http\Requests\VerifyOtpRequest;
 use Illuminate\Http\Request;
-use \App\Mail\SendOtpMail;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Exception;
 use App\Models\User;
-use App\Services\ConfigService;
+use Appp\Services\UserService;
 use App\Services\OTPService;
 use App\Services\UtilityService;
-use Dflydev\DotAccessData\Util;
+
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
+
 
 class OTPController extends Controller
 {
@@ -33,152 +31,15 @@ class OTPController extends Controller
 
     public function store(SendOTPRequest $request)
     {
-
         return $this->otpService->generateAndStoreOTP($request);
     }
 
 
 
 
-
-
-
-    private function getUserInfo($userInfo, $email, $accountNo): ?User
-    {
-
-        switch ($userInfo->role) {
-
-            case 'stockholder':
-
-                Log::info("OTP: User {$email} is trying to login as stockholder.");
-
-                $accountInfo = User::where('email', $email)
-                    ->whereIn('role', ['stockholder', 'corp-rep', 'non-member'])
-                    ->whereHas('stockholder', function ($query) use ($accountNo) {
-                        $query->where('accountNo', $accountNo);
-                    })
-                    ->orderBy('id', 'asc')
-                    ->first();
-
-
-                break;
-
-
-            case 'corp-rep':
-
-                Log::info("OTP: User {$email} is trying to login as corp-rep.");
-
-                $accountInfo = User::where('email', $email)
-                    ->whereIn('role', ['stockholder', 'corp-rep', 'non-member'])
-                    ->whereHas('stockholderAccount.stockholder', function ($query) use ($accountNo) {
-                        $query->where('accountNo', $accountNo);
-                    })
-                    ->first();
-
-                break;
-
-
-            case 'non-member':
-
-                Log::info("OTP: User {$email} is trying to login as non-member.");
-
-                $accountInfo = User::where('email', $email)
-                    ->whereIn('role', ['stockholder', 'corp-rep', 'non-member'])
-                    ->whereHas('nonMemberAccount', function ($query) use ($accountNo) {
-                        $query->where('nonmemberAccountNo', $accountNo);
-                    })
-                    ->first();
-
-                break;
-
-            default:
-                Log::info("OTP: User {$email} is trying to login. Invalid user role.");
-                throw new Exception("Unknown user role.");
-                break;
-        }
-
-        Log::info("OTP: User info retrieved successfully.", ['email' => $email, 'accountNo' => $accountNo, 'userId' => $accountInfo->id ?? null]);
-
-        return $accountInfo;
-    }
-
-
-    // done 2021-08-21
     public function verify(VerifyOtpRequest $request)
     {
-
-        try {
-
-            $email     = $request->input('email');
-            $otp       = $request->input('otp');
-
-
-            $userInfo = User::where('email', $email)
-                ->whereIn('role', ['stockholder', 'corp-rep', 'non-member'])
-                ->orderBy('id', 'asc')
-                ->first();
-
-
-            if ($userInfo === null) {
-                Log::error("Verify OTP: User not found", ["email" => $email, "otp" => $otp]);
-                return response()->json([], 500);
-            }
-
-            $accountInfo = $userInfo;
-
-            // Check if OTP is expired (5 minutes = 300 seconds)
-            if ($accountInfo->otpCreatedAt) {
-                $createdAt = strtotime($accountInfo->otpCreatedAt);
-                $now = strtotime(EApp::datetime());
-                $timeDifference = $now - $createdAt;
-
-                if ($timeDifference > 300) {
-                    Log::warning("Verify OTP: OTP expired", ["email" => $email, "createdAt" => $accountInfo->otpCreatedAt, "timeDifference" => $timeDifference]);
-                    ActivityController::log(['activityCode' => '00007', 'email' => $email]);
-                    return response()->json(['message' => 'The OTP has expired. Please request a new OTP.'], 400);
-                }
-            }
-
-            if (password_verify($otp, $accountInfo->password)) {
-
-                Log::info("Verify OTP: OTP matched", ["email" => $email, "otp" => $otp]);
-
-                if ($accountInfo->otpValid !== 1) {
-
-                    Log::warning("Verify OTP: OTP is invalid", ["email" => $email, "otp" => $otp]);
-                    return response()->json(['message' => 'The OTP you entered is incorrect.'], 400);
-                }
-
-                DB::beginTransaction();
-
-                Auth::loginUsingId($accountInfo->id, FALSE);
-
-                // Clear the OTP after successful verification
-                $accountInfo->otpValid = false;
-                $accountInfo->password = null;
-                $accountInfo->otpCreatedAt = null;
-                $accountInfo->save();
-
-                ActivityController::log(['activityCode' => '00001', 'email' => $email, 'userId' => $accountInfo->id]);
-
-                DB::commit();
-
-                Log::info("Verify OTP: OTP verified successfully", ["email" => $email, "otp" => $otp]);
-
-                return response()->json(['message' => 'Success'], 200);
-            }
-
-            Log::info("Verify OTP: OTP did not match", ["email" => $email, "otp" => $otp]);
-
-            ActivityController::log(['activityCode' => '00007', 'email' => $email]);
-
-            return response()->json(["message" => "The OTP you entered is incorrect"], 400);
-        } catch (Exception $e) {
-
-            UtilityService::logServerError($request, $e, "OTP verification failed");
-
-            return response()->json([], 500);
-        }
+        return $this->otpService->verify($request);
     }
 
 

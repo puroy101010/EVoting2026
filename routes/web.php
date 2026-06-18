@@ -103,7 +103,7 @@ Route::prefix('admin')->middleware([EnsureUserIsAdmin::class])->group(function (
     Route::get('stockholder/{id}/corporate-rep', [StockholderController::class, 'editCorpRepresentative'])->name('stockholder.corporate-rep');
     Route::post('stockholder/{id}/auth-signatory', [StockholderController::class, 'updateAuthSignatory'])->name('stockholder.update-auth-signatory');
     Route::get('stockholder/{id}/auth-signatory', [StockholderController::class, 'editAuthSignatory'])->name('stockholder.auth-signatory');
-    Route::resource('stockholder', StockholderController::class)->only(['index', 'store', 'show', 'edit', 'update']);
+    Route::resource('stockholder', StockholderController::class)->only(['index', 'show', 'edit', 'update']);
 
 
     Route::get('stock', [DeveloperStockController::class, 'index']);
