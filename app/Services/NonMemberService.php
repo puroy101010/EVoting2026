@@ -254,15 +254,14 @@ class NonMemberService
 
 
         // Track non-member changes
-        $fieldsToTrack = ['firstName', 'middleName', 'lastName'];
+        $fieldsToTrack = ['fullName'];
 
         //map field names
         $fieldMap = [
-            'firstName' => 'first name',
-            'middleName' => 'middle name',
-            'lastName' => 'last name',
-
+            'fullName' => 'full name',
         ];
+
+
 
         foreach ($fieldsToTrack as $field) {
             if ($nonMember->$field !== $validatedData[$field]) {
@@ -285,9 +284,7 @@ class NonMemberService
 
     private function updateNonMemberData(NonMemberAccount $nonMember, array $validatedData)
     {
-        $nonMember->firstName = $validatedData['firstName'];
-        $nonMember->middleName = $validatedData['middleName'];
-        $nonMember->lastName = $validatedData['lastName'];
+        $nonMember->fullName = $validatedData['fullName'];
     }
 
 

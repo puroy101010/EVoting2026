@@ -35,9 +35,7 @@ class UpdateNonMemberRequest extends FormRequest
         return [
             'id' => 'required|integer|exists:users,id',
             'email' => 'required|email|unique:users,email,' . $userId,
-            'firstName' => 'required|string|max:50',
-            'middleName' => 'nullable|string|max:50',
-            'lastName' => 'required|string|max:50',
+            'fullName' => 'required|string|max:100',
             'status' => 'required|in:0,1',
         ];
     }

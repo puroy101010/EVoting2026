@@ -36,9 +36,7 @@
             <thead class="text-nowrap">
               <tr>
                 <th width="5%" class="th-padding">#</th>
-                <th width="25%" class="th-padding">First Name</th>
-                <th width="25%" class="th-padding">Middle Name</th>
-                <th width="25%" class="th-padding">Last Name</th>
+                <th width="25%" class="th-padding">Name</th>
                 <th width="25%" class="th-padding">Email</th>
                 <th width="10%" class="th-padding">Account No</th>
                 <th width="10%" class="text-center th-padding">Status</th>
@@ -49,14 +47,14 @@
               @forelse ($data as $index => $nonMember)
               <tr data-id="{{ $nonMember->userId }}">
                 <td class="td-padding">{{ $index + 1 }}</td>
-                <td class="first-name td-padding" data-first-name="{{ $nonMember->firstName }}">
+                <td class="first-name td-padding" data-full-name="{{ $nonMember->fullName }}">
                   @if($nonMember->isGM === 1)
                   <span class="badge badge-success">GM</span>
                   @endif
-                  {{ $nonMember->firstName }}
+                  {{ $nonMember->fullName }}
                 </td>
-                <td class="middle-name td-padding">{{ $nonMember->middleName }}</td>
-                <td class="last-name td-padding">{{ $nonMember->lastName }}</td>
+       
+
                 <td class="email td-padding">{{ $nonMember->user->email }}</td>
                 <td class="account-no td-padding">{{ $nonMember->nonmemberAccountNo }}</td>
                 <td class="text-center td-padding">
@@ -182,24 +180,12 @@
             </div>
           </div>
           <div class="form-group row">
-            <label for="" class="col-md-4 col-form-label">First Name <span class="text-danger">*</span></label>
+            <label for="" class="col-md-4 col-form-label">Full Name <span class="text-danger">*</span></label>
             <div class="col-md-7">
-              <input type="text" id="" class="form-control" name="firstName" placeholder="First Name" autocomplete="off" required>
+              <input type="text" id="" class="form-control" name="fullName" placeholder="Full Name" autocomplete="off" required>
             </div>
           </div>
-          <div class="form-group row">
-            <label for="" class="col-md-4 col-form-label">Middle Name</label>
-            <div class="col-md-7">
-              <input type="text" id="" class="form-control" name="middleName" placeholder="Middle Name" autocomplete="off">
-            </div>
-          </div>
-          <div class="form-group row">
-            <label for="" class="col-md-4 col-form-label">Last Name <span class="text-danger">*</span></label>
-            <div class="col-md-7">
-              <input type="text" id="" class="form-control" name="lastName" placeholder="Last Name" autocomplete="off" required>
-            </div>
-          </div>
-
+      
           <div class="form-group row">
             <label for="" class="col-md-4 col-form-label">Email</label>
             <div class="col-md-7">
@@ -257,9 +243,7 @@
     let status = tr.find('.member-status').text() == 'Active' ? 1 : 0;
 
     form.find('[name=id]').val(id);
-    form.find('[name=firstName]').val(tr.find('.first-name').attr('data-first-name'));
-    form.find('[name=middleName]').val(tr.find('.middle-name').text());
-    form.find('[name=lastName]').val(tr.find('.last-name').text());
+    form.find('[name=fullName]').val(tr.find('.first-name').attr('data-full-name'));
     form.find('[name=email]').val(tr.find('.email').text());
     form.find('[name=account_number]').val(tr.find('.account-no').text());
 
