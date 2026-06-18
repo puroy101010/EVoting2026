@@ -981,8 +981,8 @@
                 <div class="col-md-12">
                   <div class="corporate-form-group ultra-compact">
                     <label class="corporate-label ultra-compact">Proxy</label>
-                    <select name="assignee" class="corporate-select compact" data-placeholder="Assignee">
-                      <option value="">Select Assignee</option>
+                    <select name="assignee" class="corporate-select compact" data-placeholder="Proxy">
+                      <option value="">Select Proxy</option>
                     </select>
                   </div>
                 </div>
