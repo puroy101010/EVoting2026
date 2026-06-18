@@ -15,10 +15,13 @@ class StoreAmendmentProxyRequest extends FormRequest
      */
     public function authorize()
     {
-        if (Auth::user()->can('assign amendment proxy') || Auth::user()->role('superadmin')) {
-            return true;
+
+
+        if (!Auth::user()->can('assign amendment proxy') && !Auth::user()->hasRole('superadmin')) {
+            return false;
         }
-        return false;
+
+        return true;
     }
 
     /**

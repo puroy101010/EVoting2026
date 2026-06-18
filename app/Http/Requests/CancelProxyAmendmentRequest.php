@@ -15,12 +15,13 @@ class CancelProxyAmendmentRequest extends FormRequest
      */
     public function authorize()
     {
-        if (Auth::user()->can('cancel amendment proxy') || Auth::user()->role === 'superadmin') {
-            return true;
+
+        if (!Auth::user()->can('cancel amendment proxy') && !Auth::user()->hasRole('superadmin')) {
+
+            return false;
         }
 
-
-        return false;
+        return true;
     }
 
     /**
