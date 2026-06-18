@@ -45,9 +45,7 @@ class StoreNonMemberRequest extends FormRequest
                     }
                 },
             ],
-            'firstName' => 'required|string|max:50',
-            'middleName' => 'nullable|string|max:50',
-            'lastName' => 'required|string|max:50',
+            'fullname' => 'required|string|max:50',
             'isGM' => 'required|in:0,1',
             'status' => 'required|in:0,1',
         ];

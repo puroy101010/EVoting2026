@@ -115,23 +115,12 @@
             </div>
           </div>
           <div class="form-group row">
-            <label for="" class="col-md-4 col-form-label">First Name <span class="text-danger">*</span></label>
+            <label for="" class="col-md-4 col-form-label">Full Name <span class="text-danger">*</span></label>
             <div class="col-md-7">
-              <input type="text" id="" class="form-control" name="firstName" placeholder="First Name" autocomplete="off" required>
+              <input type="text" id="" class="form-control" name="fullname" placeholder="Full Name" autocomplete="off" required>
             </div>
           </div>
-          <div class="form-group row">
-            <label for="" class="col-md-4 col-form-label">Middle Name</label>
-            <div class="col-md-7">
-              <input type="text" id="" class="form-control" name="middleName" placeholder="Middle Name" autocomplete="off">
-            </div>
-          </div>
-          <div class="form-group row">
-            <label for="" class="col-md-4 col-form-label">Last Name <span class="text-danger">*</span></label>
-            <div class="col-md-7">
-              <input type="text" id="" class="form-control" name="lastName" placeholder="Last Name" autocomplete="off" required>
-            </div>
-          </div>
+        
           <div class="form-group row">
             <label for="email" class="col-md-4 col-form-label">Email <span class="text-danger">*</span></label>
             <div class="col-md-7">

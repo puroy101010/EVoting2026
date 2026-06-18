@@ -144,9 +144,7 @@ class NonMemberService
     {
         return $user->nonMemberAccount()->create([
             'nonmemberAccountNo' => $request->input('account_number'),
-            'firstName' => $request->input('firstName'),
-            'lastName' => $request->input('lastName'),
-            'middleName' => $request->input('middleName') ? trim($request->input('middleName')) : null,
+            'fullName' => $request->input('fullname'),
             'isActive' => (int)$request->input('status'),
             'isGM' => (int)$request->input('isGM'),
             'createdBy' => Auth::id()
