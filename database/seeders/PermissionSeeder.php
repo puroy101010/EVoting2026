@@ -39,7 +39,9 @@ class PermissionSeeder extends Seeder
             ['permission' => 'delete stockholder', 'guard_name' => 'web', 'module' => 'stockholder', 'description' => 'delete stockholders'],
             ['permission' => 'export stockholder', 'guard_name' => 'web', 'module' => 'stockholder', 'description' => 'export stockholders'],
 
+            ['permission' => 'view online account', 'guard_name' => 'web', 'module' => 'online account', 'description' => 'view online accounts'],
             ['permission' => 'edit online account', 'guard_name' => 'web', 'module' => 'online account', 'description' => 'edit online accounts'],
+            ['permission' => 'view stocks for online account', 'guard_name' => 'web', 'module' => 'online account', 'description' => 'view stocks for online account'],
 
 
             ['permission' => 'mark stock delinquent', 'guard_name' => 'web', 'module' => 'stockholder', 'description' => 'mark stockr delinquent'],

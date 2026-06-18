@@ -97,7 +97,7 @@ Route::prefix('admin')->middleware([EnsureUserIsAdmin::class])->group(function (
 
     Route::get('stockholder/export', [StockholderController::class, 'export']);
     Route::get('stockholder/user', [StockholderController::class, 'load_filter_data_users']);
-    Route::get('stockholder/import', [StockholderController::class, 'import']);
+    //Route::get('stockholder/import', [StockholderController::class, 'import']);
 
     Route::post('stockholder/{id}/corporate-rep', [StockholderController::class, 'updateCorporateRep'])->name('stockholder.update-corporate-rep');
     Route::get('stockholder/{id}/corporate-rep', [StockholderController::class, 'editCorpRepresentative'])->name('stockholder.corporate-rep');

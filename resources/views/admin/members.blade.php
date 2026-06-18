@@ -964,7 +964,7 @@
                 <div class="col-md-6">
                   <div class="corporate-form-group ultra-compact">
                     <label class="corporate-label ultra-compact">Ref No: </label>
-                    <input type="text" name="refNo" class="corporate-input compact" placeholder="Enter reference number" maxlength="7">
+                    <input type="text" name="refNo" class="corporate-input compact" placeholder="Enter reference number" maxlength="10">
                   </div>
                 </div>
                 <div class="col-md-6">

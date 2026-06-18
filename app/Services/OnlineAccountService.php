@@ -33,6 +33,11 @@ class OnlineAccountService
      */
     public function index(Request $request): \Illuminate\View\View
     {
+
+        if (!Auth::user()->can('view online accounts') && !Auth::user()->hasRole('superadmin')) {
+            return view('errors.unauthorized', ['message' => 'You do not have permission to view online accounts.']);
+        }
+
         $onlineAccounts = $this->getOnlineAccountsQuery()->get();
         $accountsByEmailAndName = $this->groupAccountsByEmailAndName($onlineAccounts);
 
@@ -493,7 +498,10 @@ class OnlineAccountService
      */
     public function showStocks(string $email): array
     {
-        Log::debug("Fetching online account stocks for email: {$email}");
+        if (!Auth::user()->cannot('view stocks for online account') && !Auth::user()->hasRole('superadmin')) {
+            throw new Exception("Unauthorized to view stocks for online account with email: {$email}");
+        }
+
         $onlineAccounts = $this->getOnlineAccountsQuery(email: $email)->get();
         $accountsByEmailAndName = $this->groupAccountsByEmailAndName($onlineAccounts);
         $reconciledAccounts = $this->reconcileStockholderAndCorpRepAccounts($accountsByEmailAndName);
