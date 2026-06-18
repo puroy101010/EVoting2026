@@ -35,7 +35,7 @@ class StoreAmendmentProxyRequest extends FormRequest
             'accountToAssign' => 'required|numeric',
             'assignor' => 'required|numeric',
             'assignee' => 'required|email',
-            'refNo' => 'required|string|alpha_dash:4,7|unique:proxy_amendments,proxyAmendmentFormNo'
+            'refNo' => 'required|string|alpha_dash:4,12|unique:proxy_amendments,proxyAmendmentFormNo'
         ];
     }
 

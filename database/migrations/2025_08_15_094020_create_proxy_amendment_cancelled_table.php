@@ -15,7 +15,7 @@ class CreateProxyAmendmentCancelledTable extends Migration
     {
         Schema::create('proxy_amendment_cancelled', function (Blueprint $table) {
             $table->id('proxyAmendmentCancelledId')->unsignedBigInteger();
-            $table->string('proxyAmendmentFormNo', 10);
+            $table->string('proxyAmendmentFormNo', 12);
             $table->enum('reason', ['quorum', 'encoding_error']);
             $table->string('remarks')->nullable()->default(null);
 

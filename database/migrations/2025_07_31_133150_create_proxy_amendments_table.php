@@ -17,7 +17,7 @@ class CreateProxyAmendmentsTable extends Migration
         Schema::create('proxy_amendments', function (Blueprint $table) {
 
             $table->id('proxyAmendmentId')->unsignedBigInteger();
-            $table->string('proxyAmendmentFormNo', 10)->unique();
+            $table->string('proxyAmendmentFormNo', 12)->unique();
             $table->unsignedBigInteger('accountId')->unique()->remarks('Stockholder account ID');
             $table->unsignedBigInteger('assignorId')->remarks('User ID of the assignor');
             $table->unsignedBigInteger('assigneeId')->remarks('User ID of the assignee');

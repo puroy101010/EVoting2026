@@ -19,7 +19,7 @@ class CreateProxyAmendmentHistoriesTable extends Migration
 
             $table->id('proxyAmendmentHistoryId')->unsignedBigInteger();
             $table->unsignedBigInteger('proxyAmendmentId');
-            $table->string('proxyAmendmentFormNo', 10);
+            $table->string('proxyAmendmentFormNo', 12);
             $table->unsignedBigInteger('accountId');
             $table->unsignedBigInteger('assignorId');
             $table->unsignedBigInteger('assigneeId');
