@@ -980,7 +980,7 @@
               <div class="row mt-2">
                 <div class="col-md-12">
                   <div class="corporate-form-group ultra-compact">
-                    <label class="corporate-label ultra-compact">Assignee</label>
+                    <label class="corporate-label ultra-compact">Proxy</label>
                     <select name="assignee" class="corporate-select compact" data-placeholder="Assignee">
                       <option value="">Select Assignee</option>
                     </select>
