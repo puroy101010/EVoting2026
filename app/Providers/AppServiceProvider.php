@@ -25,7 +25,7 @@ class AppServiceProvider extends ServiceProvider
         //
         if ($this->app->environment('local')) {
             // 4 - ru sh
-            Auth::loginUsingId(1); // Automatically log in the user with ID 1 for local environment
+            //Auth::loginUsingId(1); // Automatically log in the user with ID 1 for local environment
 
         }
     }

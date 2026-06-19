@@ -172,7 +172,7 @@
         <div class="modal-body">
           <div class="form-group">
             <label for="updateAccountEmail" class="font-weight-bold">Email Address</label>
-            <input type="email" class="form-control" id="updateAccountEmail" readonly>
+            <input type="email" class="form-control" id="updateAccountEmail">
             <small class="form-text text-muted">Email address cannot be changed.</small>
           </div>
           <div class="form-group">
@@ -196,6 +196,11 @@
 <!-- END UPDATE ACCOUNT MODAL -->
 
 <script>
+
+
+
+
+
   $(document).ready(function() {
     $('[data-toggle="tooltip"]').tooltip();
   });
@@ -212,6 +217,10 @@
       url: "{{ route('online-accounts.stocks', ['email' => ':email']) }}".replace(':email', email),
       method: 'GET',
       dataType: 'json',
+      beforeSend: function() {
+        // Show loading spinner
+        $('#stocksTableBody').html('<tr><td colspan="3" class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>');
+      },
       success: function(response) {
         if (response && Object.keys(response).length > 0) {
           let stocksHtml = '';
@@ -227,7 +236,7 @@
                   stocksHtml += `
                     <tr>
                       <td class="td-padding">${detail.accountKey}</td>
-                      <td class="td-padding">${detail.accountName || 'N/A'}</td>
+                      <td class="td-padding">${detail.stockholderName || 'N/A'}</td>
                       <td class="td-padding"><span class="badge badge-info">${detail.emailRole}</span></td>
                     </tr>
                   `;
@@ -241,31 +250,17 @@
           $('#stocksTableBody').html('<tr><td colspan="3" class="text-center">No stockholder accounts found.</td></tr>');
         }
       },
-      error: function(xhr) {
-        // Show dummy accounts on error for demo/testing
-        const dummyStocks = `
-          <tr>
-            <td class="td-padding">0002-1</td>
-            <td class="td-padding">Ruel Querioso</td>
-            <td class="td-padding"><span class="badge badge-info">authorized signatory</span></td>
-          </tr>
-          <tr>
-            <td class="td-padding">0002-2</td>
-            <td class="td-padding">Ruel Querioso</td>
-            <td class="td-padding"><span class="badge badge-success">authorized signatory</span></td>
-          </tr>
-          <tr>
-            <td class="td-padding">0003-1</td>
-            <td class="td-padding">Jane Doe</td>
-            <td class="td-padding"><span class="badge badge-warning">corporate representative</span></td>
-          </tr>
-          <tr>
-            <td class="td-padding">0004-1</td>
-            <td class="td-padding">Robert Johnson</td>
-            <td class="td-padding"><span class="badge badge-secondary">non-member</span></td>
-          </tr>
-        `;
-        $('#stocksTableBody').html(dummyStocks);
+     
+      statusCode: {
+        404: function() {
+          $('#stocksTableBody').html('<tr><td colspan="3" class="text-center">No stockholder accounts found.</td></tr>');
+        },
+        403: function() {
+          $('#stocksTableBody').html('<tr><td colspan="3" class="text-center">You do not have permission to view stockholder accounts.</td></tr>');
+        },
+        500: function() {
+          $('#stocksTableBody').html('<tr><td colspan="3" class="text-center">An error occurred while fetching stockholder accounts.</td></tr>');
+        }
       }
     });
   });
@@ -274,9 +269,12 @@
   $(document).on('click', '.btn-update-account', function() {
     const email = $(this).attr('data-email');
     const name = $(this).attr('data-name');
+  
 
     $('#updateAccountEmail').val(email);
     $('#updateAccountName').val(name);
+
+    $('#updateAccountForm').attr('data-email', email);
   });
 
   // Handle Update Account form submission
@@ -285,6 +283,7 @@
 
     const email = $('#updateAccountEmail').val();
     const name = $('#updateAccountName').val();
+    const oldEmail = $(this).attr('data-email');
 
     if (!name.trim()) {
       alert('Please enter a full name.');
@@ -292,15 +291,31 @@
     }
 
     $.ajax({
-      url: "{{ route('online-accounts.update', ['online_account' => ':email']) }}".replace(':email', email),
+      url: "{{ route('online-accounts.update', ['online_account' => ':email']) }}".replace(':email', oldEmail),
       method: 'PUT',
       data: { email: email, name: name },
+      beforeSend: function() {
+        showLoader('Updating account...');
+      },
       success: function(response) {
         $('#updateAccountModal').modal('hide');
         location.reload();
       },
-      error: function(xhr) {
-        alert('Failed to update account.');
+      complete: function() {
+        hideLoader();
+      },
+
+
+      statusCode: {
+        404: function() {
+          alert('Account not found.');
+        },
+        403: function() {
+          alert('You do not have permission to update this account.');
+        },
+        500: function() {
+          alert('An error occurred while updating the account.');
+        }
       }
     });
 

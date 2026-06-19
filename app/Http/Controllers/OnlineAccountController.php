@@ -3,13 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\EditOnlineAccountRequest;
+use App\Http\Requests\IndexOnlineAccountRequest;
+use App\Http\Requests\ShowOnlineAccountRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
 
 
 class OnlineAccountController extends Controller
 {
-    public function index(Request $request)
+    public function index(IndexOnlineAccountRequest $request)
     {
         return (new \App\Services\OnlineAccountService())->index($request);
     }
@@ -19,9 +21,9 @@ class OnlineAccountController extends Controller
         return (new \App\Services\OnlineAccountService())->update($request, $email);
     }
 
-    public function showStocks(Request $request, string $email)
+    public function showStocks(ShowOnlineAccountRequest $request, string $email)
     {
-        return (new \App\Services\OnlineAccountService())->showStocks($email);
+        return (new \App\Services\OnlineAccountService())->showStocks($request, $email);
     }
 
     public function showProxies(Request $request, string $email)

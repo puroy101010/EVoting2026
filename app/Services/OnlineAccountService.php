@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use  App\Http\Requests\EditOnlineAccountRequest;
+use App\Http\Requests\ShowOnlineAccountRequest;
 
 class OnlineAccountService
 {
@@ -34,9 +35,7 @@ class OnlineAccountService
     public function index(Request $request): \Illuminate\View\View
     {
 
-        if (!Auth::user()->can('view online accounts') && !Auth::user()->hasRole('superadmin')) {
-            return view('errors.unauthorized', ['message' => 'You do not have permission to view online accounts.']);
-        }
+
 
         $onlineAccounts = $this->getOnlineAccountsQuery()->get();
         $accountsByEmailAndName = $this->groupAccountsByEmailAndName($onlineAccounts);
@@ -49,14 +48,14 @@ class OnlineAccountService
         ]);
     }
 
-    public function update(EditOnlineAccountRequest $request, string $email)
+    public function update(EditOnlineAccountRequest $request, string $oldEmail)
     {
         try {
             $validatedData = $request->validated();
             $newName = $validatedData['name'];
             $newEmail = $validatedData['email'];
 
-            $affectedUsers = User::where('email', $email)
+            $affectedUsers = User::where('email', $oldEmail)
                 ->whereIn('role', ['stockholder', 'corp-rep', 'non-member'])
                 ->get();
 
@@ -69,8 +68,8 @@ class OnlineAccountService
             DB::beginTransaction();
 
             try {
-                $this->updateProxyRecords($email, $newEmail, $newName);
-                $logs = $this->prepareActivityLogs($affectedUsers, $email, $newEmail, $newName);
+                $this->updateProxyRecords($oldEmail, $newEmail, $newName);
+                $logs = $this->prepareActivityLogs($affectedUsers, $newEmail, $newName);
                 if (empty($logs)) {
                     return response()->json(['message' => 'No changes detected to update'], 200);
                 }
@@ -85,7 +84,7 @@ class OnlineAccountService
                 throw $e;
             }
         } catch (Exception $e) {
-            AppHelper::logServerError("An error occurred while updating online account for email: {$email}. Error: " . $e->getMessage(), $e);
+            AppHelper::logServerError("An error occurred while updating online account for email: {$oldEmail}. Error: " . $e->getMessage(), $e);
             return response()->json(['error' => 'Failed to update accounts'], 500);
         }
     }
@@ -97,14 +96,14 @@ class OnlineAccountService
     {
         return [
             'email' => $user->email,
-            'name' => UserService::getAuthorizedSignatory($user),
+            'name' => $user->authorized_signatory,
         ];
     }
 
     /**
      * Prepare activity logs for all affected users.
      */
-    private function prepareActivityLogs(Collection $affectedUsers, string $oldEmail, string $newEmail, string $newName): array
+    private function prepareActivityLogs(Collection $affectedUsers, string $newEmail, string $newName): array
     {
         $logs = [];
 
@@ -155,6 +154,7 @@ class OnlineAccountService
         return [
             'activityCode' => '00146',
             'userId' => $user->id,
+            'accountNo' => $user->account_no ?? null,
             'email' => $oldValues['email'],
             'remarks' => $this->buildRemarks($oldValues['email'], $newEmail, $oldValues['name'], $newName),
             'data' => json_encode($data),
@@ -215,27 +215,27 @@ class OnlineAccountService
     /**
      * Update all proxy records related to an email address.
      */
-    private function updateProxyRecords(string $email, string $newEmail, string $newName): void
+    private function updateProxyRecords(string $oldEmail, string $newEmail, string $newName): void
     {
         // Update ProxyAmendment records
-        ProxyAmendment::where('assignorEmail', $email)
+        ProxyAmendment::where('assignorEmail', $oldEmail)
             ->update(['assignorEmail' => $newEmail, 'assignorName' => $newName]);
 
-        ProxyAmendment::where('assigneeEmail', $email)
+        ProxyAmendment::where('assigneeEmail', $oldEmail)
             ->update(['assigneeEmail' => $newEmail, 'assigneeName' => $newName]);
 
         // Update ProxyAmendmentHistory records
-        ProxyAmendmentHistory::where('assignorEmail', $email)
+        ProxyAmendmentHistory::where('assignorEmail', $oldEmail)
             ->update(['assignorEmail' => $newEmail, 'assignorName' => $newName]);
 
-        ProxyAmendmentHistory::where('assigneeEmail', $email)
+        ProxyAmendmentHistory::where('assigneeEmail', $oldEmail)
             ->update(['assigneeEmail' => $newEmail, 'assigneeName' => $newName]);
 
         // Update ProxyAmendmentCancelled records
-        ProxyAmendmentCancelled::where('assignorEmail', $email)
+        ProxyAmendmentCancelled::where('assignorEmail', $oldEmail)
             ->update(['assignorEmail' => $newEmail, 'assignorName' => $newName]);
 
-        ProxyAmendmentCancelled::where('assigneeEmail', $email)
+        ProxyAmendmentCancelled::where('assigneeEmail', $oldEmail)
             ->update(['assigneeEmail' => $newEmail, 'assigneeName' => $newName]);
     }
 
@@ -298,7 +298,8 @@ class OnlineAccountService
     {
         $uniqueEmailsAndNames = [];
         foreach ($accountsByEmailAndName as $email => $accounts) {
-            $uniqueEmailsAndNames[$email] = key($accounts);
+
+            $uniqueEmailsAndNames[$email] =   $accounts[array_key_first($accounts)][array_key_first($accounts[array_key_first($accounts)])][0]['accountName'] ?? '';
         }
         return $uniqueEmailsAndNames;
     }
@@ -335,7 +336,10 @@ class OnlineAccountService
         foreach ($accounts as $account) {
             $accountData = $this->getAccountData($account);
 
-            $groupedAccounts[$account->email][$accountData['accountName']][$accountData['accountNo']][] = [
+            $accountNameKey = AppHelper::normalizeString($accountData['accountName'], true);
+            $accountKeySha = sha1($accountNameKey);
+
+            $groupedAccounts[$account->email][$accountKeySha][$accountData['accountNo']][] = [
                 'userId' => $account->id,
                 'accountNo' => $accountData['accountNo'],
                 'accountKey' => $accountData['accountKey'],
@@ -343,7 +347,9 @@ class OnlineAccountService
                 'email' => $account->email,
                 'emailRole' => $accountData['emailRole'],
                 'role' => $account->role,
-                'stockholder' => $account?->stockholder?->toArray(),
+                'accountType' => $accountData['accountType'],
+                'stockholder' => $account?->stockholder?->toArray(), //Stockholder with stockholder_accounts relationship
+                'stockholderName' => $account?->stockholder?->stockholder ?? $account?->stockholderAccount?->stockholder->stockholder ?? null,
             ];
         }
 
@@ -358,13 +364,18 @@ class OnlineAccountService
     private function reconcileStockholderAndCorpRepAccounts(array $groupedAccounts): array
     {
         foreach ($groupedAccounts as $email => $accountsByName) {
-            foreach ($accountsByName as $accountName => $accountsByNumber) {
+
+            if (count($accountsByName) > 1) {
+                Log::warning("Multiple account names found for email {$email}. This may indicate data integrity issues. Account names: " . implode(', ', array_keys($accountsByName)));
+                throw new Exception("Data integrity error: Multiple names found for email {$email}");
+            }
+
+            foreach ($accountsByName as $accountNameSha => $accountsByNumber) {
                 foreach ($accountsByNumber as $accountNumber => $details) {
                     if ($this->hasStockholderRole($details)) {
-                        $groupedAccounts[$email][$accountName][$accountNumber] = $this->processStockholderAccountGroup(
+                        $groupedAccounts[$email][$accountNameSha][$accountNumber] = $this->processStockholderAccountGroup(
                             $details,
-                            $email,
-                            $accountName
+                            $email
                         );
                     }
                 }
@@ -386,35 +397,40 @@ class OnlineAccountService
      * Process a group of accounts where a stockholder role exists.
      * Removes corp-rep accounts and expands stockholder authorized signatories.
      */
-    private function processStockholderAccountGroup(array $details, string $email, string $accountName): array
+    private function processStockholderAccountGroup(array $details, string $email): array
     {
         $detailsToAdd = [];
-        $filteredDetails = [];
 
         foreach ($details as $detail) {
             if ($detail['role'] === 'corp-rep') {
                 // Skip corp-rep accounts
                 continue;
-            } elseif ($detail['role'] === 'stockholder' && !empty($detail['stockholder']['stockholder_accounts'])) {
+            } elseif ($detail['role'] === 'stockholder') {
+
+                if (empty($detail['stockholder']['stockholder_accounts'])) {
+                    throw new Exception("Data integrity error: Stockholder account missing for email {$email}");
+                }
+
                 // Add authorized signatory accounts
                 foreach ($detail['stockholder']['stockholder_accounts'] as $signatoryAccount) {
                     $detailsToAdd[] = [
                         'userId' => $signatoryAccount['userId'],
                         'accountNo' => $detail['stockholder']['accountNo'],
                         'accountKey' => $signatoryAccount['accountKey'],
-                        'accountName' => $accountName,
+                        'accountName' => $detail['accountName'],
                         'email' => $email,
-                        'emailRole' => 'authorized signatory',
-                        'role' => 'stockholder',
+                        'emailRole' => $detail['accountType'] === 'corp' ? 'authorized signatory' : 'stockholder',
+                        'role' => $detail['role'], // retain the original role for the signatory account
+                        'accountType' => $detail['accountType'],
+                        'stockholder' => $detail['stockholder'], // retain the original stockholder data to make it available for the view
+                        'stockholderName' => $detail['stockholderName'],
                     ];
                 }
-            } else {
-                $filteredDetails[] = $detail;
             }
         }
 
-        // Return merged filtered and new signatory accounts
-        return array_merge($filteredDetails, $detailsToAdd);
+
+        return $detailsToAdd;
     }
 
     /**
@@ -445,7 +461,8 @@ class OnlineAccountService
             'accountNo' => $stockholder->accountNo,
             'accountKey' => $stockholder->accountNo,
             'accountName' => $accountName,
-            'emailRole' => 'authorized signatory',
+            'emailRole' => $this->isCorporateAccount($account) ? 'authorized signatory' : 'stockholder',
+            'accountType' => $stockholder->accountType,
         ];
     }
 
@@ -461,7 +478,7 @@ class OnlineAccountService
             'accountNo' => $account->stockholderAccount->stockholder->accountNo,
             'accountKey' => $account->stockholderAccount->accountKey,
             'emailRole' => 'corporate representative',
-
+            'accountType' => $stockholder->accountType,
         ];
     }
 
@@ -475,6 +492,7 @@ class OnlineAccountService
             'accountKey' => $nonMemberAccountNo,
             'accountName' => $accountName,
             'emailRole' => 'non-member',
+            'accountType' => 'non-member',
         ];
     }
 
@@ -487,8 +505,8 @@ class OnlineAccountService
     private function isCorporateAccount(User $user): bool
     {
         return match ($user->role) {
-            'stockholder' => $user->stockholder?->accountType === 'corp',
-            'corp-rep' => $user->stockholderAccount?->stockholder?->accountType === 'corp',
+            'stockholder' => $user->stockholder->accountType === 'corp',
+            'corp-rep' => $user->stockholderAccount->stockholder?->accountType === 'corp',
             default => false,
         };
     }
@@ -496,11 +514,8 @@ class OnlineAccountService
     /**
      * Retrieve and reconcile stocks for a specific email address.
      */
-    public function showStocks(string $email): array
+    public function showStocks(ShowOnlineAccountRequest $request, string $email): array
     {
-        if (!Auth::user()->cannot('view stocks for online account') && !Auth::user()->hasRole('superadmin')) {
-            throw new Exception("Unauthorized to view stocks for online account with email: {$email}");
-        }
 
         $onlineAccounts = $this->getOnlineAccountsQuery(email: $email)->get();
         $accountsByEmailAndName = $this->groupAccountsByEmailAndName($onlineAccounts);

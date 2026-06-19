@@ -1677,62 +1677,6 @@ function populateSuffixOptions(suffixes = []) {
     $(SELECTORS.addMemberModal + " [name=suffix]").html(suffixSelect);
 }
 
-function showLoader(message = "Loading...") {
-    const loaderId = "app-loader-overlay";
-
-    // Remove existing loader if any
-    $("#" + loaderId).remove();
-
-    // Create and show loader
-    const loaderHtml = `
-        <div id="${loaderId}" style="
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-        ">
-            <div style="
-                background: white;
-                padding: 2rem;
-                border-radius: 8px;
-                text-align: center;
-                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            ">
-                <div style="
-                    border: 4px solid #f3f3f3;
-                    border-top: 4px solid #27ae60;
-                    border-radius: 50%;
-                    width: 40px;
-                    height: 40px;
-                    animation: spin 1s linear infinite;
-                    margin: 0 auto 1rem;
-                "></div>
-                <p style="margin: 0; color: #333; font-size: 14px;">${message}</p>
-            </div>
-            <style>
-                @keyframes spin {
-                    0% { transform: rotate(0deg); }
-                    100% { transform: rotate(360deg); }
-                }
-            </style>
-        </div>
-    `;
-
-    $("body").append(loaderHtml);
-}
-
-function hideLoader() {
-    $("#app-loader-overlay").fadeOut(300, function () {
-        $(this).remove();
-    });
-}
-
 function getErrorMessage(error) {
     if (!error) return "An error occurred. Please try again.";
 

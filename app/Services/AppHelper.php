@@ -77,12 +77,13 @@ class AppHelper
     }
 
 
-    public static function normalizeString(?string $text): ?string
+    public static function normalizeString(?string $text, bool $toLowercase = false): ?string
     {
         if (blank($text)) {
             return null;
         }
 
-        return trim($text);
+        $text = trim($text);
+        return $toLowercase ? strtolower($text) : $text;
     }
 }
