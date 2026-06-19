@@ -93,7 +93,8 @@ class StockholderOnlineBallotController extends Controller
                 'amendmentForm'    => VoteService::generateAmendmentForm($amendment, $ballotInfo->availableVotesAmendment),
                 'agendaForm'    => VoteService::generateAgendaForm($agenda, $ballotInfo->availableVotesBod),
                 'configuration'  => Configuration::all()->toArray(),
-                'amendmentEnabled'  => ConfigService::getConfig('amendment_enabled') === '1'
+                'amendmentEnabled'  => ConfigService::getConfig('amendment_enabled') === '1',
+                'bodEnabled'  => ConfigService::getConfig('bod_module_enabled') === '1'
 
             ]);
         } catch (Exception $e) {

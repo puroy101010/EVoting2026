@@ -20,7 +20,7 @@
         </button>
       </div>
       <div class="modal-body">
-        <div id="amendmentForm" class="ballot-pages @if($amendmentEnabled === true) active @else d-none @endif" data-page="1" data-page-name="amendment">
+        <div id="amendmentForm" class="ballot-pages @if(config('evoting.enableAmendment') === true) active @else d-none @endif" data-page="1" data-page-name="amendment">
           <form>
 
             <h2 class="h2-stockholder section-title"><span class="span-divider">Amendments</span></h2>
@@ -59,7 +59,7 @@
           </form>
         </div>
 
-        <div id="boardOfDirectorForm" class="ballot-pages @if($amendmentEnabled === false && (!isset($bodEnabled) || $bodEnabled !== false)) active @endif @if(isset($bodEnabled) && $bodEnabled === false) d-none @endif" data-page="2" data-page-name="bod">
+        <div id="boardOfDirectorForm" class="ballot-pages @if($amendmentEnabled === false) active @endif" data-page="2" data-page-name="bod">
           <form>
             <h2 class="h2-stockholder section-title"><span class="span-divider">Board of Directors</span></h2>
             <div class="row mb-3">
@@ -184,7 +184,6 @@
               </div>
             </div>
           </div>
-          @if(!isset($bodEnabled) || $bodEnabled !== false)
           <div class="row mt-3 mb-3" id="summary-votes-section">
             <div class="col-12 col-md-6 order-md-1 mb-3 mb-md-0">
               <div class="summary-votes-card unused-votes-card">
@@ -207,7 +206,6 @@
               </div>
             </div>
           </div>
-          @endif
           @if($amendmentEnabled === true)
           <h5 class="h5-semiTitle">Amendments</h5>
           <div class="card">
@@ -229,7 +227,6 @@
             </div>
           </div>
           @endif
-          @if(!isset($bodEnabled) || $bodEnabled !== false)
           <h5 class="h5-semiTitle"><i class="fas fa-list-check me-2"></i>Agenda Items</h5>
           <div class="card">
             <div class="card-body">
@@ -265,7 +262,6 @@
               </table>
             </div>
           </div>
-          @endif
         </div>
 
       </div>
@@ -273,7 +269,7 @@
         <button type="button" class="btn newBtnlight" data-btn-show-page="0" data-direction="back" id="btnBack" onclick="handlePage(this)" disabled>
           <i class="fas fa-arrow-left me-2"></i> Back
         </button>
-        <button type="button" class="btn btn-continue" data-btn-show-page="0" data-direction="next" id="btnSumbitBallot" onclick="handlePage(this)">
+        <button type="button" class="btn btn-continue" data-btn-show-page="@if($amendmentEnabled === true) 2 @else 3 @endif" data-direction="next" id="btnSumbitBallot" onclick="handlePage(this)">
           Continue <i class="fas fa-arrow-right ms-2"></i>
         </button>
       </div>
@@ -340,11 +336,11 @@
   // CONFIGURATION & CONSTANTS
   // ============================================================================
   const BALLOT_CONFIG = {
+    totalPages: $('.ballot-pages').length,
     ballotId: "{{ $ballotId }}",
     availableBoardOfDirectorVotes: Number('{{ $availableVotesBod }}'),
     availableAmendmentVotes: Number('{{ $availableVotesAmendment }}'),
-    isAmendmentEnabled: @if($amendmentEnabled === true) true @else false @endif,
-    isBodEnabled: @if(!isset($bodEnabled) || $bodEnabled !== false) true @else false @endif,
+    isAmendmentEnabled: @if(config('evoting.enableAmendment') === true) true @else false @endif,
     pageTransitionDelayMs: 500,
     smoothScrollDurationMs: 400
   };
@@ -357,7 +353,6 @@
     // Initialize the voting application
     initialize() {
       this.setupEventListeners();
-      this.initializeNavigation();
       this.displayBallotModal();
       this.enableTooltips();
     },
@@ -403,46 +398,6 @@
     },
 
     // ========================================================================
-    // STEPPER & VISIBLE PAGE HELPERS
-    // ========================================================================
-    initializeNavigation() {
-      const visiblePages = this.getVisiblePages();
-      if (visiblePages.length === 0) return;
-
-      // Activate the first visible page
-      const firstPage = visiblePages[0];
-      $('.ballot-pages').removeClass('active').hide();
-      $(`.ballot-pages[data-page=${firstPage}]`).addClass('active').show();
-
-      // Set initial button targets
-      const nextPage = this.getNextVisiblePage(firstPage);
-      $('[data-direction=back]').attr('disabled', true).attr('data-btn-show-page', firstPage);
-      if (nextPage !== null) {
-        $('[data-direction=next]').attr('data-btn-show-page', nextPage);
-      } else {
-        $('[data-direction=next]').attr('data-btn-show-page', firstPage).text('Confirm and Submit');
-      }
-    },
-
-    getVisiblePages() {
-      return $('.ballot-pages').not('.d-none').map(function() {
-        return Number($(this).attr('data-page'));
-      }).get();
-    },
-
-    getNextVisiblePage(pageNumber) {
-      const pages = this.getVisiblePages();
-      const idx = pages.indexOf(Number(pageNumber));
-      return (idx >= 0 && idx < pages.length - 1) ? pages[idx + 1] : null;
-    },
-
-    getPrevVisiblePage(pageNumber) {
-      const pages = this.getVisiblePages();
-      const idx = pages.indexOf(Number(pageNumber));
-      return (idx > 0) ? pages[idx - 1] : null;
-    },
-
-    // ========================================================================
     // PAGE NAVIGATION & TRANSITIONS
     // ========================================================================
     switchBallotPage(currentPageNumber, targetPageNumber) {
@@ -465,13 +420,13 @@
       }, BALLOT_CONFIG.smoothScrollDurationMs);
     },
 
-    processNextPageTransition(previousPageNumber, nextPageNumber) {
+    processNextPageTransition(previousPageNumber, nextPageNumber, totalPageCount) {
       this.displayLoadingOverlay();
 
       setTimeout(() => {
-        $('[data-direction=back]').attr('disabled', previousPageNumber === null);
+        $('[data-direction=back]').attr('disabled', previousPageNumber === 0);
 
-        if (nextPageNumber === null) {
+        if (nextPageNumber > totalPageCount) {
           $('[data-direction=next]').text('Confirm and Submit');
         }
 
@@ -479,13 +434,13 @@
       }, BALLOT_CONFIG.pageTransitionDelayMs);
     },
 
-    processBackPageTransition(previousPageNumber, nextPageNumber) {
+    processBackPageTransition(previousPageNumber, nextPageNumber, totalPageCount) {
       this.displayLoadingOverlay();
 
       setTimeout(() => {
-        $('[data-direction=next]').html('Continue <i class="fas fa-arrow-right ms-2"></i>');
-        $('[data-direction=back]').attr('disabled', previousPageNumber === null);
-        $('[data-direction=next]').attr('disabled', false);
+        $('[data-direction=next]').text('Continue');
+        $('[data-direction=back]').attr('disabled', previousPageNumber === (BALLOT_CONFIG.isAmendmentEnabled ? 0 : 1));
+        $('[data-direction=next]').attr('disabled', nextPageNumber > totalPageCount);
 
         this.hideLoadingOverlay();
       }, BALLOT_CONFIG.pageTransitionDelayMs);
@@ -569,12 +524,11 @@
       const navigationDirection = $(navigationElement).attr('data-direction');
       const targetPageNumber = Number($(navigationElement).attr('data-btn-show-page'));
       const currentPageName = $('.ballot-pages.active').attr('data-page-name');
-      const targetPageName = $(`.ballot-pages[data-page=${targetPageNumber}]`).attr('data-page-name');
-      const nextPageNumber = this.getNextVisiblePage(targetPageNumber);
-      const previousPageNumber = this.getPrevVisiblePage(targetPageNumber);
+
+      let nextPageNumber = targetPageNumber + 1;
+      let previousPageNumber = targetPageNumber - 1;
 
       if (navigationDirection === 'next') {
-        // Validate the current page before navigating away
         switch (currentPageName) {
           case 'amendment':
             if (!this.validateAmendmentSelections()) return;
@@ -582,51 +536,58 @@
 
           case 'bod':
             if (!this.validateAgendaSelections() || !this.validateBoardOfDirectorVotes()) return;
+
+            // Show loading overlay while generating summary
+            this.displayLoadingOverlay();
+
+            try {
+              const summaryGenerated = await this.generateBallotSummary();
+              if (summaryGenerated === false) {
+                this.hideLoadingOverlay();
+                return;
+              }
+            } catch (error) {
+              this.hideLoadingOverlay();
+              return;
+            }
             break;
 
           case 'summary':
             this.displayFinalConfirmationDialog();
             return;
         }
-
-        // Generate summary whenever navigating TO the summary page (regardless of source)
-        if (targetPageName === 'summary') {
-          this.displayLoadingOverlay();
-          try {
-            const summaryGenerated = await this.generateBallotSummary();
-            if (summaryGenerated === false) {
-              this.hideLoadingOverlay();
-              return;
-            }
-          } catch (error) {
-            this.hideLoadingOverlay();
-            return;
-          }
-        }
       }
 
-      // Switch to the target page
+      // Only switch pages after successful validation/summary generation
       this.switchBallotPage(currentPageNumber, targetPageNumber);
 
       if (navigationDirection === 'next') {
-        if (targetPageName === 'summary') {
-          // Loading overlay was shown during summary generation — hide it now
-          this.hideLoadingOverlay();
-          $('[data-direction=back]').attr('disabled', false);
-          $('[data-direction=next]').text('Confirm and Submit');
+        // Don't show loading overlay again if we're coming from BOD page (already shown during summary generation)
+        if (currentPageName !== 'bod') {
+          this.processNextPageTransition(previousPageNumber, nextPageNumber, BALLOT_CONFIG.totalPages);
         } else {
-          this.processNextPageTransition(previousPageNumber, nextPageNumber);
+          // Hide the loading overlay that was shown during summary generation
+          this.hideLoadingOverlay();
+
+          // Update navigation buttons without showing loading overlay again
+          $('[data-direction=back]').attr('disabled', previousPageNumber === 0);
+          if (nextPageNumber > BALLOT_CONFIG.totalPages) {
+            $('[data-direction=next]').text('Confirm and Submit');
+          }
         }
       } else {
-        this.processBackPageTransition(previousPageNumber, nextPageNumber);
+        this.processBackPageTransition(previousPageNumber, nextPageNumber, BALLOT_CONFIG.totalPages);
       }
 
-      // Update navigation button targets to the next/previous visible pages
-      if (nextPageNumber !== null) {
-        $('[data-direction=next]').attr('data-btn-show-page', nextPageNumber);
-      }
-      if (previousPageNumber !== null) {
-        $('[data-direction=back]').attr('data-btn-show-page', previousPageNumber);
+      // Update navigation button attributes
+      $('[data-direction=next]').attr('data-btn-show-page', nextPageNumber);
+      $('[data-direction=back]').attr('data-btn-show-page', previousPageNumber);
+
+      // Update button text if we're now on the summary page
+      if (targetPageNumber === 3) { // Summary page
+        $('[data-direction=next]').text('Confirm and Submit');
+      } else if (navigationDirection === 'back') {
+        $('[data-direction=next]').html('Continue <i class="fas fa-arrow-right ms-2"></i>');
       }
 
       // Smooth scroll to top of page
@@ -671,10 +632,6 @@
     },
 
     getBodVote() {
-      if (!BALLOT_CONFIG.isBodEnabled) {
-        return [];
-      }
-
       const bodData = [];
       $('.bod-votes-table tbody tr').each(function() {
         const candidateId = $(this).attr('data-id');
@@ -688,11 +645,7 @@
     },
 
     getAmendmentVote() {
-      if (!BALLOT_CONFIG.isAmendmentEnabled) {
-        return [];
-      }
-
-      if (!this.validateAmendmentSelections()) {
+      if (!this.validAmendment()) {
         throw new Error("Unexpected error encountered. Please reload the page.");
       }
 
@@ -711,11 +664,7 @@
     },
 
     getAgendaVote() {
-      if (!BALLOT_CONFIG.isBodEnabled) {
-        return [];
-      }
-
-      if (!this.validateAgendaSelections()) {
+      if (!this.validAgenda()) {
         throw new Error("Unexpected error encountered. Please reload the page.");
       }
 
@@ -1061,12 +1010,12 @@
     return StockholderVotingSystem.switchBallotPage(currentPageNo, showPageNo);
   }
 
-  function handleNextButton(prevPage, nextPage) {
-    return StockholderVotingSystem.processNextPageTransition(prevPage, nextPage);
+  function handleNextButton(prevPage, nextPage, ballotPageCount) {
+    return StockholderVotingSystem.processNextPageTransition(prevPage, nextPage, ballotPageCount);
   }
 
-  function handleBackButton(prevPage, nextPage) {
-    return StockholderVotingSystem.processBackPageTransition(prevPage, nextPage);
+  function handleBackButton(prevPage, nextPage, ballotPageCount) {
+    return StockholderVotingSystem.processBackPageTransition(prevPage, nextPage, ballotPageCount);
   }
 
   function submitBallot() {

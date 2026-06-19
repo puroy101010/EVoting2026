@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Exceptions\ValidationErrorException;
 use App\Http\Controllers\ActivityController;
+use App\Http\Requests\StoreStockholderOnlineBallotRequest;
 use App\Models\Ballot;
 use App\Models\StockholderAccount;
 use App\Models\User;
@@ -128,7 +129,7 @@ class StockholderOnlineBallotService
 
 
 
-    public function getAvailableVotes($revoke, $userInfo)
+    public function getAvailableVotes(string $revoke, User $userInfo)
     {
 
         $user = Auth::user();
@@ -198,6 +199,10 @@ class StockholderOnlineBallotService
                             ->pluck('accountId');
 
 
+                        break;
+                    default:
+                        Log::error("Stockholder Online Voting: Invalid revoke option provided for stockholder user: " . $userInfo->id, ['revoke' => $revoke]);
+                        throw new Exception("Invalid revoke option provided: {$revoke}");
                         break;
                 }
 
@@ -404,7 +409,7 @@ class StockholderOnlineBallotService
     }
 
 
-    private static function checkIfUserIsAuthorizedVoter($userInfo): string
+    private static function checkIfUserIsAuthorizedVoter(User $userInfo): string
     {
 
         Log::info("Stockholder Online Voting: Checking if user is authorized voter.");
@@ -442,9 +447,10 @@ class StockholderOnlineBallotService
         return $authorizedVoter;
     }
 
-    public function store($request)
+    public function store(StoreStockholderOnlineBallotRequest $request)
     {
         try {
+
 
             $this->ensureElectionIsOngoing('store');
 
@@ -493,7 +499,7 @@ class StockholderOnlineBallotService
         }
     }
 
-    private function ensureElectionIsOngoing($action, $ballotId = null, $confirmationId = null)
+    private function ensureElectionIsOngoing(string $action,  $ballotId = null, $confirmationId = null)
     {
 
         if (!in_array($action, ['store', 'summary', 'submit'])) {

@@ -446,17 +446,18 @@ class VoteService
             }
         }
 
+        if ((int) $settings['bod_module_enabled'] === 1) {
+            $candidates = Candidate::where('isActive', true)->count();
+            if ($candidates === 0) {
+                Log::error('No active candidates found.');
+                throw new ValidationErrorException('No active candidates found. Please contact admin.');
+            }
 
-        $candidates = Candidate::where('isActive', true)->count();
-        if ($candidates === 0) {
-            Log::error('No active candidates found.');
-            throw new ValidationErrorException('No active candidates found. Please contact admin.');
-        }
-
-        $agendaItems = Agenda::where('isActive', true)->count();
-        if ($agendaItems === 0) {
-            Log::error('No active agenda items found.');
-            throw new ValidationErrorException('No active agenda items found. Please contact admin.');
+            $agendaItems = Agenda::where('isActive', true)->count();
+            if ($agendaItems === 0) {
+                Log::error('No active agenda items found.');
+                throw new ValidationErrorException('No active agenda items found. Please contact admin.');
+            }
         }
     }
 
@@ -568,9 +569,13 @@ class VoteService
 
         ]);
 
-        $amendmentSummary = $this->processAmendmentSummary($request->amendment, $ballotInfo);
-        $agendaSummary = $this->processAgendaSummary($request->agenda, $ballotInfo);
-        $bodSummary = $this->processBodSummary($request->bod, $ballotInfo);
+        $amendmentEnabled = (int)ConfigService::getConfig('amendment_enabled') === 1;
+        $bodModuleEnabled = (int)ConfigService::getConfig('bod_module_enabled') === 1;
+
+
+        $amendmentSummary = $amendmentEnabled ? $this->processAmendmentSummary($request->amendment, $ballotInfo) : [];
+        $agendaSummary = $bodModuleEnabled ? $this->processAgendaSummary($request->agenda, $ballotInfo) : [];
+        $bodSummary = $bodModuleEnabled ?  $this->processBodSummary($request->bod, $ballotInfo) : [];
 
         $proccessedData = [
             'bod' => $bodSummary,
@@ -998,7 +1003,7 @@ class VoteService
 
 
 
-    public static function ensureEmailIsNotUsed($email, $votingType): void
+    public static function ensureEmailIsNotUsed(string $email, $votingType): void
     {
 
         UtilityService::validateVotingType($votingType);

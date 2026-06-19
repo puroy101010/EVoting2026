@@ -174,6 +174,11 @@ class UtilityService
         return $ballotType;
     }
 
+    /**
+     * Validates the voting type and returns a standardized string.
+     * Acceptable values are 'Stockholder Online Voting' and 'Proxy Voting' (case-insensitive).
+     * Throws an exception if the input is invalid.
+     */
     public static function validateVotingType(string $votingType): string
     {
         if (!in_array($votingType, ['Stockholder Online Voting', 'Proxy Voting'])) {

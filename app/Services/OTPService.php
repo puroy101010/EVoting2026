@@ -100,7 +100,7 @@ class OTPService
             ]);
 
 
-            $this->sendOTP($email, $authUserDetails, $otp);
+            //$this->sendOTP($email, $authUserDetails, $otp);
 
             DB::commit();
 

@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
+use App\Services\ConfigService;
 
 class SummaryStockholderOnlineRequest extends FormRequest
 {
@@ -26,18 +27,33 @@ class SummaryStockholderOnlineRequest extends FormRequest
         return [
             'ballotId' => 'required',
 
-            'amendment' => 'required|array',
+            'amendment' => [
+                'array',
+                Rule::requiredIf(function () {
+                    return ConfigService::getConfig('amendment_enabled') === '1';
+                }),
+            ],
             'amendment.*.amendmentId' => ['required', 'integer', Rule::exists('amendments')->where('isActive', 1)],
             'amendment.*.yes' => ['boolean'],
             'amendment.*.no' => ['boolean'],
 
-            'agenda' => 'required|array',
+            'agenda' => [
+                'array',
+                Rule::requiredIf(function () {
+                    return ConfigService::getConfig('bod_module_enabled') === '1';
+                }),
+            ],
             'agenda.*.agendaId' => ['required', 'integer', Rule::exists('agendas')->where('isActive', 1)],
             'agenda.*.favor' => ['boolean'],
             'agenda.*.notFavor' => ['boolean'],
             'agenda.*.abstain' => ['boolean'],
 
-            'bod' => 'required|array',
+            'bod' => [
+                'array',
+                Rule::requiredIf(function () {
+                    return ConfigService::getConfig('bod_module_enabled') === '1';
+                }),
+            ],
             'bod.*.candidateId' => ['required', 'integer', Rule::exists('candidates')->where('isActive', 1)],
             'bod.*.vote' => ['nullable', 'integer', 'min:0']
         ];
