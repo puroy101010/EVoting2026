@@ -671,7 +671,7 @@ class AmendmentProxyService
                 case 'non-member':
                     $userRole = 'NM';
                     $corpRep = null;
-                    $stockholder = $proxyholder->nonMemberAccount->firstName . ' ' . $proxyholder->nonMemberAccount->lastName;
+                    $stockholder = $proxyholder->nonMemberAccount->fullName;
                     $accountNo = $proxyholder->nonMemberAccount->nonmemberAccountNo;
                     break;
 
