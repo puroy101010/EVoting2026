@@ -355,6 +355,7 @@ class AmendmentProxyService
             : 'Revoked verification status';
 
         $history['updatedAt'] = now();
+        $history['createdAt'] = now();
 
         return ProxyAmendmentHistory::create($history);
     }
