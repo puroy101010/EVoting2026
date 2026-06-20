@@ -52,11 +52,22 @@
 
               $counter = 1;
 
+              $totalCollected = 0;
+              $totalActive = 0;
+              $totalDelinquent = 0;
+              $totalAvailable = 0;
+
+
               foreach ($proxyholders as $email =>  $detail) {
 
                 $activeProxies = $detail['active']['count'] ?? 0;
                 $delinquentProxies = $detail['delinquent']['count'] ?? 0;
                 $collectedProxies = $activeProxies + $delinquentProxies;
+
+                $totalCollected += $collectedProxies;
+                $totalActive += $activeProxies;
+                $totalDelinquent += $delinquentProxies;
+                $totalAvailable += $collectedProxies - $delinquentProxies;
 
 
                 echo '<tr data-email="' . $email . '">
@@ -78,6 +89,14 @@
               ?>
 
             </tbody>
+            <tfoot class="text-nowrap text-center table-light" style="position: sticky;bottom: 0; z-index: 1;">
+              <th class="th-padding"></th>
+              <th class="th-padding"></th>
+              <th class="th-padding"></th>
+              <th class="th-padding">{{ $totalCollected }}</th>
+              <th class="th-padding">{{ $totalActive }}</th>
+              <th class="th-padding">{{ $totalDelinquent }}</th>
+              <th class="th-padding">{{ $totalAvailable }}</th>
           </table>
         </div>
       </div>
