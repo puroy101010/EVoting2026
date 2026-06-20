@@ -402,7 +402,7 @@ class StockholderOnlineBallotService
         VoteService::sendVoteConfirmation(Auth::user()->email, 'Stockholder Online Voting', $confirmation->id, $ballotInfo);
 
         return response()->json([
-            'message' => 'Your vote has been successfully submitted.',
+            'message' => 'Thank you for your participation in the election.',
             'ballotId' => $ballotInfo->ballotId,
             'confirmationId' => $confirmation->confirmationId
         ], 200);

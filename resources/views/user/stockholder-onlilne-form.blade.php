@@ -530,7 +530,7 @@
       Swal.fire({
         icon: 'success',
         title: '<span style="color:#2F4A3C;font-weight:bold;">Ballot Submitted!</span>',
-        html: `<div style='font-size:1.1em;margin-bottom:8px;'>${successMessage}</div><div style='color:#888;'>Thank you for participating in the election.</div>`,
+        html: `<div style='font-size:1.1em;margin-bottom:8px;'>${successMessage}</div>`,
         showConfirmButton: true,
         confirmButtonColor: '#2F4A3C',
         confirmButtonText: '<i class="fas fa-check-circle me-2"></i> Return to Dashboard',

@@ -240,6 +240,8 @@
     $('#customSearchInput').on('keyup', function() {
       table.search(this.value).draw();
     });
+
+    $('#customSearchInput').focus();
   });
 </script>
 
