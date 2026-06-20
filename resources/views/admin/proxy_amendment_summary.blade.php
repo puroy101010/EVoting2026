@@ -39,9 +39,8 @@
           <table class="table corporate-table ultra-compact" id="table_proxy_summary">
             <thead class="text-nowrap text-center table-light" style="position: sticky;top: 0; z-index: 1;">
               <th class="th-padding">#</th>
-              <th class="th-padding">Account No</th>
               <th class="th-padding">Assignee</th>
-              <th class="th-padding">Role</th>
+              <th class="th-padding">Email</th>
               <th class="th-padding">Collected Proxies</th>
               <th class="th-padding">Active</th>
               <th class="th-padding">Delinquent</th>
@@ -53,28 +52,21 @@
 
               $counter = 1;
 
-              foreach ($proxyholders as $proxyholder) {
+              foreach ($proxyholders as $email =>  $detail) {
 
-                $totalCollectdProxy = count($proxyholder['proxies']);
-                $countedValues = array_count_values($proxyholder['isDelinquent']);
-
-                $delinquentCount = $countedValues[1] ?? 0;
-                $activeCount     = $countedValues[0] ?? 0;
-
-                $availableProxy =  $totalCollectdProxy  - (int) $delinquentCount;
+                $activeProxies = $detail['active']['count'] ?? 0;
+                $delinquentProxies = $detail['delinquent']['count'] ?? 0;
+                $collectedProxies = $activeProxies + $delinquentProxies;
 
 
-                $assignee = $proxyholder['stockholder'] . ' ' . ($proxyholder['corpRep'] === null ? '' : '-' . $proxyholder['corpRep']);
-
-                echo '<tr data-id="' . $proxyholder['userId'] . '">
+                echo '<tr data-email="' . $email . '">
                                     <td class="td-padding">' . $counter . '</td>
-                                    <td class="td-padding">' . $proxyholder['accountNo'] . '</td>
-                                    <td class="td-padding">' . $assignee . '</td>
-                                    <td class="td-padding text-center">' . $proxyholder['role'] . '</td>
-                                    <td class="td-padding text-center"><span class="total-proxy">' . $totalCollectdProxy . '</span></td>
-                                    <td class="td-padding text-center">' . $activeCount . '</td>
-                                    <td class="td-padding text-center">' . $delinquentCount . '</td>
-                                    <td class="td-padding text-center">' . $availableProxy . '</td>
+                                    <td class="td-padding">' . $detail['assignee']['name'] . '</td>
+                                    <td class="td-padding">' . $email . '</td>
+                                    <td class="td-padding text-center"><span class="total-proxy">' . $collectedProxies . '</span></td>
+                                    <td class="td-padding text-center">' . $activeProxies . '</td>
+                                    <td class="td-padding text-center">' . $delinquentProxies . '</td>
+                                    <td class="td-padding text-center">' . $collectedProxies - $delinquentProxies . '</td>
                                   </tr>';
                 $counter++;
               }
@@ -149,39 +141,30 @@
 
     for (let proxy of data['proxyList']) {
 
-
       totalCollected++;
 
       let status = proxy.stockholder_account.isDelinquent === 1 ?
         '<span class="badge badge-danger">Delinquent</span>' :
         '<span class="badge badge-success">Active</span>';
 
-      let vote = proxy['used_account'] !== null ? '<span class="badge badge-secondary">Used</span>' : '<span class="badge badge-primary">Available</span>';
+      const usedAmendment = proxy['stockholder_account']['used_amendment'];
 
-
+      let vote = usedAmendment !== null ? '<span class="badge badge-secondary">Used</span>' : '<span class="badge badge-primary">Available</span>';
 
       if (proxy.stockholder_account.isDelinquent === 1) {
         totalDelinquent++;
 
       }
 
-
-      if (proxy['used_account'] !== null) {
+      if (usedAmendment !== null) {
         usedAccounts++;
-
       }
-
-      let assignorName = proxy.assignor.role === 'stockholder' ?
-        proxy.assignor.stockholder.stockholder :
-        proxy.assignor.stockholder_account.corpRep;
-
-
 
       stockholders += `<tr>
                       <td> ${counter} </td>
                       <td> ${proxy.stockholder_account.accountKey} </td>
                       <td> ${proxy.proxyAmendmentFormNo} </td>
-                      <td> ${assignorName} </td>
+                      <td> ${proxy.assignorName} </td>
                       <td> ${status} </td>
                       <td> ${vote} </td>
                       </tr>`;
@@ -207,7 +190,7 @@
   }
 
   $(document).on('click', '.total-proxy', function() {
-    const id = $(this).closest('tr').attr('data-id');
+    const id = $(this).closest('tr').attr('data-email');
     $.ajax({
       url: BASE_URL + 'admin/amendment-proxy/summary/' + id,
       method: 'GET',

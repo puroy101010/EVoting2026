@@ -116,7 +116,7 @@ Route::prefix('admin')->middleware([EnsureUserIsAdmin::class])->group(function (
     Route::get('amendment-proxy/masterlist/export', [AmendmentProxyController::class, 'exportMasterlist']);
     Route::get('amendment-proxy/active/export', [AmendmentProxyController::class, 'exportActiveProxies']);
     Route::get('amendment-proxy/summary', [AmendmentProxyController::class, 'summary']); //used
-    Route::get('amendment-proxy/summary/{id}', [AmendmentProxyController::class, 'proxy_list']); //used
+    Route::get('amendment-proxy/summary/{email}', [AmendmentProxyController::class, 'proxy_list']); //used
     Route::resource('amendment-proxy', AmendmentProxyController::class);
 
     Route::post('bod-proxy/{id}/cancel', [BODProxyController::class, 'cancel']);

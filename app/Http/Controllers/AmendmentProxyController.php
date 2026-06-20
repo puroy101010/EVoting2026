@@ -123,6 +123,15 @@ class AmendmentProxyController extends Controller
                 ]);
             }
 
+
+
+            // echo '<pre>';
+            // print_r($this->amendmentProxyService->getSummary());
+            // echo '</pre>';
+            // return;
+
+
+
             Log::info("Amendment Proxy: Accessed Amendment proxy summary");
             return view('admin.proxy_amendment_summary', [
                 'proxyholders' => $this->amendmentProxyService->getSummary()
@@ -133,7 +142,7 @@ class AmendmentProxyController extends Controller
         }
     }
 
-    public function proxy_list(Request $request, int $id)
+    public function proxy_list(Request $request, string $email)
     {
         try {
 
@@ -147,7 +156,7 @@ class AmendmentProxyController extends Controller
 
             Log::info("Amendment Proxy: Accessed Amendment proxy assignor");
 
-            return response()->json(['proxyList' => $this->amendmentProxyService->getProxyList($request, $id)]);
+            return response()->json(['proxyList' => $this->amendmentProxyService->getProxyList($email)]);
         } catch (Exception $e) {
 
             UtilityService::logServerError($request, $e, 'Error occurred while fetching Amendment proxy list');

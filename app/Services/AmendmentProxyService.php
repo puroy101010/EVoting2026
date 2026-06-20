@@ -631,136 +631,49 @@ class AmendmentProxyService
 
     public function getSummary()
     {
-        $groupByEmail = [];
+        $summary = [];
 
-        $proxyholders = User::with([
-            'collectedProxyAmendment',
-            'collectedProxyAmendment.stockholderAccount:accountId,isDelinquent',
-            'stockholder',
-            'stockholderAccount',
-            'stockholderAccount.stockholder',
-            'nonMemberAccount'
-        ])
-            ->has('collectedProxyAmendment')
-            ->get();
+        $proxies = ProxyAmendment::with('stockholderAccount')->get();
 
-        $groupByEmail = [];
+        foreach ($proxies as $proxy) {
+            $account = $proxy->stockholderAccount;
 
-        foreach ($proxyholders as $proxyholder) {
-
-            if ($proxyholder->email === null) {
-
-                throw new Exception("Assignor's email cannot be null");
+            if ($account->isDelinquent === null) {
+                throw new Exception(
+                    "Stockholder account for proxy ID {$proxy->proxyAmendmentId} is missing."
+                );
             }
 
-            switch ($proxyholder->role) {
-
-                case 'stockholder':
-                    $userRole = 'SH';
-                    $corpRep = null;
-                    $stockholder = $proxyholder->stockholder->stockholder;
-                    $accountNo = $proxyholder->stockholder->accountNo;
-                    break;
-
-                case 'corp-rep':
-                    $userRole = 'CR';
-                    $corpRep = $proxyholder->stockholderAccount->corpRep;
-                    $stockholder = $proxyholder->stockholderAccount->stockholder->stockholder;
-                    $accountNo = $proxyholder->stockholderAccount->accountKey;
-                    break;
-
-                case 'non-member':
-                    $userRole = 'NM';
-                    $corpRep = null;
-                    $stockholder = $proxyholder->nonMemberAccount->fullName;
-                    $accountNo = $proxyholder->nonMemberAccount->nonmemberAccountNo;
-                    break;
-
-                default:
-                    throw new Exception('Account type is not valid. Only allowed accountType can have a proxy.');
-                    break;
-            }
+            $status = $account->isDelinquent ? 'delinquent' : 'active';
 
 
-            foreach ($proxyholder->collectedProxyAmendment->toArray() as $proxy) {
-                $groupByEmail[$proxyholder->email]['userId'] = $proxyholder->id;
-                $groupByEmail[$proxyholder->email]['role'] = $userRole;
-                $groupByEmail[$proxyholder->email]['stockholder'] = $stockholder;
-                $groupByEmail[$proxyholder->email]['corpRep'] = $corpRep;
-                $groupByEmail[$proxyholder->email]['accountNo'] = $accountNo;
-                $groupByEmail[$proxyholder->email]['proxies'][] = $proxy;
-                $groupByEmail[$proxyholder->email]['isDelinquent'][] = $proxy['stockholder_account']['isDelinquent'];
-            }
+
+            $summary[$proxy->assigneeEmail][$status] ??= [
+                'count' => 0,
+            ];
+
+            $summary[$proxy->assigneeEmail]['assignee'] = [
+                'name' => $proxy->assigneeName,
+                'email' => $proxy->assigneeEmail,
+            ];
+
+            $summary[$proxy->assigneeEmail][$status]['count']++;
         }
+
 
         ActivityController::log(['activityCode' => '00110']);
 
-        return $groupByEmail;
+        return $summary;
     }
 
-    public function getProxyList($request, $id)
+    public function getProxyList(string $email)
     {
 
-        Log::info("Fetching amendment proxy list for user ID: $id");
-        $proxyList = [];
-        $user = User::with([
-            'stockholder',
-            'stockholderAccount',
-            'stockholderAccount.stockholder'
-        ])->findOrFail($id);
+        Log::info("Fetching amendment proxy list for user email: $email");
 
-        switch ($user->role) {
-            case 'stockholder':
-                $proxyList = ProxyAmendment::with([
-                    'assignor:id,role',
-                    'assignor.stockholder',
-                    'assignor.stockholderAccount',
-                    'assignor.stockholderAccount.stockholder',
-                    'stockholderAccount.stockholder',
-                    'usedAccount'
+        $proxyList = ProxyAmendment::with('stockholderAccount.usedAmendment')->where('assigneeEmail', $email)->get();
 
-                ])->where('assigneeId', $id)->get()->toArray();
-
-                break;
-
-            case 'corp-rep':
-
-                $accountNo = $user->stockholderAccount->stockholder->accountNo;
-
-                $assigneeIds = User::whereHas('stockholderAccount.stockholder', function ($query) use ($accountNo) {
-                    $query->where('accountNo', $accountNo);
-                })->where('email', $user->email)->pluck('id');
-
-
-                $proxyList   = ProxyAmendment::with([
-                    'assignor:id,role',
-                    'assignor.stockholder',
-                    'assignor.stockholderAccount',
-                    'assignor.stockholderAccount.stockholder',
-                    'stockholderAccount.stockholder',
-                    'usedAccount'
-
-                ])->whereIn('assigneeId', $assigneeIds)->get()->toArray();;
-
-                break;
-
-            case 'non-member':
-
-                Log::info("Fetching proxy list for non-member user ID: $id");
-                $proxyList = ProxyAmendment::with([
-                    'assignor:id,role',
-                    'assignor.stockholder',
-                    'assignor.stockholderAccount',
-                    'assignor.stockholderAccount.stockholder',
-                    'stockholderAccount.stockholder',
-                    'usedAccount'
-
-
-                ])->where('assigneeId', $id)->get()->toArray();
-
-                break;
-        }
-        Log::info("Fetched proxy list for user ID: $id");
+        Log::info("Fetched proxy list for user email: $email");
         return $proxyList;
     }
 
