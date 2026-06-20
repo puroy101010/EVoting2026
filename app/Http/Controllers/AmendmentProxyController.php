@@ -28,7 +28,7 @@ class AmendmentProxyController extends Controller
 {
 
 
-    protected $amendmentProxyService;
+    protected AmendmentProxyService $amendmentProxyService;
 
     public function __construct(AmendmentProxyService $amendmentProxyService)
     {

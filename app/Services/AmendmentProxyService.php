@@ -376,23 +376,14 @@ class AmendmentProxyService
         ]);
     }
 
-    public function getProxies($request, ?string $filter)
+    public function getProxies($request, ?string $filter): array
     {
 
         $proxies = ProxyAmendment::with([
-            'stockholderAccount',
-            'assignee',
-            'assignee.stockholder',
-            'assignee.stockholderAccount',
-            'assignee.stockholderAccount.stockholder',
-            'assignee.nonMemberAccount',
+            'stockholderAccount.stockholder',
             'auditor.adminAccount' => function ($query) {
                 $query->withTrashed();
             },
-            'assignor.stockholder',
-            'assignor.stockholderAccount',
-            'assignor.stockholderAccount.stockholder',
-            'assignor.nonMemberAccount',
             'createdBy',
             'usedAccount',
             'cancelledProxyAmendment' => function ($query) {
@@ -407,88 +398,39 @@ class AmendmentProxyService
                     $query->where('auditedBy', '!=', null);
                 }
             })
-            ->get()->toArray();
+            ->get();
 
 
         $proxyList = [];
 
         foreach ($proxies as $proxy) {
-
-            $assignee = '';
-
-            switch ($proxy['assignee']['role']) {
-
-                case 'stockholder':
-                    $assignee = $proxy['assigneeName'];
-                    $assigneeAccountNo = $proxy['assignee']['stockholder']['accountNo'];
-
-                    break;
-
-                case 'corp-rep':
-                    $assignee = $proxy['assigneeName'];
-                    $assigneeAccountNo = $proxy['assignee']['stockholder_account']['accountKey'];
-                    break;
-
-                case 'non-member':
-                    $assignee = $proxy['assigneeName'];
-                    $assigneeAccountNo = $proxy['assignee']['non_member_account']['nonmemberAccountNo'];
-                    break;
-
-                default:
-
-                    throw new Exception("Assignee is not valid.");
-                    break;
-            }
-
-
-            switch ($proxy['assignor']['role']) {
-
-                case 'stockholder':
-                    $assignor = $proxy['assignor']['stockholder']['stockholder'] . " (" . $proxy['assignorName'] . ")";
-                    $assignorAccountNo = $proxy['assignor']['stockholder']['accountNo'];
-
-
-                    break;
-
-                case 'corp-rep':
-                    $assignor = $proxy['assignor']['stockholder_account']['stockholder']['stockholder'] . " (" . $proxy['assignorName'] . ")";
-                    $assignorAccountNo = $proxy['assignor']['stockholder_account']['accountKey'];
-                    break;
-
-                default:
-
-                    throw new Exception("Assignor is not valid.");
-                    break;
-            }
-
-
-
-
-
             $proxyList[] = array(
 
-                'id' => $proxy['proxyAmendmentId'],
-                'accountId' => $proxy['accountId'],
-                'accountNo' => $proxy['stockholder_account']['accountKey'],
-                'assignee' => $assignee,
-                'assigneeAccountNo' => $assigneeAccountNo,
-                'assignor' => $assignor,
-                'assignorAccountNo' => $assignorAccountNo,
-                'proxyFormNo' => $proxy['proxyAmendmentFormNo'],
-                'isDelinquent' => $proxy['stockholder_account']['isDelinquent'] === 1 ? 'delinquent' : 'active',
-                'vote' => $proxy['used_account'] === null ? 'available' : 'used',
-                'audited' => $proxy['auditedBy'] === null ? '' : 'checked',
-                'auditor' => $proxy['auditedBy'] === null ? '' : $proxy['auditor']['admin_account']['firstName'] . ' ' .  $proxy['auditor']['admin_account']['lastName'],
-                'auditedAt' => $proxy['auditedAt'] ?? '',
-                'cancelled' => $proxy['cancelled_proxy_amendment']
+                'id' => $proxy->proxyAmendmentId,
+                'accountId' => $proxy->accountId,
+                'accountNo' => $proxy->stockholderAccount->accountKey,
+                'stockholder' => $proxy->stockholderAccount->stockholder->stockholder,
+                'assignee' => $proxy->assigneeName,
+                'assignor' => $proxy->assignorName,
+                'assignorAccountNo' => $proxy->stockholderAccount->stockholder->accountNo,
+                'proxyFormNo' => $proxy->proxyAmendmentFormNo,
+                'isDelinquent' => $proxy->stockholderAccount->isDelinquent === 1 ? 'delinquent' : 'active',
+                'audited' => $proxy->auditedBy === null ? '' : 'checked',
+                'auditor' => $proxy->auditedBy === null ? '' : $proxy->auditor->adminAccount->firstName . ' ' .  $proxy->auditor->adminAccount->lastName,
+                'auditedAt' => $proxy->auditedAt ?? '',
+                'cancelled' => $proxy->cancelled_proxy_amendment ?? []
 
             );
         }
+
+
+
 
         // Sort proxyList by assignor ascending
         usort($proxyList, function ($a, $b) {
             return strcmp($a['assignor'], $b['assignor']);
         });
+
 
         return $proxyList;
     }

@@ -125,9 +125,12 @@
               @endphp
               <tr data-id="{{ $proxyholder['id'] }}">
                 <td>{{ $loop->iteration }}</td>
-                <td>{{ $proxyholder['assigneeAccountNo'] }} - {{ $proxyholder['assignee'] }}</td>
+                <td>{{ $proxyholder['assignee'] }}</td>
                 <td>{{ $proxyholder['proxyFormNo'] }}</td>
-                <td>{{ $proxyholder['assignorAccountNo'] }} - {{ $proxyholder['assignor'] }}</td>
+                <td> {{ $proxyholder['assignorAccountNo'] }} - {{ $proxyholder['stockholder'] }}
+                  @if($proxyholder['assignor'] != $proxyholder['stockholder'])
+                  ({{ $proxyholder['assignor'] }})
+                  @endif</td>
                 <td>{!! $proxyholder['isDelinquent'] !!}</td>
                 <td>{!! $withCancelled !!}</td>
                 <td>{!! $voteStatus !!}</td>
@@ -136,7 +139,7 @@
               </tr>
               @empty
               <tr class="text-center">
-                <td colspan="8">No record found</td>
+                <td colspan="9">No record found</td>
               </tr>
               @endforelse
             </tbody>
