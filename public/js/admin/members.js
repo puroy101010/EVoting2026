@@ -1348,8 +1348,8 @@ const load_proxyhoder_amendment = loadProxyAmendment;
 
 function showProxyAmendment(data) {
     const amendment = data.proxy_amendment;
-    const assignor = buildUserDisplay(amendment.assignor);
-    const assignee = buildUserDisplay(amendment.assignee);
+    const assignor = amendment.assignorName ? `<strong>${amendment.assignorName}</strong> (${amendment.assignorEmail})` : '';
+    const assignee = amendment.assigneeName ? `<strong>${amendment.assigneeName}</strong> (${amendment.assigneeEmail})` : '';
     const detailsForm = $(SELECTORS.proxyFormAmendment + " .assignee-details");
     const stockKey = `${data.accountKey} ${data.stockholder.stockholder}`;
 
