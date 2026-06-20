@@ -177,23 +177,15 @@
       "You are about to revoke the proxy's verified status." :
       "You are about to confirm the proxy as verified.";
 
-    Swal.fire({
-      title: 'Are you sure?',
-      text: prompt,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Yes',
-      cancelButtonText: 'No'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        $chk.prop('disabled', true);
-        audit(id, action).always(function() {
-          $chk.prop('disabled', false);
-        });
-      }
-    })
+
+
+    $chk.prop('disabled', true);
+    audit(id, action).always(function() {
+      $chk.prop('disabled', false);
+    });
+
+
+
   })
 
   function audit(id, action) {
