@@ -65,7 +65,7 @@
     <div class="container container-Div">
         <div class="row">
             <div class="col-md-12">
-                <h1 class="h2-annual-title text-center" style="">2026 Annual Meeting of Stockholders</h1>
+                <h1 class="h2-annual-title text-center" style="">2026 Special Stockholders' Meeting</h1>
             </div>
         </div>
         <div class="row">

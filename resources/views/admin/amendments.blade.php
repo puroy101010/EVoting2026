@@ -91,7 +91,7 @@
 
 <!-- ADD AMENDMENT MODAL -->
 <div class="modal fade" id="addAmendmentModal">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <!-- Modal Header -->
       <div class="modal-header">
@@ -111,7 +111,7 @@
           <div class="form-group row">
             <label for="" class="col-md-4 col-form-label">Amendment <span class="text-danger">*</span></label>
             <div class="col-md-7">
-              <input type="text" id="" class="form-control" name="amendment" placeholder="Amendment" required autocomplete="off" required maxlength="5000">
+              <textarea id="" class="form-control" name="amendment" placeholder="Amendment" required maxlength="10000" autocomplete="off" rows="5"></textarea>
             </div>
           </div>
           <div class="form-group row">
@@ -140,7 +140,7 @@
 
 <!-- EDIT AMENDMENT MODAL -->
 <div class="modal fade" id="editAmendmentModal">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-lg">
     <div class="modal-content">
 
       <!-- Modal Header -->
@@ -157,7 +157,7 @@
           <div class="form-group row">
             <label for="" class="col-md-4 col-form-label">Amendment <span class="text-danger">*</span></label>
             <div class="col-md-7">
-              <input type="text" id="" class="form-control" name="amendment" placeholder="Amendment" required maxlength="5000" autocomplete="off">
+              <textarea id="" class="form-control" name="amendment" placeholder="Amendment" required maxlength="10000" autocomplete="off" rows="5"></textarea>
             </div>
           </div>
 

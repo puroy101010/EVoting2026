@@ -180,7 +180,7 @@
       stockholders += `<tr>
                       <td> ${counter} </td>
                       <td> ${proxy.stockholder_account.accountKey} </td>
-                      <td> ${proxy.proxyBodFormNo} </td>
+                      <td> ${proxy.proxyAmendmentFormNo} </td>
                       <td> ${assignorName} </td>
                       <td> ${status} </td>
                       <td> ${vote} </td>

@@ -20,9 +20,10 @@
         </button>
       </div>
       <div class="modal-body">
+
+        <!-- AMENDMENT -->
         <div id="amendmentForm" class="ballot-pages @if($amendmentEnabled === true) active @else d-none @endif" data-page="1" data-page-name="amendment">
           <form>
-
             <h2 class="h2-stockholder section-title"><span class="span-divider">Amendments</span></h2>
             <div class="row mb-3">
               <div class="col-md-6">

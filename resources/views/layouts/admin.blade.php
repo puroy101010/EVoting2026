@@ -596,13 +596,13 @@
 
 
     function showLoader(message = "Loading...") {
-    const loaderId = "app-loader-overlay";
+      const loaderId = "app-loader-overlay";
 
-    // Remove existing loader if any
-    $("#" + loaderId).remove();
+      // Remove existing loader if any
+      $("#" + loaderId).remove();
 
-    // Create and show loader
-    const loaderHtml = `
+      // Create and show loader
+      const loaderHtml = `
         <div id="${loaderId}" style="
             position: fixed;
             top: 0;
@@ -642,14 +642,14 @@
         </div>
     `;
 
-    $("body").append(loaderHtml);
-}
+      $("body").append(loaderHtml);
+    }
 
-function hideLoader() {
-    $("#app-loader-overlay").fadeOut(300, function () {
+    function hideLoader() {
+      $("#app-loader-overlay").fadeOut(300, function() {
         $(this).remove();
-    });
-}
+      });
+    }
 
     function handleSuccess(xhr, reload = true) {
       Swal.fire({
@@ -869,7 +869,11 @@ function hideLoader() {
 
 
 
+
+
             <!-- PROXY MANAGEMENT SECTION -->
+
+            @if(App\Services\ConfigService::getConfig('bod_module_enabled') == '1')
             <li class="nav-header" data-group="proxy-management">PROXY BOD</li>
             <div class="nav-group" id="proxy-management-group">
 
@@ -897,7 +901,7 @@ function hideLoader() {
               </li>
 
             </div>
-
+            @endif
 
             <!-- AMENDMENT MANAGEMENT SECTION -->
             <li class="nav-header" data-group="proxy-management-amendment">PROXY AMENDMENT</li>

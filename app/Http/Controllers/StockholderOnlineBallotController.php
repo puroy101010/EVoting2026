@@ -24,7 +24,7 @@ use App\Services\StockholderOnlineBallotService;
 class StockholderOnlineBallotController extends Controller
 {
 
-    private $stockholderOnlineBallotService;
+    private StockholderOnlineBallotService $stockholderOnlineBallotService;
 
     public function __construct(StockholderOnlineBallotService $stockholderOnlineBallotService)
     {
