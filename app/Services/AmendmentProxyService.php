@@ -412,7 +412,7 @@ class AmendmentProxyService
                 'stockholder' => $proxy->stockholderAccount->stockholder->stockholder,
                 'assignee' => $proxy->assigneeName,
                 'assignor' => $proxy->assignorName,
-                'assignorAccountNo' => $proxy->stockholderAccount->accountKey,
+                'assignorAccountNo' => $proxy->stockholderAccount->stockholder->accountNo,
                 'proxyFormNo' => $proxy->proxyAmendmentFormNo,
                 'isDelinquent' => $proxy->stockholderAccount->isDelinquent === 1 ? 'delinquent' : 'active',
                 'audited' => $proxy->auditedBy === null ? '' : 'checked',
