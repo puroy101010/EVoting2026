@@ -345,10 +345,10 @@ class AmendmentProxyService
         unset($history['assignee']);
         unset($history['stockholder_account']);
 
-        $history['assignorName'] = $proxy->proxy_assignor_name;
-        $history['assignorEmail'] = $proxy->assignor->email;
-        $history['assigneeName'] = $proxy->proxy_assignee_name;
-        $history['assigneeEmail'] = $proxy->assignee->email;
+        $history['assignorName'] = $proxy->assignorName;
+        $history['assignorEmail'] = $proxy->assignorEmail;
+        $history['assigneeName'] = $proxy->assigneeName;
+        $history['assigneeEmail'] = $proxy->assigneeEmail;
         $history['status'] = $action === 'verify' ? 'verified' : 'unverified';
         $history['remarks'] = $action === 'verify'
             ? 'Verified Amendment proxy'

@@ -66,29 +66,29 @@ class ProxyBoardOfDirectorCancelled extends Model
         return $this->belongsTo(User::class, 'assignorId', 'id');
     }
 
-    public function getProxyAssignorNameAttribute()
-    {
+    // public function getProxyAssignorNameAttribute()
+    // {
 
-        return $this->assignor->role === 'stockholder' ? $this->assignor->stockholder->stockholder : $this->assignor->stockholderAccount->corpRep;
-    }
+    //     return $this->assignor->role === 'stockholder' ? $this->assignor->stockholder->stockholder : $this->assignor->stockholderAccount->corpRep;
+    // }
 
 
-    public function getProxyAssigneeNameAttribute()
-    {
+    // public function getProxyAssigneeNameAttribute()
+    // {
 
-        switch ($this->assignee->role) {
-            case 'stockholder':
-                return $this->assignee->stockholder->stockholder;
-            case 'corp-rep':
-                return $this->assignee->stockholderAccount->corpRep;
-            case 'non-member':
-                return $this->assignee->nonMemberAccount->firstName . ' ' . $this->assignee->nonMemberAccount->lastName;
-            default:
-                throw new \Exception("Unknown role: {$this->assignee->role}");
-        }
+    //     switch ($this->assignee->role) {
+    //         case 'stockholder':
+    //             return $this->assignee->stockholder->stockholder;
+    //         case 'corp-rep':
+    //             return $this->assignee->stockholderAccount->corpRep;
+    //         case 'non-member':
+    //             return $this->assignee->nonMemberAccount->firstName . ' ' . $this->assignee->nonMemberAccount->lastName;
+    //         default:
+    //             throw new \Exception("Unknown role: {$this->assignee->role}");
+    //     }
 
-        return $this->assignee->role === 'stockholder' ? $this->assignee->stockholder->stockholder : $this->assignee->stockholderAccount->corpRep;
-    }
+    //     return $this->assignee->role === 'stockholder' ? $this->assignee->stockholder->stockholder : $this->assignee->stockholderAccount->corpRep;
+    // }
 
     public function auditor()
     {
