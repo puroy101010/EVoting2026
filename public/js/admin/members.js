@@ -1050,9 +1050,9 @@ function buildUserDisplay(userObject) {
             return `${accountKey} ${corpRep} <span class="badge badge-success">corporate representative</span>`;
         },
         "non-member": () => {
-            const { nonmemberAccountNo, firstName, lastName } =
+            const { nonmemberAccountNo, fullName } =
                 userObject.non_member_account;
-            return `${nonmemberAccountNo} ${firstName} ${lastName} <span class="badge badge-success">non-member</span>`;
+            return `${nonmemberAccountNo} ${fullName} <span class="badge badge-success">non-member</span>`;
         },
     };
 
