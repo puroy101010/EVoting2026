@@ -25,7 +25,7 @@ class CreateBallotsTable extends Migration
             $table->text('availableAmendmentAccounts')->nullable()->comment('List of stockholder account IDs available for voting for Amendment');
             $table->text('availableAccounts')->nullable()->comment("List of stockholder account IDs available for voting with different revocation types ['bod', 'amendment', 'both', 'none']");
             $table->enum('ballotType', ['person', 'proxy']);
-            $table->enum('authorizedVoter', ['stockholder', 'corp-rep'])->nullable();
+            // $table->enum('authorizedVoter', ['stockholder', 'corp-rep'])->nullable();
             $table->enum('role', ['stockholder', 'corp-rep', 'non-member']);
             $table->integer('availableVotesBod')->comment('Total number of votes available for Board of Directors. This is the sum of shares multiplied by votes per share.');
             $table->integer('availableVotesAmendment')->comment('Total number of votes available for Amendment. This is the sum of shares multiplied by votes per share.');

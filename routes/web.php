@@ -210,7 +210,7 @@ Route::prefix('user/ballot')->middleware([EnsureUserCanVoteProxy::class])->group
 
 
 
-Route::get('user/vote', [VoteController::class, 'index'])->middleware([EnsureUserIsAuthorizedVoter::class]);
+Route::get('user/vote', [BallotController::class, 'create'])->middleware([EnsureUserIsAuthorizedVoter::class]);
 Route::get('user/login', [LoginController::class, 'index'])->name('user.login');
 
 

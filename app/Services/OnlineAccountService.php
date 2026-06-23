@@ -383,6 +383,12 @@ class OnlineAccountService
                             $email,
                             $canUseVoteOnly
                         );
+                    } else {
+                        $groupedAccounts[$email][$accountNameSha][$accountNumber] = $this->processCorpRepGroup(
+                            $details,
+                            $email,
+                            $canUseVoteOnly
+                        );
                     }
                 }
             }
@@ -437,9 +443,48 @@ class OnlineAccountService
                         'accountType' => $detail['accountType'],
                         'stockholder' => $detail['stockholder'], // retain the original stockholder data to make it available for the view
                         'stockholderName' => $detail['stockholderName'],
+                        'voteInPerson' => $detail['voteInPerson']
                     ];
                 }
             }
+        }
+
+
+        return $detailsToAdd;
+    }
+
+
+
+    private function processCorpRepGroup(array $details, string $email, bool $canUseVoteOnly): array
+    {
+        $detailsToAdd = [];
+
+        foreach ($details as $detail) {
+
+            if ($canUseVoteOnly === true && $detail['voteInPerson'] === 'stockholder') {
+
+                Log::info("Skipping corporate representative account for email {$email} due to assigned voteInPerson", [
+                    'accountNo' => $detail['accountNo'],
+                    'voteInPerson' => $detail['voteInPerson'],
+                    'role' => $detail['role'],
+                ]);
+
+                continue;
+            }
+
+            $detailsToAdd[] = [
+                'userId' => $detail['userId'],
+                'accountNo' => $detail['accountNo'],
+                'accountKey' => $detail['accountKey'],
+                'accountName' => $detail['accountName'],
+                'email' => $email,
+                'emailRole' => $detail['emailRole'],
+                'role' => $detail['role'],
+                'accountType' => $detail['accountType'],
+                'stockholder' => $detail['stockholder'], // retain the original stockholder data to make it available for the view
+                'stockholderName' => $detail['stockholderName'],
+                'voteInPerson' => $detail['voteInPerson'],
+            ];
         }
 
 
@@ -542,7 +587,7 @@ class OnlineAccountService
 
 
     /**
-     * Retrieve and reconcile stocks for a specific email address.
+     * Get user IDs for accounts associated with a specific email address, optionally filtering for vote-only accounts.
      */
     public function getAccounts(string $email, bool $canUseVoteOnly = true): array
     {

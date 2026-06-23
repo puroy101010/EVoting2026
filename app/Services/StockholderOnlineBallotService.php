@@ -15,6 +15,14 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Services\ConfirmationService;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
+use App\Models\Candidate;
+use App\Models\Amendment;
+use App\Models\Agenda;
+use App\Models\Configuration;
+use App\Services\BallotService;
+use App\Http\Requests\SummaryStockholderOnlineRequest;
+
 
 
 
@@ -22,19 +30,110 @@ class StockholderOnlineBallotService
 {
 
 
-    public VoteService $voteService;
+    public BallotService $ballotService;
 
     public function __construct()
     {
-        $this->voteService = new VoteService();
+        $this->ballotService = new BallotService();
     }
-
-    public function summary($request)
+    public function show(Request $request, string $id)
     {
 
         try {
 
+            Log::info("Stockholder Online Voting: Loading Stockholder Online Ballot for ID {$id}.", [
+                'ballotId' => $id,
+            ]);
 
+            $ballotInfo = Ballot::where('ballotId', $id)
+                ->where('createdBy', Auth::id())
+                ->where('isSubmitted', false)
+                ->where('ballotType', 'person')
+                ->where('isViewed', false)
+                ->first();
+
+            if ($ballotInfo === null) {
+
+                Log::info("Stockholder Online Voting: Ballot has already been viewed or submitted. Redirecting to voting page.", [
+                    'ballotId' => $id,
+                ]);
+
+                ActivityController::log([
+                    'activityCode' => '00090',
+                    'remarks' => 'Attempted to access a ballot that has already been viewed or submitted. Redirecting to voting page.',
+                    'ballotId' => $id,
+                    'userId' => Auth::id(),
+                ]);
+
+                return redirect('user/vote');
+            }
+
+
+
+            Log::info("Stockholder Online Voting: Loading user information.", [
+                'ballotId' => $id,
+            ]);
+
+            $userInfo = User::with('stockholder', 'stockholderAccount', 'stockholderAccount.stockholder')->findOrFail(Auth::id());
+
+            $this->markBallotAsViewed($ballotInfo);
+
+            $candidates = Candidate::where('isActive', 1)->orderBy('type', 'asc')->orderBy('lastName', 'asc')->orderBy('type', 'asc')->get();
+            $amendment = Amendment::where('isActive', 1)->get();
+            $agenda = Agenda::where('isActive', 1)->get();
+
+
+            $amendmentForm = BallotService::generateAmendmentForm($amendment, $ballotInfo->availableVotesAmendment);
+            $agendaForm = BallotService::generateAgendaForm($agenda, $ballotInfo->availableVotesBod);
+
+
+            Log::info("Stockholder Online Voting: Successfully displayed ballot information.", [
+                'ballotId' => $id,
+            ]);
+
+
+            return view('user.stockholder-onlilne-form', [
+
+                'ballotId' => $ballotInfo->ballotId,
+                'ballotNo' => $ballotInfo->ballotNo,
+                'userInfo' => $userInfo,
+                'availableVotesBod' => $ballotInfo->availableVotesBod,
+                'availableVotesAmendment' => $ballotInfo->availableVotesAmendment,
+                'availableSharesBod' => count(json_decode($ballotInfo->availableBodAccounts)),
+                'availableSharesAmendment' => count(json_decode($ballotInfo->availableAmendmentAccounts)),
+                'candidates' => $candidates,
+                'amendmentForm'    => $amendmentForm,
+                'agendaForm'    => $agendaForm,
+                'configuration'  => Configuration::all()->toArray(),
+                'amendmentEnabled'  => ConfigService::getConfig('amendment_enabled') === '1',
+                'bodEnabled'  => ConfigService::getConfig('bod_module_enabled') === '1'
+
+            ]);
+        } catch (Exception $e) {
+
+            UtilityService::logServerError($request, $e, "Error displaying Stockholder Online Ballot for ID {$id}.");
+
+            return view('errors.500');
+        }
+    }
+
+    private function markBallotAsViewed(Ballot $ballotInfo): Ballot
+    {
+
+        $ballotInfo->isViewed = true;
+        $ballotInfo->save();
+
+        Log::info("Stockholder Online Voting: Ballot ID {$ballotInfo->ballotId} marked as viewed.", [
+            'ballotId' => $ballotInfo->ballotId,
+        ]);
+
+        return $ballotInfo;
+    }
+
+    public function summary(SummaryStockholderOnlineRequest $request)
+    {
+
+        try {
 
             Log::info('Stockholder Online Voting: Processing summary for ballot ID ' . $request->ballotId, [
                 'ballotId' => $request->ballotId,
@@ -42,30 +141,42 @@ class StockholderOnlineBallotService
 
             $this->ensureElectionIsOngoing('summary', $request->ballotId, $request->confirmationId);
 
-            $voteService = new VoteService();
 
-            $ballotInfo = VoteService::ballotInfo($request, 'Stockholder Online Voting');
 
-            $userSubmittedData = $voteService->processUserSubmittedData($request, $ballotInfo);
+            $ballotInfo = $this->ballotService->ballotInfo($request, 'Stockholder Online Voting');
+
+            $userSubmittedData = $this->ballotService->processUserSubmittedData($request, $ballotInfo);
 
             $this->ensureAvailableVotesAreUnchanged($ballotInfo, $userSubmittedData);
 
             $totalVotesSubmitted = collect($userSubmittedData['bod'])->sum('vote');
             $unusedVotes = $ballotInfo->availableVotesBod - $totalVotesSubmitted;
 
-            $this->voteService->checkExceedVotes($userSubmittedData, $ballotInfo, $totalVotesSubmitted, $unusedVotes);
+            $this->ballotService->checkExceedVotes($userSubmittedData, $ballotInfo, $totalVotesSubmitted);
 
-            $overallVotesStatus = $voteService->checkUnusedVotes($ballotInfo, $totalVotesSubmitted, $unusedVotes);
+            $overallVotesStatus = $this->ballotService->checkUnusedVotes($ballotInfo, $totalVotesSubmitted, $unusedVotes);
 
-            $message = VoteService::generateSummaryInfoMessage($overallVotesStatus, $unusedVotes, true);
-            $infoMessage = VoteService::generateSummaryInfoMessage($overallVotesStatus, $unusedVotes, false);
+            $message = $this->ballotService->generateSummaryInfoMessage($overallVotesStatus, $unusedVotes, true);
+            $infoMessage = $this->ballotService->generateSummaryInfoMessage($overallVotesStatus, $unusedVotes, false);
 
 
             DB::beginTransaction();
             $confirmationService = new ConfirmationService();
-            $ballotConfirmation = $confirmationService->store($ballotInfo, $userSubmittedData, true, $message, $unusedVotes);
 
-            ActivityController::log(['activityCode' => '00071', 'remarks' => $message, 'confirmationId' => $ballotConfirmation->confirmationId, 'ballotId' => $request->ballotId], 'userId', Auth::id());
+            Log::debug("Coffee");
+            $ballotConfirmation = $confirmationService->store($ballotInfo, $userSubmittedData, true, $message);
+            Log::debug("Tea");
+
+
+            ActivityController::log([
+                'activityCode' => '00071',
+                'remarks' => $message,
+                'confirmationId' => $ballotConfirmation->confirmationId,
+                'ballotId' => $request->ballotId,
+                'userId' => Auth::id(),
+                'email' => Auth::user()->email,
+                'accountNo' => Auth::user()->account_no,
+            ]);
 
             Log::info('Stockholder Online Voting: Summary processed successfully for ballot ID ' . $request->ballotId, [
                 'ballotId' => $request->ballotId,
@@ -96,11 +207,11 @@ class StockholderOnlineBallotService
         }
     }
 
-    private function ensureAvailableVotesAreUnchanged($ballotInfo, $userSubmittedData)
+    private function ensureAvailableVotesAreUnchanged(Ballot $ballotInfo, array $userSubmittedData)
     {
         $votingType = UtilityService::getVotingType($ballotInfo->ballotType);
 
-        $recordChanged = $this->voteService->checkAccountChanges($ballotInfo);
+        $recordChanged = $this->ballotService->checkAccountChanges($ballotInfo);
 
         if ($recordChanged === true) {
 
@@ -109,12 +220,15 @@ class StockholderOnlineBallotService
             $confirmationnService = new ConfirmationService();
 
             $ballotConfirmation = $confirmationnService->createAvailableVoteChangeRecord($ballotInfo, $userSubmittedData);
-            $this->voteService->createAvailableVoteChangeActivityLog($ballotInfo, $ballotConfirmation, $message);
+            $this->ballotService->createAvailableVoteChangeActivityLog($ballotInfo, $ballotConfirmation, $message);
             throw new ValidationErrorException($message);
         }
     }
 
 
+    /**
+     * Get available accounts for the authenticated user, categorized by revoke option.
+     */
     public function getAvailableAccounts()
     {
         $userInfo = Auth::user();
@@ -129,9 +243,11 @@ class StockholderOnlineBallotService
 
 
 
+    /**
+     * Get available votes for a user based on the revoke option.
+     */
     public function getAvailableVotes(string $revoke, User $userInfo)
     {
-
 
         $accountIds = (new OnlineAccountService())->getAccounts($userInfo->email, true);
 
@@ -226,7 +342,7 @@ class StockholderOnlineBallotService
         $this->ensureElectionIsOngoing('submit', $request->ballotId, $request->confirmationId);
 
 
-        $ballotInfo = VoteService::ballotInfo($request, 'Stockholder Online Voting');
+        $ballotInfo = BallotService::ballotInfo($request, 'Stockholder Online Voting');
         $confirmation = ConfirmationService::ensureBallotConfirmationIsValid($ballotInfo, $request);
 
         $this->ensureAvailableVotesAreUnchanged($ballotInfo, json_decode($confirmation->data, true));
@@ -234,21 +350,24 @@ class StockholderOnlineBallotService
 
         DB::beginTransaction();
 
-        $this->voteService->updateBallotStatus($ballotInfo, $confirmation);
+        $this->ballotService->updateBallotStatus($ballotInfo, $confirmation);
 
 
-        $this->voteService->createBallotDetails($confirmation, $ballotInfo);
-        $this->voteService->createBallotAgendaDetails($confirmation, $ballotInfo);
-        $this->voteService->createBallotAmendmentDetails($confirmation, $ballotInfo);
+        $this->ballotService->createBallotDetails($confirmation, $ballotInfo);
+        $this->ballotService->createBallotAgendaDetails($confirmation, $ballotInfo);
+        $this->ballotService->createBallotAmendmentDetails($confirmation, $ballotInfo);
 
-        $this->voteService->insertUsedAccounts($confirmation);
+        $this->ballotService->insertUsedAccounts($confirmation);
 
         ActivityController::log(['activityCode' => '00094', 'ballotId' => $ballotInfo->ballotId, 'confirmationId' => $confirmation->confirmationId, 'userId' => Auth::id()]);
 
 
         DB::commit();
 
-        VoteService::sendVoteConfirmation(Auth::user()->email, 'Stockholder Online Voting', $confirmation->id, $ballotInfo);
+        if (app()->environment('production')) {
+            BallotService::sendVoteConfirmation(Auth::user()->email, 'Stockholder Online Voting', $confirmation->id, $ballotInfo);
+        }
+
 
         return response()->json([
             'message' => 'Thank you for your participation in the election.',
@@ -258,7 +377,7 @@ class StockholderOnlineBallotService
     }
 
 
-    private static function checkIfUserIsAuthorizedVoter(User $userInfo): string
+    private static function checkIfUserIsAuthorizedVoter(User $userInfo): bool
     {
 
         return !User::where('email', $userInfo->email)
@@ -272,41 +391,37 @@ class StockholderOnlineBallotService
 
 
             $this->ensureElectionIsOngoing('store');
+            BallotService::validateVotingItems();
 
-            Log::info("Stockholder Online Voting: Fetching user information.");
+
             $userInfo = User::with('stockholder', 'stockholderAccount', 'stockholderAccount.stockholder')->findOrFail(Auth::id());
-
-            // to be used
-            $hasSubmittedBallot = VoteService::hasSubmittedBallot($userInfo->email, 'Stockholder Online Voting');
-            VoteService::validateVotingItems();
-
-            //to be updated
             $authorizedVoter = $this->checkIfUserIsAuthorizedVoter($userInfo);
+            $hasSubmittedBallot = BallotService::hasSubmittedBallot($userInfo->email, 'Stockholder Online Voting');
 
-            Log::info("Stockholder Online Voting: Fetching available votes.");
             $availableVotes =  $this->getAvailableVotes($request->revoke, $userInfo);
-            Log::info("Stockholder Online Voting: Available votes fetched successfully.", ['availableVotes' => $availableVotes]);
-            Log::info("Stockholder Online Voting: Fetching available accounts.");
             $availableAccounts = $this->getAvailableAccounts();
-            Log::info("Stockholder Online Voting: Available accounts fetched successfully.", ['availableAccounts' => $availableAccounts]);
-
-            VoteService::checkIfUserCanVote($availableVotes, "Stockholder Online Voting", $hasSubmittedBallot);
 
 
-
+            BallotService::checkIfUserCanVote($availableVotes, "Stockholder Online Voting", $hasSubmittedBallot);
 
             DB::beginTransaction();
 
-            $ballotInfo = $this->saveBallot($userInfo, $availableVotes, $availableAccounts, $authorizedVoter);
+            $ballotInfo = $this->saveBallot($userInfo, $availableVotes, $availableAccounts);
 
 
-            VoteService::saveAttendance($availableVotes, $ballotInfo, "Stockholder Online Voting");
+            BallotService::saveAttendance($availableVotes, $ballotInfo, "Stockholder Online Voting");
 
             Log::info("Stockholder Online Voting: Stockholder Online Ballot created successfully.", [
                 'ballotId' => $ballotInfo->ballotId,
             ]);
 
-            ActivityController::log(['activityCode' => '00047', 'ballotId' => $ballotInfo->ballotId, 'userId' => $userInfo->id]);
+            ActivityController::log([
+                'activityCode' => '00047',
+                'ballotId' => $ballotInfo->ballotId,
+                'userId' => $userInfo->id,
+                'email' => $userInfo->email,
+                'accountNo' => $userInfo->account_no,
+            ]);
 
             DB::commit();
 
@@ -330,7 +445,7 @@ class StockholderOnlineBallotService
             throw new ValidationErrorException("Invalid action specified for election status check.");
         }
 
-        $electionDataStatus = VoteService::isElectionOngoing("Stockholder Online Voting");
+        $electionDataStatus = BallotService::isElectionOngoing("Stockholder Online Voting");
 
         if ($electionDataStatus !== true) {
 
@@ -348,11 +463,11 @@ class StockholderOnlineBallotService
 
 
 
-    private function saveBallot(User $userInfo, array $availableVotes, array $availableAccounts, string $authorizedVoter): Ballot
+    private function saveBallot(User $userInfo, array $availableVotes, array $availableAccounts): Ballot
     {
 
         $votesPerShare = ConfigService::getConfig("votes_per_share");
-        $ballot = VoteService::generateBallot("Stockholder Online Voting");
+        $ballot = BallotService::generateBallot("Stockholder Online Voting");
 
         $request = app('request');
 
@@ -368,7 +483,7 @@ class StockholderOnlineBallotService
             'availableAmendmentAccounts' => json_encode($availableVotes['amendment']),
             'availableAccounts'         => json_encode($availableAccounts),
             'ballotType'                => 'person',
-            'authorizedVoter'           => $authorizedVoter,
+            // 'authorizedVoter'           => $authorizedVoter,
             'role'                      => $userInfo->role,
             'availableVotesBod'         => count($availableVotes['bod']) * $votesPerShare,
             'availableVotesAmendment'   => count($availableVotes['amendment']),

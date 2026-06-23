@@ -14,65 +14,22 @@ use Illuminate\Support\Facades\Log;
 
 use Dompdf\Dompdf;
 use App\Models\StockholderAccount;
-use App\Models\User;
-use App\Models\BallotConfirmation;
 use App\Http\Requests\ExportBallotRequest;
-use App\Http\Requests\IndexBallotRequest;
 use App\Models\ProxyAmendment;
 use App\Models\ProxyBoardOfDirector;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
+use App\Services\BallotService;
 
 class BallotController extends Controller
 {
 
 
-
-
-
-    // to be deleted
-    public function summary()
+    public function create(Request $request)
     {
-
-
-        try {
-
-            $candidates  =  Candidate::orderBy('lastName', 'asc')->get();
-            $amendments  =  Amendment::orderBy('amendmentId', 'asc')->get();
-            $agendas  =  Agenda::orderBy('agendaId', 'asc')->get();
-
-            $ballots = Ballot::with('createdBy', 'bodDetails', 'amendmentDetails', 'agendaDetails')->where('isSubmitted', true)->get()->toArray();
-
-
-            $bodSummary = [];
-            $agendaSummary = [];
-            $amendmentSummary = [];
-
-            foreach ($ballots as $ballot) {
-
-                foreach ($ballot['bod_details'] as $bod) {
-                    $bodSummary[$ballot['ballotType']][$bod["candidateId"]][] = $bod["candidateId"];
-                }
-
-                foreach ($ballot['agenda_details'] as $agenda) {
-                    $agendaSummary[$ballot['ballotType']][$agenda["agendaId"]]["favor"][] = $agenda["favor"];
-                    $agendaSummary[$ballot['ballotType']][$agenda["agendaId"]]["notFavor"][] = $agenda["notFavor"];
-                    $agendaSummary[$ballot['ballotType']][$agenda["agendaId"]]["abstain"][] = $agenda["abstain"];
-                }
-
-                foreach ($ballot['amendment_details'] as $amendment) {
-                    $amendmentSummary[$ballot['ballotType']][$amendment["amendmentId"]]["yes"][] = $amendment["yes"];
-                    $amendmentSummary[$ballot['ballotType']][$amendment["amendmentId"]]["no"][] = $amendment["no"];
-                }
-            }
-
-            ActivityController::log(['activityCode' => '00057']);
-
-            return view('admin.ballot_result', ['candidates' => $candidates, 'amendments' => $amendments, 'agendas' => $agendas, 'bodSummary' => $bodSummary, 'agendaSummary' => $agendaSummary, 'amendmentSummary' => $amendmentSummary]);
-        } catch (Exception $e) {
-
-            Log::critical($e);
-        }
+        return (new BallotService())->create($request);
     }
+
 
 
     public function export(ExportBallotRequest $request)

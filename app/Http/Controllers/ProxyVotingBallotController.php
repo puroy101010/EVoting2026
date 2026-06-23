@@ -14,7 +14,7 @@ use App\Models\Configuration;
 use App\Models\User;
 use App\Services\UtilityService;
 use App\Services\ConfigService;
-use App\Services\VoteService;
+use App\Services\BallotService;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -90,8 +90,8 @@ class ProxyVotingBallotController extends Controller
                 'availableSharesBod' => count(json_decode($ballotInfo->availableBodAccounts)),
                 'availableSharesAmendment' => count(json_decode($ballotInfo->availableAmendmentAccounts)),
                 'candidates'    => Candidate::where('isActive', 1)->orderBy('type', 'asc')->orderBy('lastName', 'asc')->orderBy('type', 'asc')->get(),
-                'amendmentForm'    => VoteService::generateAmendmentForm($amendment, $ballotInfo->availableVotesAmendment),
-                'agendaForm'    => VoteService::generateAgendaForm($agenda, $ballotInfo->availableVotesBod),
+                'amendmentForm'    => BallotService::generateAmendmentForm($amendment, $ballotInfo->availableVotesAmendment),
+                'agendaForm'    => BallotService::generateAgendaForm($agenda, $ballotInfo->availableVotesBod),
                 'configuration'  => Configuration::all()->toArray(),
                 'amendmentEnabled'  => ConfigService::getConfig('amendment_enabled') === '1'
 

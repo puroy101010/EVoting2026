@@ -32,59 +32,69 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Mail;
 use PSpell\Config;
 
-class VoteService
+class BallotService
 {
 
     protected $stockholderOnlineActive = false;
     protected $proxyVotingActive = false;
 
 
-    public function index(Request $request)
+    public function create(Request $request)
     {
-        $user = Auth::user();
 
         Log::info("Voting Page: Loading page");
 
-
-        Log::info("Voting Page: Fetching BOD proxies");
-        $proxyBod = ProxyBoardOfDirector::where('assignorEmail', $user->email)->get()->toArray();
-
-        Log::info("Voting Page: Fetching Amendment proxies");
-        $proxyAmendment = ProxyAmendment::where('assignorEmail', $user->email)->get()->toArray();
-
-        Log::info("Voting Page: Formatting revoke options");
-        $revokeOptions = $this->formatRevokeOptions($proxyBod, $proxyAmendment);
-
-
-        $onlineVoting = $this->checkVotingDay('Stockholder Online Voting');
-        $proxyVoting = $this->checkVotingDay('Proxy Voting');
-
-        $settings = ConfigService::getConfig();
-
-
+        $user = Auth::user();
         $fullName = Auth::user()->authorized_signatory;
 
-        $stockholderOnlineTC = $this->termsAndCondition($fullName, $settings['terms_and_conditions_online'] ?? null);
-        $proxyVotingTC = $this->termsAndCondition($fullName, $settings['terms_and_conditions_proxy'] ?? null);
 
-        $issuedProxy = count($proxyBod) + count($proxyAmendment) > 0;
+        $settings = ConfigService::getConfig();
 
         $amendmentEnabled = (int) $settings['amendment_enabled'] === 1;
         $bodEnabled = (int) $settings['bod_module_enabled'] === 1;
 
+
         $this->checkConfig($bodEnabled, $amendmentEnabled);
+
+
+        $userIds = (new OnlineAccountService())->getAccounts($user->email, true);
+        Log::info("User IDs associated with email {$user->email}: " . implode(', ', $userIds));
+
+
+        $proxyBod = $bodEnabled ? $this->getProxyBod($userIds, $bodEnabled) : [];
+        $proxyAmendment = $amendmentEnabled ? $this->getProxyAmendment($userIds, $amendmentEnabled) : [];
+
+        Log::info("Voting Page: Retrieved proxy BOD and amendment data", [
+            'proxyBodCount' => count($proxyBod),
+            'proxyAmendmentCount' => count($proxyAmendment)
+        ]);
+
+        foreach (User::whereIn('id', $userIds)->get() as $user) {
+            Log::info("Voting Page: User ID {$user->id} - Role: {$user->role} - Email: {$user->email} - Signatory: {$user->authorized_signatory} - Account No: {$user->account_no}");
+        }
+
+        $revokeOptions = $this->formatRevokeOptions($proxyBod, $proxyAmendment);
+
+        $onlineVoting = $this->checkVotingDay('Stockholder Online Voting');
+        $proxyVoting = $this->checkVotingDay('Proxy Voting');
+
+        $stockholderOnlineTC = $this->termsAndCondition($fullName, $settings['terms_and_conditions_online'] ?? null);
+        $proxyVotingTC = $this->termsAndCondition($fullName, $settings['terms_and_conditions_proxy'] ?? null);
+
+        $issuedProxy = $this->getIssuedProxyCount($proxyBod, $proxyAmendment);
 
 
         $param = array_merge([
 
-            'btnDisableOnlineVoting' => $this->stockholderOnlineActive == true ? '' : 'disabled',
-            'btnDisableProxyVoting' => $this->proxyVotingActive == true ? '' : 'disabled',
+            'btnDisableOnlineVoting' => $this->stockholderOnlineActive === true ? '' : 'disabled',
+            'btnDisableProxyVoting' => $this->proxyVotingActive === true ? '' : 'disabled',
 
             'stockholderOnlineTT' => $onlineVoting,
             'proxyVotingTT' => $proxyVoting,
 
             'stockholderOnlineTC' => $stockholderOnlineTC,
             'proxyVotingTC' => $proxyVotingTC,
+
             'issuedProxy' => $issuedProxy,
             'userInitials' => $this->generateUserInitials($user),
             'amendmentEnabled' => $amendmentEnabled,
@@ -98,17 +108,65 @@ class VoteService
             'activityCode' => '00132',
             'remarks' => 'Accessed voting page',
             'data' => json_encode($param),
-            'userId' => Auth::user()->id
+            'userId' => Auth::user()->id,
+            'email' => Auth::user()->email,
+            'accountNo' => Auth::user()->account_no
         ]);
 
         return view('user.voting-page', $param);
     }
 
+    private function getIssuedProxyCount(array $proxyBod, array $proxyAmendment): int
+    {
+
+        return count($proxyBod) + count($proxyAmendment);
+    }
+
+
+    /**
+     * Get the list of BOD proxies assigned to the user that have not been used and are not delinquent.
+     * 
+     */
+    private function getProxyBod(array $userIds, bool $bodEnabled): array
+    {
+
+        $proxy =  ProxyBoardOfDirector::whereDoesntHave('usedAccount')
+            ->whereHas('stockholderAccount', function ($query) use ($userIds) {
+                $query->where('isDelinquent', false)
+                    ->whereIn('userId', $userIds);
+            })
+            ->get()
+            ->toArray();
+
+        return $bodEnabled ?  $proxy : [];
+    }
+
+    /**
+     * Get the list of amendment proxies assigned to the user that have not been used and are not delinquent.
+     */
+    private function getProxyAmendment(array $userIds, bool $amendmentEnabled): array
+    {
+
+        $proxy =  ProxyAmendment::whereDoesntHave('usedAccount')
+            ->whereHas('stockholderAccount', function ($query) use ($userIds) {
+                $query->where('isDelinquent', false)
+                    ->whereIn('userId', $userIds);
+            })
+            ->get()
+            ->toArray();
+
+        return $amendmentEnabled ?  $proxy : [];
+    }
+
+
+    /**
+     * Check if both amendment and BOD modules are disabled in the configuration settings. If both are disabled, log a warning and throw a ValidationErrorException indicating that voting is unavailable.
+     */
     private function checkConfig(bool $bodEnabled, bool $amendmentEnabled)
     {
         if ($bodEnabled === false && $amendmentEnabled === false) {
             Log::warning("Voting Page: Both amendment and BOD modules are disabled. User will not be able to vote.");
-            return response()->json(['message' => 'Voting is currently unavailable as both amendment and BOD voting are disabled in settings. Please contact admin.'], 500);
+            throw new ValidationErrorException('Voting is currently unavailable as both amendment and BOD voting are disabled in settings. Please contact admin.');
         }
     }
 
@@ -180,107 +238,9 @@ class VoteService
     }
 
 
-    /**
-     * Get account IDs based on proxy type and usage status.
-     * @param string $proxyType Type of proxy ('bod' or 'amendment')
-     * @param bool $unusedOnly Whether to fetch only unused accounts
-     * @return array List of account IDs
-     * @throws Exception If an invalid proxy type is provided
-     * @throws \Illuminate\Database\QueryException If a database query error occurs
-     * @throws \Exception For any other exceptions
-     * 
-     * Called by: VoteController@index
-     */
-    private function getAccountIds(string $proxyType, bool $unusedOnly = true): array
-    {
-        switch (Auth::user()->role) {
-            case 'stockholder':
-                $assignorAccountIds = $this->getAccountsForStockholder($proxyType, $unusedOnly);
-                break;
-
-            case 'corp-rep':
-                $assignorAccountIds = $this->getAccountsForCorpRep($proxyType, $unusedOnly);
-                break;
-            default:
-                $assignorAccountIds = [];
-        }
-
-        return $assignorAccountIds;
-    }
-
-    private function getAccountsForCorpRep(string $proxyType, bool $unusedOnly = true)
-    {
-
-        $relatedModel = UtilityService::validateProxyType($proxyType);
-
-        Log::info("Voting Page: Fetching account IDs for corporate representative", [
-            'proxyType' => $proxyType,
-            'unusedOnly' => $unusedOnly
-        ]);
-
-        $accountIds = [];
-        $corpRepAccountQuery = StockholderAccount::leftJoin('users', 'users.id', '=', 'stockholder_accounts.userId')
-            ->leftJoin('stockholders', 'stockholders.stockholderId', '=', 'stockholder_accounts.stockholderId')
-            ->where('users.email', Auth::user()->email)
-            ->where('stockholders.accountNo', Auth::user()->stockholderAccount->stockholder->accountNo)
-            ->where('users.role', 'corp-rep')
-            ->where('stockholder_accounts.isDelinquent', 0);
-
-        if ($unusedOnly) {
-            $corpRepAccountQuery->whereDoesntHave($relatedModel);
-        }
-
-        $corpRepAccounts = $corpRepAccountQuery->get();
 
 
-        foreach ($corpRepAccounts as $corpRepAccount) {
 
-            array_push($accountIds, $corpRepAccount->accountId);
-        }
-
-        Log::info("Voting Page: Fetched account IDs for corporate representative", [
-            'accountIds' => $accountIds,
-            'proxyType' => $proxyType,
-            'unusedOnly' => $unusedOnly
-        ]);
-        return $accountIds;
-    }
-
-    private function getAccountsForStockholder(string $proxyType, bool $unusedOnly = true): array
-    {
-
-        $relatedModel = UtilityService::validateProxyType($proxyType);
-
-        Log::info("Voting Page: Fetching account IDs for stockholder", [
-            'proxyType' => $proxyType,
-            'unusedOnly' => $unusedOnly
-        ]);
-
-        $accountIds = [];
-
-
-        $stockholderAccountsQuery = StockholderAccount::where('stockholderId', Auth::user()->stockholder->stockholderId)
-            ->where('isDelinquent', 0);
-
-
-        if ($unusedOnly) {
-            $stockholderAccountsQuery->whereDoesntHave($relatedModel);
-        }
-
-        $stockholderAccounts = $stockholderAccountsQuery->get();
-
-        foreach ($stockholderAccounts as $account) {
-            $accountIds[] = $account->accountId;
-        }
-
-        Log::info("Voting Page: Fetched account IDs for stockholder", [
-            'account_ids' => $accountIds,
-            'proxyType' => $proxyType,
-            'unusedOnly' => $unusedOnly
-        ]);
-
-        return $accountIds;
-    }
 
 
 
@@ -341,7 +301,7 @@ class VoteService
     }
 
 
-    public static function isElectionOngoing($votingType): bool|string
+    public static function isElectionOngoing(string $votingType): bool|string
     {
 
         if (!in_array($votingType, ['Stockholder Online Voting', 'Proxy Voting'])) {
@@ -387,12 +347,12 @@ class VoteService
 
         if ($currentDateTime->lt($startDate)) {
             Log::info("{$votingType}: Voting has not started yet.");
-            return "The {$votingType} period will begin on {$formattedStartDate} and continue until {$formattedEndDate}.";
+            return "The {$votingType} period will begin at {$formattedStartDate} and continue until {$formattedEndDate}.";
         }
 
         if ($currentDateTime->gt($endDate)) {
             Log::info("{$votingType}: Voting has ended.");
-            return "The period for {$votingType} ended on {$formattedEndDate}.";
+            return "The period for {$votingType} ended at {$formattedEndDate}.";
         }
 
         Log::warning("{$votingType}: Unexpected state in {$votingType} period check.");
@@ -422,7 +382,7 @@ class VoteService
 
         if ($currentDateTime->gt($endDate)) {
             Log::info("Voting Page: {$votingType} has ended.");
-            return "The period for {$votingType} ended on {$formattedEndDate}.";
+            return "The period for {$votingType} ended at {$formattedEndDate}.";
         }
 
         Log::warning("Voting Page: Unexpected state in {$votingType} period check.");
@@ -480,16 +440,11 @@ class VoteService
 
 
     /**
-     * Check if user can vote based on available votes and voting type
-     * @param array $setting Configuration settings
-     * @param array $availableVotes Available votes categorized by type
-     * @param string $votingType Type of voting ('Stockholder Online Voting' or 'Proxy Voting')
-     * @return bool True if user can vote, otherwise throws ValidationErrorException
-     * @throws ValidationErrorException if user has no available votes
-     * @throws Exception if an invalid voting type is provided
+     * Check if the user can vote based on available votes, voting type, and whether they have already submitted a ballot.
+     * 
      * 
      */
-    public static function checkIfUserCanVote($availableVotes, $votingType, bool $hasSubmittedBallot): bool
+    public static function checkIfUserCanVote(array $availableVotes, string $votingType, bool $hasSubmittedBallot): bool
     {
 
         UtilityService::validateVotingType($votingType);
@@ -576,7 +531,7 @@ class VoteService
         ];
     }
 
-    public function processUserSubmittedData(Request $request, $ballotInfo): array
+    public function processUserSubmittedData(Request $request, Ballot $ballotInfo): array
     {
 
         $votingType = UtilityService::getVotingType($ballotInfo->ballotType);
@@ -876,7 +831,7 @@ class VoteService
         return [];
     }
 
-    public function checkUnusedVotes($ballotInfo, $totalVotesSubmitted, $unusedVotes): string|bool
+    public function checkUnusedVotes(Ballot $ballotInfo, int $totalVotesSubmitted, int $unusedVotes): string|bool
     {
 
         $votingType = UtilityService::getVotingType($ballotInfo->ballotType);
@@ -916,7 +871,7 @@ class VoteService
     }
 
 
-    public function checkExceedVotes($userSubmittedData, $ballotInfo, int $totalVotesSubmitted): void
+    public function checkExceedVotes(array $userSubmittedData, Ballot $ballotInfo, int $totalVotesSubmitted): void
     {
 
         $votingType = $ballotInfo->ballotType === 'person' ? 'Stockholder Online Voting' : 'Proxy Voting';
@@ -944,7 +899,7 @@ class VoteService
     }
 
 
-    private function recordExceedVotes($ballotInfo, $userSubmittedData, $message): BallotConfirmation
+    private function recordExceedVotes(Ballot $ballotInfo, array $userSubmittedData, string $message): BallotConfirmation
     {
 
 
@@ -1032,25 +987,15 @@ class VoteService
     {
 
         if (empty($email)) {
-            Log::error("Email is required for hasSubmittedBallot method.", ['email' => $email]);
             throw new Exception('Email is required to check ballot submission.');
         }
 
         UtilityService::validateVotingType($votingType);
 
         $ballotType = $votingType === 'Stockholder Online Voting' ? 'person' : 'proxy';
-
-        Log::info("{$votingType}: Checking if email {$email} has already submitted a ballot.", [
-            'email' => $email,
-            'votingType' => $votingType
-        ]);
-
         $ballot = Ballot::where('email', $email)->where('ballotType', $ballotType)->where('isSubmitted', true);
 
-        if ($ballot->exists()) {
-            return true;
-        }
-        return false;
+        return $ballot->exists();
     }
 
     /**
@@ -1173,7 +1118,7 @@ class VoteService
     }
 
 
-    public static function generateSummaryInfoMessage($usedAllVotes, $unusedVotes, bool $confirmMessage = true): string
+    public static function generateSummaryInfoMessage(string|bool $usedAllVotes, int $unusedVotes, bool $confirmMessage = true): string
     {
         if ($usedAllVotes !== true) {
             return $confirmMessage ?
@@ -1327,7 +1272,7 @@ class VoteService
             return [];
         }
 
-        $voteService = new VoteService();
+        $ballotService = new BallotService();
         $data = json_decode($ballotConfirmation->data, true);
         $agendaData = $data['agenda'] ?? [];
 
@@ -1335,7 +1280,7 @@ class VoteService
 
         foreach ($agendaData as $agenda) {
 
-            $voteService->validateAgendaForm($agenda["vote"], $ballotInfo);
+            $ballotService->validateAgendaForm($agenda["vote"], $ballotInfo);
 
             $agendaProcessedData[] = [
                 'favor' => $agenda['vote']['favor'],
@@ -1377,7 +1322,7 @@ class VoteService
             return [];
         }
 
-        $voteService = new VoteService();
+        $ballotService = new BallotService();
         $data = json_decode($ballotConfirmation->data, true);
         $amendmentData = $data['amendment'] ?? [];
 
@@ -1385,7 +1330,7 @@ class VoteService
 
         foreach ($amendmentData as $amendment) {
 
-            $voteService->validateAmendmentForm($amendment["vote"], $ballotInfo);
+            $ballotService->validateAmendmentForm($amendment["vote"], $ballotInfo);
 
             $amendmentProcessedData[] = [
                 'yes' => $amendment['vote']['yes'],

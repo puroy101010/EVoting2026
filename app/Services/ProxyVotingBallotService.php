@@ -23,11 +23,11 @@ class ProxyVotingBallotService
 {
 
 
-    public VoteService $voteService;
+    public BallotService $ballotService;
 
     public function __construct()
     {
-        $this->voteService = new VoteService();
+        $this->ballotService = new BallotService();
     }
 
     public function summary($request)
@@ -40,30 +40,39 @@ class ProxyVotingBallotService
 
             $this->ensureElectionIsOngoing('summary', $request->ballotId, $request->confirmationId);
 
-            $voteService = new VoteService();
+            $ballotService = new BallotService();
 
-            $ballotInfo = VoteService::ballotInfo($request, 'Proxy Voting');
+            $ballotInfo = $ballotService->ballotInfo($request, 'Proxy Voting');
 
-            $userSubmittedData = $voteService->processUserSubmittedData($request, $ballotInfo);
+            $userSubmittedData = $ballotService->processUserSubmittedData($request, $ballotInfo);
 
             $this->ensureAvailableVotesAreUnchanged($ballotInfo, $userSubmittedData);
 
             $totalVotesSubmitted = collect($userSubmittedData['bod'])->sum('vote');
             $unusedVotes = $ballotInfo->availableVotesBod - $totalVotesSubmitted;
 
-            $this->voteService->checkExceedVotes($userSubmittedData, $ballotInfo, $totalVotesSubmitted, $unusedVotes);
+            $this->ballotService->checkExceedVotes($userSubmittedData, $ballotInfo, $totalVotesSubmitted);
 
-            $overallVotesStatus = $voteService->checkUnusedVotes($ballotInfo, $totalVotesSubmitted, $unusedVotes);
+            $overallVotesStatus = $this->ballotService->checkUnusedVotes($ballotInfo, $totalVotesSubmitted, $unusedVotes);
 
-            $message = VoteService::generateSummaryInfoMessage($overallVotesStatus, $unusedVotes, true);
-            $infoMessage = VoteService::generateSummaryInfoMessage($overallVotesStatus, $unusedVotes, false);
+            $message = BallotService::generateSummaryInfoMessage($overallVotesStatus, $unusedVotes, true);
+            $infoMessage = BallotService::generateSummaryInfoMessage($overallVotesStatus, $unusedVotes, false);
 
 
             DB::beginTransaction();
             $confirmationService = new ConfirmationService();
-            $ballotConfirmation = $confirmationService->store($ballotInfo, $userSubmittedData, true, $message, $unusedVotes);
+            $ballotConfirmation = $confirmationService->store($ballotInfo, $userSubmittedData, true, $message);
 
-            ActivityController::log(['activityCode' => '00072', 'remarks' => $message, 'confirmationId' => $ballotConfirmation->confirmationId, 'ballotId' => $request->ballotId], 'userId', Auth::id());
+            ActivityController::log([
+                'activityCode' => '00072',
+                'remarks' => $message,
+                'confirmationId' => $ballotConfirmation->confirmationId,
+                'ballotId' => $request->ballotId,
+                'userId' => Auth::id(),
+                'email' => Auth::user()->email,
+                'accountNo' => Auth::user()->account_no
+
+            ]);
 
             Log::info('Proxy Voting: Summary processed successfully for ballot ID ' . $request->ballotId, [
                 'ballotId' => $request->ballotId,
@@ -98,7 +107,7 @@ class ProxyVotingBallotService
     {
         $votingType = UtilityService::getVotingType($ballotInfo->ballotType);
 
-        $recordChanged = $this->voteService->checkAccountChanges($ballotInfo);
+        $recordChanged = $this->ballotService->checkAccountChanges($ballotInfo);
 
         if ($recordChanged === true) {
 
@@ -107,7 +116,7 @@ class ProxyVotingBallotService
             $confirmationnService = new ConfirmationService();
 
             $ballotConfirmation = $confirmationnService->createAvailableVoteChangeRecord($ballotInfo, $userSubmittedData);
-            $this->voteService->createAvailableVoteChangeActivityLog($ballotInfo, $ballotConfirmation, $message);
+            $this->ballotService->createAvailableVoteChangeActivityLog($ballotInfo, $ballotConfirmation, $message);
             throw new ValidationErrorException($message);
         }
     }
@@ -231,7 +240,7 @@ class ProxyVotingBallotService
         $this->ensureElectionIsOngoing('submit', $request->ballotId, $request->confirmationId);
 
 
-        $ballotInfo = VoteService::ballotInfo($request, 'Proxy Voting');
+        $ballotInfo = BallotService::ballotInfo($request, 'Proxy Voting');
         $confirmation = ConfirmationService::ensureBallotConfirmationIsValid($ballotInfo, $request);
 
         $this->ensureAvailableVotesAreUnchanged($ballotInfo, json_decode($confirmation->data, true));
@@ -239,21 +248,21 @@ class ProxyVotingBallotService
 
         DB::beginTransaction();
 
-        $this->voteService->updateBallotStatus($ballotInfo, $confirmation);
+        $this->ballotService->updateBallotStatus($ballotInfo, $confirmation);
 
 
-        $this->voteService->createBallotDetails($confirmation, $ballotInfo);
-        $this->voteService->createBallotAgendaDetails($confirmation, $ballotInfo);
-        $this->voteService->createBallotAmendmentDetails($confirmation, $ballotInfo);
+        $this->ballotService->createBallotDetails($confirmation, $ballotInfo);
+        $this->ballotService->createBallotAgendaDetails($confirmation, $ballotInfo);
+        $this->ballotService->createBallotAmendmentDetails($confirmation, $ballotInfo);
 
-        $this->voteService->insertUsedAccounts($confirmation);
+        $this->ballotService->insertUsedAccounts($confirmation);
 
         ActivityController::log(['activityCode' => '00095', 'ballotId' => $ballotInfo->ballotId, 'confirmationId' => $confirmation->confirmationId, 'userId' => Auth::id()]);
 
 
         DB::commit();
 
-        VoteService::sendVoteConfirmation(Auth::user()->email, 'Proxy Voting', $confirmation->id, $ballotInfo);
+        BallotService::sendVoteConfirmation(Auth::user()->email, 'Proxy Voting', $confirmation->id, $ballotInfo);
 
         return response()->json([
             'message' => 'Your vote has been successfully submitted.',
@@ -281,8 +290,8 @@ class ProxyVotingBallotService
             Log::info("Proxy Voting: Fetching user information.");
             $userInfo = User::with('stockholder', 'stockholderAccount', 'stockholderAccount.stockholder')->findOrFail(Auth::id());
 
-            VoteService::ensureEmailIsNotUsed($userInfo->email, 'Proxy Voting');
-            VoteService::validateVotingItems();
+            BallotService::ensureEmailIsNotUsed($userInfo->email, 'Proxy Voting');
+            BallotService::validateVotingItems();
 
             $authorizedVoter = $this->checkIfUserIsAuthorizedVoter($userInfo);
 
@@ -291,7 +300,7 @@ class ProxyVotingBallotService
             Log::info("Proxy Voting: Available votes fetched successfully.", ['availableVotes' => $availableVotes]);
             $availableAccounts = $availableVotes; // Store available accounts for record-keeping similar to Proxy Voting
 
-            VoteService::checkIfUserCanVote($availableVotes, "Proxy Voting");
+            BallotService::checkIfUserCanVote($availableVotes, "Proxy Voting");
 
 
             DB::beginTransaction();
@@ -299,7 +308,7 @@ class ProxyVotingBallotService
             $ballotInfo = $this->saveBallot($userInfo, $availableVotes, $availableAccounts, $authorizedVoter);
 
 
-            VoteService::saveAttendance($availableVotes, $ballotInfo, "Proxy Voting");
+            BallotService::saveAttendance($availableVotes, $ballotInfo, "Proxy Voting");
 
             Log::info("Proxy Voting: Proxy Voting Ballot created successfully.", [
                 'ballotId' => $ballotInfo->ballotId,
@@ -329,7 +338,7 @@ class ProxyVotingBallotService
             throw new ValidationErrorException("Invalid action specified for election status check.");
         }
 
-        $electionDataStatus = VoteService::isElectionOngoing("Proxy Voting");
+        $electionDataStatus = BallotService::isElectionOngoing("Proxy Voting");
 
         if ($electionDataStatus !== true) {
 
@@ -351,7 +360,7 @@ class ProxyVotingBallotService
     {
 
         $votesPerShare = ConfigService::getConfig("votes_per_share");
-        $ballot = VoteService::generateBallot("Proxy Voting");
+        $ballot = BallotService::generateBallot("Proxy Voting");
 
         $request = app('request');
 
