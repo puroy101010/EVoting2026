@@ -13,7 +13,8 @@ use Illuminate\Support\Facades\Validator;
 class VotingController extends Controller
 {
 
-    // done 2022-09-16
+
+
     public static function validate_in_person($revoked)
     {
 

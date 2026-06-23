@@ -14,15 +14,9 @@
                     <div class="status-indicator"></div>
                 </div>
                 <div class="profile-info">
-                    <h1 class="user-name">{{ Auth::user()->full_name }}</h1>
+                    <h1 class="user-name">{{ Auth::user()->authorized_signatory }}</h1>
                     <div class="user-meta">
                         <span class="email">{{ Auth::user()->email }}</span>
-                        <span class="separator">•</span>
-                        <span class="account-no">{{ Auth::user()->account_no }}</span>
-                    </div>
-                    <div class="role-badge">
-                        <i class="fas fa-shield-alt"></i>
-                        {{ $accountRole }}
                     </div>
                 </div>
             </div>
@@ -705,10 +699,10 @@
                 <div class="modal-body p-4">
                     <div class="mb-4">
                         <h6 class="fw-semibold mb-3">
-                            @if($amendmentEnabled === true)
+                            @if($amendmentEnabled === true && $bodEnabled === true)
                             Please choose which proxy to revoke from the options below:
                             @else
-                            You have issued proxy(ies). Would you like to revoke them?
+                            Do you want to revoke your issued proxy(ies)?
                             @endif
                         </h6>
                     </div>
@@ -718,26 +712,33 @@
                                 @if($amendmentEnabled === true)
                                 <div class="list-group-item border-0 p-0 mb-2 bg-transparent">
                                     <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="revoke_proxy" id="amendmentProxy" value="amendment" {{ $amendment === false ? 'disabled' : '' }}>
-                                        <label class="form-check-label fw-semibold ms-2 {{ $amendment === true ? 'text-dark' : 'text-secondary' }}" for="amendmentProxy">
-                                            Amendment
-                                        </label>
-                                    </div>
-                                </div>
-                                @endif
-                                <div class="list-group-item border-0 p-0 mb-2 bg-transparent">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="radio" name="revoke_proxy" id="bodProxy" value="bod" {{ $bod === false ? 'disabled' : '' }}>
-                                        <label class="form-check-label fw-semibold ms-2 {{ $bod === true ? 'text-dark' : 'text-secondary' }}" for="bodProxy">
-                                            @if($amendmentEnabled === false)
-                                            Yes
+                                        <input class="form-check-input" type="radio" name="revoke_proxy" id="amendmentProxy" value="amendment" {{ $amendmentEnabled ? '' : 'disabled' }}>
+                                        <label class="form-check-label fw-semibold ms-2 {{ $amendmentEnabled ? 'text-dark' : 'text-secondary' }}" for="amendmentProxy">
+                                            @if($bodEnabled)
+                                                Amendment
                                             @else
-                                            BOD and other items in the agenda
+                                                Yes
                                             @endif
                                         </label>
                                     </div>
                                 </div>
-                                @if($amendmentEnabled === true)
+                                @endif
+
+                                @if($bodEnabled === true)
+                                <div class="list-group-item border-0 p-0 mb-2 bg-transparent">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="revoke_proxy" id="bodProxy" value="bod" {{ $bodEnabled ? '' : 'disabled' }}>
+                                        <label class="form-check-label fw-semibold ms-2 {{ $bodEnabled ? 'text-dark' : 'text-secondary' }}" for="bodProxy">
+                                            @if($amendmentEnabled)
+                                                BOD and other items in the agenda
+                                            @else
+                                                Yes
+                                            @endif
+                                        </label>
+                                    </div>
+                                </div>
+                                @endif
+                                @if($amendmentEnabled && $bodEnabled)
                                 <div class="list-group-item border-0 p-0 mb-2 bg-transparent">
                                     <div class="form-check">
                                         <input class="form-check-input" type="radio" name="revoke_proxy" id="bothProxy" value="both" {{ $all === false ? 'disabled' : '' }}>
@@ -751,7 +752,7 @@
                                     <div class="form-check">
                                         <input class="form-check-input" type="radio" name="revoke_proxy" id="noneProxy" value="none" {{ $none === false ? 'disabled' : '' }}>
                                         <label class="form-check-label fw-semibold ms-2 {{ $none === true ? 'text-dark' : 'text-secondary' }}" for="noneProxy">
-                                            @if($amendmentEnabled === true)
+                                            @if($amendmentEnabled && $bodEnabled)
                                             None of the above
                                             @else
                                             No
@@ -909,9 +910,7 @@
 
     function requestStockholderOnlineForm(revoke = "none") {
 
-
         const now = new Date();
-
         const year = now.getFullYear();
         const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are zero-based
         const day = String(now.getDate()).padStart(2, '0');
@@ -920,8 +919,6 @@
         const seconds = String(now.getSeconds()).padStart(2, '0');
 
         const currentDateTime = `${year}${month}${day}${hours}${minutes}${seconds}`;
-
-
 
         $.ajax({
             url: BASE_URL + 'user/ballot/stockholder-online?v' + currentDateTime,
@@ -947,49 +944,29 @@
 
         $(function() {
             $('[data-toggle="tooltip"]').tooltip()
-
         })
-
-
 
         $(document).on('show.bs.modal', '#in_person_agreement_modal', function() {
-
             $('#checkboxInPerson').prop('checked', false);
-
         })
 
-
-
         $(document).on('show.bs.modal', '#proxy_agreement_modal', function() {
-
             $('#checkboxProxyVoting').prop('checked', false);
-
         })
 
 
         $(document).on('show.bs.modal', '#requestBallotFormModal', function() {
-
             $('#requestBallotForm')[0].reset();
-
         })
 
-
-
-
-
         $(document).on('click', '#btnProxyVoting', function() {
-
             $('#proxy_agreement_modal').modal('show');
-
-
         })
 
 
 
         $(document).on('click', '#btnProceedToProxyVoting', function(e) {
-
             if ($('#checkboxProxyVoting').is(':checked') === false) {
-
                 Swal.fire({
                     icon: 'info',
                     title: 'Info',
@@ -997,12 +974,8 @@
                 }).then(() => {
                     $('#checkboxProxyVoting').focus();
                 });
-
-
                 return;
             }
-
-
 
             createBallot();
 
@@ -1014,18 +987,13 @@
 
 
         $(document).on('click', '#btnVoteStockholderOnline', function() {
-
             $('#in_person_agreement_modal').modal('show');
-
-
         })
 
 
         $(document).on('click', '#btnProceedToStockholderOnline', function(e) {
 
-
             if ($('#checkboxInPerson').is(':checked') === false) {
-
                 Swal.fire({
                     icon: 'info',
                     title: 'Info',
@@ -1033,8 +1001,6 @@
                 }).then(() => {
                     $('#checkboxInPerson').focus();
                 });
-
-
 
                 return;
             }
@@ -1045,10 +1011,6 @@
 
             let issuedProxy = "{{$issuedProxy}}";
 
-
-
-
-            // alert(issuedProxy);
 
             if (issuedProxy == 0) {
                 requestStockholderOnlineForm();
@@ -1065,11 +1027,8 @@
             let revoke = $("input[name='revoke_proxy']:checked").val();
 
             if (!revoke) {
-
                 alert("Please choose from the options.");
-
                 return;
-
             }
 
 

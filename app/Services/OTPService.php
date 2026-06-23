@@ -99,8 +99,9 @@ class OTPService
                 'data' => json_encode(['userId' => $userInfo->id])
             ]);
 
-
-            //$this->sendOTP($email, $authUserDetails, $otp);
+            if (app()->isProduction()) {
+                $this->sendOTP($email, $authUserDetails, $otp);
+            }
 
             DB::commit();
 

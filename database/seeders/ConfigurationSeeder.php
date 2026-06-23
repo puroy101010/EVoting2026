@@ -41,7 +41,32 @@ class ConfigurationSeeder extends Seeder
                     'value' => Carbon::now()->addHours(100),
                     'description' => 'End time for voting by proxy',
                     'type' => 'datetime'
-                ]
+                ],
+                [
+                    'config' => 'terms_and_conditions_online',
+                    'value' => "By confirming my participation, I, [voter_name], hereby declare my intent to exercise my right to vote at the Special Stockholders’ Meeting of Valley Golf & Country Club, Inc. on June 27,  2026. In accordance with the Data Privacy Act of 2012 (Republic Act No. 10173), I authorize Valley Golf & Country Club, Inc. to collect, record, organize, use, and disclose my personal information solely for verifying my identity and facilitating my voting at the meeting. I acknowledge that this consent is given only for this specific purpose and does not waive any of my rights under the Data Privacy Act of 2012 or other applicable laws.
+                                Voting Rule:
+                                For voting purposes, each share of stock shall be entitled to one (1) vote. 
+                                Disclaimer:
+                                The information contained on this site has been compiled for the convenience and general information of the stockholders. Valley Golf and Country Club, Inc. has no right to change the information you provided on the website. Although Valley Golf provided the voting platform to facilitate an E-voting system for stockholders related matters, we have endeavored to ensure appropriate checks are in place and to enable true and fair voting, and that data is not accessed by any person when the voting window is open. However, Valley Golf shall not be liable in case of any unauthorized access by any person.",
+                    'description' => null,
+                    'type' => 'text'
+                ],
+                [
+                    'config' => 'terms_and_conditions_proxy',
+                    'value' => "By confirming my participation, I, [voter_name], hereby declare my intent to exercise my right to vote in absentia at the Special Stockholders’ Meeting of Valley Golf & Country Club, Inc. on June 27,  2026. In accordance with the Data Privacy Act of 2012 (Republic Act No. 10173), I authorize Valley Golf & Country Club, Inc. to collect, record, organize, use, and disclose my personal information solely for verifying my identity and facilitating my  voting at the meeting. I acknowledge that this consent is given only for this specific purpose and does not waive any of my rights under the Data Privacy Act of 2012 or other applicable laws.
+                                Voting Rule:
+                                For voting purposes, each share of stock shall be entitled to one (1) vote. 
+                                Disclaimer:
+                                The information contained on this site has been compiled for the convenience and general information of the stockholders. Valley Golf and Country Club, Inc. has no right to change the information you provided on the website. Although Valley Golf provided the voting platform to facilitate an E-voting system for stockholders related matters, we have endeavored to ensure appropriate checks are in place and to enable true and fair voting, and that data is not accessed by any person when the voting window is open. However, Valley Golf shall not be liable in case of any unauthorized access by any person.By confirming my participation, I, [voter_name], hereby declare my intent to exercise my right to vote in absentia at the Special Stockholders’ Meeting of Valley Golf & Country Club, Inc. on June 27,  2026. In accordance with the Data Privacy Act of 2012 (Republic Act No. 10173), I authorize Valley Golf & Country Club, Inc. to collect, record, organize, use, and disclose my personal information solely for verifying my identity and facilitating my  voting at the meeting. I acknowledge that this consent is given only for this specific purpose and does not waive any of my rights under the Data Privacy Act of 2012 or other applicable laws.
+                                Voting Rule:
+                                For voting purposes, each share of stock shall be entitled to one (1) vote. 
+                                Disclaimer:
+                                The information contained on this site has been compiled for the convenience and general information of the stockholders. Valley Golf and Country Club, Inc. has no right to change the information you provided on the website. Although Valley Golf provided the voting platform to facilitate an E-voting system for stockholders related matters, we have endeavored to ensure appropriate checks are in place and to enable true and fair voting, and that data is not accessed by any person when the voting window is open. However, Valley Golf shall not be liable in case of any unauthorized access by any person.",
+                    'description' => null,
+                    'type' => 'text'
+                ],
+
             ]);
         } else {
             Configuration::insert([

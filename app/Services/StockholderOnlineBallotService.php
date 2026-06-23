@@ -132,235 +132,84 @@ class StockholderOnlineBallotService
     public function getAvailableVotes(string $revoke, User $userInfo)
     {
 
-        $user = Auth::user();
 
-        switch ($user->role) {
-            case 'stockholder':
+        $accountIds = (new OnlineAccountService())->getAccounts($userInfo->email, true);
 
-                Log::info("Stockholder Online Voting: Fetching available votes for stockholder user: " . $userInfo->id, ['revoke' => $revoke]);
+        switch ($revoke) {
 
-                switch ($revoke) {
+            case 'bod':
+                $availableVotesBod = StockholderAccount::whereIn('userId', $accountIds)
+                    ->where('isDelinquent', 0)
+                    ->whereDoesntHave('usedBodAccount')
+                    ->pluck('accountId');
 
-                    case 'bod':
-                        $availableVotesBod = StockholderAccount::where('stockholderId', $user->stockholder->stockholderId)
-                            ->where('isDelinquent', 0)
-                            ->whereDoesntHave('usedBodAccount')
-                            ->pluck('accountId');
+                $availableVotesAmendment = StockholderAccount::whereIn('userId', $accountIds)
+                    ->where('isDelinquent', 0)
+                    ->whereDoesntHave('proxyAmendment')
+                    ->whereDoesntHave('usedAmendmentAccount')
+                    ->pluck('accountId');
 
-                        $availableVotesAmendment = StockholderAccount::where('stockholderId', $user->stockholder->stockholderId)
-                            ->where('isDelinquent', 0)
-                            ->whereDoesntHave('proxyAmendment')
-                            ->whereDoesntHave('usedAmendmentAccount')
-                            ->pluck('accountId');
+                break;
 
-                        break;
+            case 'amendment':
 
-                    case 'amendment':
+                $availableVotesBod = StockholderAccount::whereIn('userId', $accountIds)
+                    ->where('isDelinquent', 0)
+                    ->whereDoesntHave('proxyBoard')
+                    ->whereDoesntHave('usedBodAccount')
+                    ->pluck('accountId');
 
-                        $availableVotesBod = StockholderAccount::where('stockholderId', $user->stockholder->stockholderId)
-                            ->where('isDelinquent', 0)
-                            ->whereDoesntHave('proxyBoard')
-                            ->whereDoesntHave('usedBodAccount')
-                            ->pluck('accountId');
-
-                        $availableVotesAmendment = StockholderAccount::where('stockholderId', $user->stockholder->stockholderId)
-                            ->where('isDelinquent', 0)
-                            ->whereDoesntHave('usedAmendmentAccount')
-                            ->pluck('accountId');
-
-                        break;
-
-
-                    case 'both':
-                        $availableVotesBod = StockholderAccount::where('stockholderId', $user->stockholder->stockholderId)
-                            ->where('isDelinquent', 0)
-                            ->whereDoesntHave('usedBodAccount')
-                            ->pluck('accountId');
-
-                        $availableVotesAmendment = StockholderAccount::where('stockholderId', $user->stockholder->stockholderId)
-                            ->where('isDelinquent', 0)
-                            ->whereDoesntHave('usedAmendmentAccount')
-                            ->pluck('accountId');
-
-
-                        break;
-
-                    case 'none':
-                        $availableVotesBod = StockholderAccount::where('stockholderId', $user->stockholder->stockholderId)
-                            ->where('isDelinquent', 0)
-                            ->whereDoesntHave('proxyBoard')
-                            ->whereDoesntHave('usedBodAccount')
-                            ->pluck('accountId');
-
-                        $availableVotesAmendment = StockholderAccount::where('stockholderId', $user->stockholder->stockholderId)
-                            ->where('isDelinquent', 0)
-                            ->whereDoesntHave('proxyAmendment')
-                            ->whereDoesntHave('usedAmendmentAccount')
-                            ->pluck('accountId');
-
-
-                        break;
-                    default:
-                        Log::error("Stockholder Online Voting: Invalid revoke option provided for stockholder user: " . $userInfo->id, ['revoke' => $revoke]);
-                        throw new Exception("Invalid revoke option provided: {$revoke}");
-                        break;
-                }
-
-                Log::info("Stockholder Online Voting: Available votes for stockholder user: " . $userInfo->id, [
-                    'availableVotesBod' => $availableVotesBod,
-                    'availableVotesAmendment' => $availableVotesAmendment
-                ]);
+                $availableVotesAmendment = StockholderAccount::whereIn('userId', $accountIds)
+                    ->where('isDelinquent', 0)
+                    ->whereDoesntHave('usedAmendmentAccount')
+                    ->pluck('accountId');
 
                 break;
 
 
-            case 'corp-rep':
+            case 'both':
+                $availableVotesBod = StockholderAccount::whereIn('userId', $accountIds)
+                    ->where('isDelinquent', 0)
+                    ->whereDoesntHave('usedBodAccount')
+                    ->pluck('accountId');
 
-                Log::info("Stockholder Online Voting: Fetching available votes for corp-rep user: " . $userInfo->id, ['revoke' => $revoke]);
+                $availableVotesAmendment = StockholderAccount::whereIn('userId', $accountIds)
+                    ->where('isDelinquent', 0)
+                    ->whereDoesntHave('usedAmendmentAccount')
+                    ->pluck('accountId');
 
-                $accountNo = $userInfo->stockholderAccount->stockholder->accountNo;
-
-                switch ($revoke) {
-                    case 'bod':
-                        $availableVotesBod = User::where('email', $userInfo->email)
-                            ->join('stockholder_accounts', 'users.id', '=', 'stockholder_accounts.userId')
-                            ->where('role', 'corp-rep')
-                            ->whereHas('stockholderAccount', function ($query) {
-                                $query->where('isDelinquent', 0)->whereDoesntHave('usedBodAccount');
-                            })
-                            ->whereHas('stockholderAccount.stockholder', function ($query) use ($accountNo) {
-                                $query->where('accountNo', $accountNo);
-                            })
-                            ->selectRaw('stockholder_accounts.accountId')
-                            ->pluck('stockholder_accounts.accountId');
-
-
-                        $availableVotesAmendment = User::where('email', $userInfo->email)
-                            ->join('stockholder_accounts', 'users.id', '=', 'stockholder_accounts.userId')
-                            ->where('role', 'corp-rep')
-                            ->whereHas('stockholderAccount', function ($query) {
-                                $query->where('isDelinquent', 0)->whereDoesntHave('usedAmendmentAccount');
-                            })
-                            ->whereHas('stockholderAccount.stockholder', function ($query) use ($accountNo) {
-                                $query->where('accountNo', $accountNo);
-                            })
-                            ->whereDoesntHave('stockholderAccount.proxyAmendment')
-                            ->selectRaw('stockholder_accounts.accountId')
-                            ->pluck('stockholder_accounts.accountId');
-
-                        break;
-
-                    case 'amendment':
-                        $availableVotesBod = User::where('email', $userInfo->email)
-                            ->join('stockholder_accounts', 'users.id', '=', 'stockholder_accounts.userId')
-                            ->where('role', 'corp-rep')
-                            ->whereHas('stockholderAccount', function ($query) {
-                                $query->where('isDelinquent', 0)->whereDoesntHave('usedBodAccount');
-                            })
-                            ->whereHas('stockholderAccount.stockholder', function ($query) use ($accountNo) {
-                                $query->where('accountNo', $accountNo);
-                            })
-                            ->whereDoesntHave('stockholderAccount.proxyBoard')
-                            ->selectRaw('stockholder_accounts.accountId')
-                            ->pluck('stockholder_accounts.accountId');
-
-
-                        $availableVotesAmendment = User::where('email', $userInfo->email)
-                            ->join('stockholder_accounts', 'users.id', '=', 'stockholder_accounts.userId')
-                            ->where('role', 'corp-rep')
-                            ->whereHas('stockholderAccount', function ($query) {
-                                $query->where('isDelinquent', 0)->whereDoesntHave('usedAmendmentAccount');
-                            })
-                            ->whereHas('stockholderAccount.stockholder', function ($query) use ($accountNo) {
-                                $query->where('accountNo', $accountNo);
-                            })
-                            ->selectRaw('stockholder_accounts.accountId')
-                            ->pluck('stockholder_accounts.accountId');
-
-                        break;
-
-                    case 'both':
-                        $availableVotesBod = User::where('email', $userInfo->email)
-                            ->join('stockholder_accounts', 'users.id', '=', 'stockholder_accounts.userId')
-                            ->where('role', 'corp-rep')
-                            ->whereHas('stockholderAccount', function ($query) {
-                                $query->where('isDelinquent', 0)->whereDoesntHave('usedBodAccount');
-                            })
-                            ->whereHas('stockholderAccount.stockholder', function ($query) use ($accountNo) {
-                                $query->where('accountNo', $accountNo);
-                            })
-                            ->selectRaw('stockholder_accounts.accountId')
-                            ->pluck('stockholder_accounts.accountId');
-
-
-
-                        $availableVotesAmendment = User::where('email', $userInfo->email)
-                            ->join('stockholder_accounts', 'users.id', '=', 'stockholder_accounts.userId')
-                            ->where('role', 'corp-rep')
-                            ->whereHas('stockholderAccount', function ($query) {
-                                $query->where('isDelinquent', 0)->whereDoesntHave('usedAmendmentAccount');
-                            })
-                            ->whereHas('stockholderAccount.stockholder', function ($query) use ($accountNo) {
-                                $query->where('accountNo', $accountNo);
-                            })
-                            ->selectRaw('stockholder_accounts.accountId')
-                            ->pluck('stockholder_accounts.accountId');
-
-
-                        break;
-
-                    case 'none':
-                        $availableVotesBod = User::where('email', $userInfo->email)
-                            ->join('stockholder_accounts', 'users.id', '=', 'stockholder_accounts.userId')
-                            ->where('role', 'corp-rep')
-                            ->whereHas('stockholderAccount', function ($query) {
-                                $query->where('isDelinquent', 0)->whereDoesntHave('usedBodAccount');
-                            })
-                            ->whereHas('stockholderAccount.stockholder', function ($query) use ($accountNo) {
-                                $query->where('accountNo', $accountNo);
-                            })
-                            ->whereDoesntHave('stockholderAccount.proxyBoard')
-                            ->selectRaw('stockholder_accounts.accountId')
-                            ->pluck('stockholder_accounts.accountId');
-
-
-                        $availableVotesAmendment = User::where('email', $userInfo->email)
-                            ->join('stockholder_accounts', 'users.id', '=', 'stockholder_accounts.userId')
-                            ->where('role', 'corp-rep')
-                            ->whereHas('stockholderAccount', function ($query) {
-                                $query->where('isDelinquent', 0)->whereDoesntHave('usedAmendmentAccount');
-                            })
-                            ->whereHas('stockholderAccount.stockholder', function ($query) use ($accountNo) {
-                                $query->where('accountNo', $accountNo);
-                            })
-                            ->whereDoesntHave('stockholderAccount.proxyAmendment')
-                            ->selectRaw('stockholder_accounts.accountId')
-                            ->pluck('stockholder_accounts.accountId');
-
-                        break;
-                }
-
-
-                Log::info("Stockholder Online Voting: Available votes for corp-rep user: " . $userInfo->id, [
-                    'availableVotesBod' => $availableVotesBod,
-                    'availableVotesAmendment' => $availableVotesAmendment
-                ]);
 
                 break;
 
+            case 'none':
+                $availableVotesBod = StockholderAccount::whereIn('userId', $accountIds)
+                    ->where('isDelinquent', 0)
+                    ->whereDoesntHave('proxyBoard')
+                    ->whereDoesntHave('usedBodAccount')
+                    ->pluck('accountId');
+
+                $availableVotesAmendment = StockholderAccount::whereIn('userId', $accountIds)
+                    ->where('isDelinquent', 0)
+                    ->whereDoesntHave('proxyAmendment')
+                    ->whereDoesntHave('usedAmendmentAccount')
+                    ->pluck('accountId');
+
+
+                break;
             default:
-
-                Log::error("Stockholder Online Voting: User role " . $user->role . " is not allowed to vote in Stockholder Online.", ['userId' => $userInfo->id]);
-                throw new Exception("User is not allowed to vote in Stockholder Online.");
-
-
+                Log::error("Stockholder Online Voting: Invalid revoke option provided for stockholder user: " . $userInfo->id, ['revoke' => $revoke]);
+                throw new Exception("Invalid revoke option provided: {$revoke}");
                 break;
         }
 
 
+        $bodEnabled = ConfigService::getConfig("bod_module_enabled") === '1';
+        $amendmentEnabled = ConfigService::getConfig("amendment_enabled") === '1';
+
+
         return array(
-            'bod' => $availableVotesBod->toArray(),
-            'amendment' => $availableVotesAmendment->toArray()
+            'bod' => $bodEnabled ? $availableVotesBod->toArray() : [],
+            'amendment' => $amendmentEnabled ? $availableVotesAmendment->toArray() : []
         );
     }
 
@@ -412,39 +261,9 @@ class StockholderOnlineBallotService
     private static function checkIfUserIsAuthorizedVoter(User $userInfo): string
     {
 
-        Log::info("Stockholder Online Voting: Checking if user is authorized voter.");
-
-        switch ($userInfo->role) {
-            case 'stockholder':
-                $authorizedVoter = $userInfo->stockholder->voteInPerson;
-                break;
-            case 'corp-rep':
-                $authorizedVoter = $userInfo->stockholderAccount->stockholder->voteInPerson;
-                break;
-            default:
-                throw new Exception('User role is not authorized for voting.');
-                break;
-        }
-
-
-        if (Auth::user()->role !== $authorizedVoter) {
-
-            Log::info("Stockholder Online Voting: User not authorized to vote for Stockholder Online.", [
-                'authorizedVoter' => $authorizedVoter,
-                'userRole' => Auth::user()->role
-            ]);
-
-            $message = $authorizedVoter === "stockholder" ?
-                "The stockholder is the authorized voter for this account. Please contact our Membership Office at 8658 4901 to 03 local 114." :
-                "The corporate representative is the authorized voter for this account. Please contact our Membership Office at 8658 4901 to 03 local 114.";
-
-
-            ActivityController::log(['activityCode' => '00090', 'remarks' => $message, 'userId' => Auth::user()->id]);
-
-            throw new ValidationErrorException($message);
-        }
-
-        return $authorizedVoter;
+        return !User::where('email', $userInfo->email)
+            ->where('role', 'non-member')
+            ->exists();
     }
 
     public function store(StoreStockholderOnlineBallotRequest $request)
@@ -457,19 +276,23 @@ class StockholderOnlineBallotService
             Log::info("Stockholder Online Voting: Fetching user information.");
             $userInfo = User::with('stockholder', 'stockholderAccount', 'stockholderAccount.stockholder')->findOrFail(Auth::id());
 
-            VoteService::ensureEmailIsNotUsed($userInfo->email, 'Stockholder Online Voting');
+            // to be used
+            $hasSubmittedBallot = VoteService::hasSubmittedBallot($userInfo->email, 'Stockholder Online Voting');
             VoteService::validateVotingItems();
 
+            //to be updated
             $authorizedVoter = $this->checkIfUserIsAuthorizedVoter($userInfo);
 
             Log::info("Stockholder Online Voting: Fetching available votes.");
             $availableVotes =  $this->getAvailableVotes($request->revoke, $userInfo);
             Log::info("Stockholder Online Voting: Available votes fetched successfully.", ['availableVotes' => $availableVotes]);
             Log::info("Stockholder Online Voting: Fetching available accounts.");
-            $availableAccounts = $this->getAvailableAccounts($userInfo);
+            $availableAccounts = $this->getAvailableAccounts();
             Log::info("Stockholder Online Voting: Available accounts fetched successfully.", ['availableAccounts' => $availableAccounts]);
 
-            VoteService::checkIfUserCanVote($availableVotes, "Stockholder Online Voting");
+            VoteService::checkIfUserCanVote($availableVotes, "Stockholder Online Voting", $hasSubmittedBallot);
+
+
 
 
             DB::beginTransaction();
@@ -525,7 +348,7 @@ class StockholderOnlineBallotService
 
 
 
-    private function saveBallot($userInfo, $availableVotes, $availableAccounts, $authorizedVoter): Ballot
+    private function saveBallot(User $userInfo, array $availableVotes, array $availableAccounts, string $authorizedVoter): Ballot
     {
 
         $votesPerShare = ConfigService::getConfig("votes_per_share");

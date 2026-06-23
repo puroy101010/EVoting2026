@@ -45,54 +45,50 @@ class VoteService
 
         Log::info("Voting Page: Loading page");
 
-        Log::info("Voting Page: Getting account IDs for BOD");
-        $accountIdsBod = $this->getAccountIds('bod', true);
-
-        Log::info("Voting Page: Getting account IDs for Amendment");
-        $accountIdsAmendment = $this->getAccountIds('amendment', true);
 
         Log::info("Voting Page: Fetching BOD proxies");
-        $proxyBod = ProxyBoardOfDirector::whereIn('accountId', $accountIdsBod)->get()->toArray();
+        $proxyBod = ProxyBoardOfDirector::where('assignorEmail', $user->email)->get()->toArray();
 
         Log::info("Voting Page: Fetching Amendment proxies");
-        $proxyAmendment = ProxyAmendment::whereIn('accountId', $accountIdsAmendment)->get()->toArray();
+        $proxyAmendment = ProxyAmendment::where('assignorEmail', $user->email)->get()->toArray();
 
         Log::info("Voting Page: Formatting revoke options");
         $revokeOptions = $this->formatRevokeOptions($proxyBod, $proxyAmendment);
 
-        Log::info("Voting Page: Getting display role for user");
-        $accountRole = UtilityService::getDisplayUserRole($user);
 
         $onlineVoting = $this->checkVotingDay('Stockholder Online Voting');
         $proxyVoting = $this->checkVotingDay('Proxy Voting');
 
         $settings = ConfigService::getConfig();
 
-        $stockholderOnlineTC = $settings['terms_and_conditions_online'] ?? null;
-        $proxyVotingTC = $settings['terms_and_conditions_proxy'] ?? null;
 
-        $fullName = Auth::user()->full_name;
+        $fullName = Auth::user()->authorized_signatory;
 
-        $stockholderOnlineTC = str_ireplace('[voter_name]', $fullName, $stockholderOnlineTC);
-        $proxyVotingTC = str_ireplace('[voter_name]', $fullName, $proxyVotingTC);
+        $stockholderOnlineTC = $this->termsAndCondition($fullName, $settings['terms_and_conditions_online'] ?? null);
+        $proxyVotingTC = $this->termsAndCondition($fullName, $settings['terms_and_conditions_proxy'] ?? null);
 
         $issuedProxy = count($proxyBod) + count($proxyAmendment) > 0;
 
+        $amendmentEnabled = (int) $settings['amendment_enabled'] === 1;
+        $bodEnabled = (int) $settings['bod_module_enabled'] === 1;
+
+        $this->checkConfig($bodEnabled, $amendmentEnabled);
+
+
         $param = array_merge([
-            'role' => $accountRole,
-            "accountRole" => $accountRole,
+
             'btnDisableOnlineVoting' => $this->stockholderOnlineActive == true ? '' : 'disabled',
             'btnDisableProxyVoting' => $this->proxyVotingActive == true ? '' : 'disabled',
+
             'stockholderOnlineTT' => $onlineVoting,
             'proxyVotingTT' => $proxyVoting,
-            'accountIdsBod' => $accountIdsBod,
-            'accountIdsAmendment' => $accountIdsAmendment,
+
             'stockholderOnlineTC' => $stockholderOnlineTC,
             'proxyVotingTC' => $proxyVotingTC,
             'issuedProxy' => $issuedProxy,
             'userInitials' => $this->generateUserInitials($user),
-            'amendmentEnabled' => (int) $settings['amendment_enabled'] === 1,
-            'boardOfDirectorEnabled' => (int) $settings['bod_module_enabled'] === 1
+            'amendmentEnabled' => $amendmentEnabled,
+            'bodEnabled' => $bodEnabled
 
         ], $revokeOptions);
 
@@ -108,11 +104,24 @@ class VoteService
         return view('user.voting-page', $param);
     }
 
+    private function checkConfig(bool $bodEnabled, bool $amendmentEnabled)
+    {
+        if ($bodEnabled === false && $amendmentEnabled === false) {
+            Log::warning("Voting Page: Both amendment and BOD modules are disabled. User will not be able to vote.");
+            return response()->json(['message' => 'Voting is currently unavailable as both amendment and BOD voting are disabled in settings. Please contact admin.'], 500);
+        }
+    }
+
+    private function termsAndCondition($fullName, $terms): string
+    {
+        return str_ireplace('[voter_name]', $fullName, $terms);
+    }
+
     private function generateUserInitials(User $user): string
     {
 
         // Generate user initials for avatar
-        $userFullName = $user->full_name ?? '';
+        $userFullName = $user->authorized_signatory ?? '';
         $nameWords = explode(' ', trim($userFullName));
         $userInitials = '';
         foreach ($nameWords as $word) {
@@ -279,12 +288,12 @@ class VoteService
 
 
     /**
-     * Check if stockholder online voting is currently available
-     * 
-     * @return bool|string Returns true if voting is available, error message string otherwise
-     * Called by: VoteController@index
+     * Check if the current date is within the voting period for the specified voting type and return appropriate messages.
+     * @param string $votingType The type of voting to check (e.g., 'Stockholder Online Voting' or 'Proxy Voting')
+     * @return string A message indicating the voting status or period
+     * @throws Exception If an invalid voting type is provided
      */
-    private function checkVotingDay($votingType)
+    private function checkVotingDay(string $votingType): string
     {
 
         $votingType = UtilityService::validateVotingType($votingType);
@@ -392,13 +401,13 @@ class VoteService
     }
 
     /**
-     * Generate appropriate voting period message based on current time vs voting period
-     * 
-     * @param Carbon $currentDateTime Current date and time
-     * @param Carbon $startDate Voting period start date
-     * @param Carbon $endDate Voting period end date
-     * @param string $votingType Type of voting (e.g., 'Stockholder Online Voting')
-     * @return string Formatted message
+     * Generate a user-friendly message indicating the voting period status based on the current date and the configured start and end dates for the specified voting type.
+     * @param Carbon $currentDateTime The current date and time
+     * @param Carbon $startDate The start date and time of the voting period
+     * @param Carbon $endDate The end date and time of the voting period
+     * @param string $votingType The type of voting (e.g., 'Stockholder Online Voting' or 'Proxy Voting')
+     * @return string A message indicating whether the voting period has not started, has ended, or is currently ongoing
+     * @throws Exception If an invalid voting type is provided
      */
     private function generateVotingPeriodMessage(Carbon $currentDateTime, Carbon $startDate, Carbon $endDate, string $votingType): string
     {
@@ -438,7 +447,10 @@ class VoteService
 
         $settings = ConfigService::getConfig();
 
-        if ((int) $settings['amendment_enabled'] === 1) {
+        $amendmentEnableed = (int) $settings['amendment_enabled'] === 1;
+        $bodEnabled = (int) $settings['bod_module_enabled'] === 1;
+
+        if ($amendmentEnableed) {
             $amendment = Amendment::where('isActive', true)->count();
             if ($amendment === 0) {
                 Log::error('Amendment voting is enabled in settings but no active amendment found.');
@@ -446,7 +458,7 @@ class VoteService
             }
         }
 
-        if ((int) $settings['bod_module_enabled'] === 1) {
+        if ($bodEnabled) {
             $candidates = Candidate::where('isActive', true)->count();
             if ($candidates === 0) {
                 Log::error('No active candidates found.');
@@ -458,6 +470,11 @@ class VoteService
                 Log::error('No active agenda items found.');
                 throw new ValidationErrorException('No active agenda items found. Please contact admin.');
             }
+        }
+
+        if (!$amendmentEnableed && !$bodEnabled) {
+            Log::error('Both amendment and BOD voting are disabled in settings. No voting items to validate.');
+            throw new ValidationErrorException('Voting is currently unavailable as both amendment and BOD voting are disabled in settings. Please contact admin.');
         }
     }
 
@@ -472,53 +489,55 @@ class VoteService
      * @throws Exception if an invalid voting type is provided
      * 
      */
-    public static function checkIfUserCanVote($availableVotes, $votingType): bool
+    public static function checkIfUserCanVote($availableVotes, $votingType, bool $hasSubmittedBallot): bool
     {
 
         UtilityService::validateVotingType($votingType);
 
         Log::info("{$votingType}: Checking if user can vote");
 
-        $amendmentEnabled = (int)ConfigService::getConfig('amendment_enabled') === 1;
         $bodVotes = count($availableVotes['bod']);
         $amendmentVotes = count($availableVotes['amendment']);
 
-        Log::info("{$votingType}: Checking if amendment module is enabled", ['enabled' => $amendmentEnabled]);
 
-        if ($amendmentEnabled) {
-            Log::info("{$votingType}: Amendment module is enabled, checking both BOD and Amendment votes.", [
+        if ($bodVotes === 0 && $amendmentVotes === 0) {
+
+            if ($hasSubmittedBallot) {
+                Log::info("{$votingType}: User has already submitted a ballot and has no available votes left.");
+                $msg = $votingType === 'Stockholder Online Voting' ? "You have already submitted your ballot for {$votingType} and have no available votes left." : "You have already submitted your ballot for {$votingType} and have no available votes left.";
+                ActivityController::log([
+                    'activityCode' => $votingType === 'Stockholder Online Voting' ? '00090' : '00091',
+                    'remarks' => $msg,
+                    'userId' => Auth::user()->id,
+                    'email' => Auth::user()->email,
+                    'accountNo' => Auth::user()->account_no
+                ]);
+                throw new ValidationErrorException("You have already submitted your ballot for {$votingType} and have no available votes left.");
+            }
+
+
+            $msg = "You don't have any votes available for {$votingType}.";
+            Log::info("{$votingType}: No available votes found.", [
+                'votingType' => $votingType,
                 'bodVotes' => $bodVotes,
                 'amendmentVotes' => $amendmentVotes
             ]);
 
-            if ($bodVotes === 0 && $amendmentVotes === 0) {
-                $msg = "You don't have any votes available for {$votingType}.";
-                Log::info("{$votingType}: No available votes found for both BOD and Amendment.", [
-                    'votingType' => $votingType,
-                    'bodVotes' => $bodVotes,
-                    'amendmentVotes' => $amendmentVotes
-                ]);
-                ActivityController::log(['activityCode' => '00090', 'remarks' => $msg, 'userId' => Auth::user()->id]);
-                throw new ValidationErrorException($msg);
-            }
-            return true;
-        }
-
-        Log::info("{$votingType}: Amendment module is disabled, checking BOD votes only.", ['bodVotes' => $bodVotes]);
-
-
-
-        if ($bodVotes === 0) {
-            $msg = "You don't have any votes available for {$votingType}.";
-            Log::info("{$votingType}: No available votes found for BOD.", [
-                'votingType' => $votingType,
-                'bodVotes' => $bodVotes
-            ]);
-
             $activityCode = $votingType === 'Stockholder Online Voting' ? '00090' : '00091';
-            ActivityController::log(['activityCode' => $activityCode, 'remarks' => $msg, 'userId' => Auth::user()->id]);
+            ActivityController::log([
+                'activityCode' => $activityCode,
+                'remarks' => $msg,
+                'userId' => Auth::user()->id,
+                'email' => Auth::user()->email,
+                'accountNo' => Auth::user()->account_no
+            ]);
             throw new ValidationErrorException($msg);
         }
+
+        Log::debug("{$votingType}: User has available votes.", [
+            'bodVotes' => $bodVotes,
+            'amendmentVotes' => $amendmentVotes
+        ]);
 
         return true;
     }
@@ -1002,9 +1021,20 @@ class VoteService
     }
 
 
-
-    public static function ensureEmailIsNotUsed(string $email, $votingType): void
+    /**
+     * Check if the provided email has already been used to submit a ballot for the specified voting type.
+     * @param string $email The email address to check
+     * @param string $votingType The type of voting ('Stockholder Online Voting' or 'Proxy Voting')
+     * @return bool True if the email has already been used to submit a ballot, false otherwise
+     * @throws Exception If an invalid voting type is provided
+     */
+    public static function hasSubmittedBallot(string $email, string $votingType): bool
     {
+
+        if (empty($email)) {
+            Log::error("Email is required for hasSubmittedBallot method.", ['email' => $email]);
+            throw new Exception('Email is required to check ballot submission.');
+        }
 
         UtilityService::validateVotingType($votingType);
 
@@ -1018,15 +1048,9 @@ class VoteService
         $ballot = Ballot::where('email', $email)->where('ballotType', $ballotType)->where('isSubmitted', true);
 
         if ($ballot->exists()) {
-
-            Log::info("{$votingType}: Attempted to create a ballot form for {$votingType}, but a submitted ballot already exists for {$email}.");
-            ActivityController::log([
-                'activityCode' => $votingType === 'Stockholder Online Voting' ? '00090' : '00091',
-                'remarks' => "Attempted to create a ballot form for {$votingType} but already has a submitted ballot using {$email}.",
-                'userId' => Auth::user()->id
-            ]);
-            throw new ValidationErrorException("Sorry, you cannot proceed because you have already submitted your vote for {$votingType}. If you believe this is an error, please contact your administrator.");
+            return true;
         }
+        return false;
     }
 
     /**

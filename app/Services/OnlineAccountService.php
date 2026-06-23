@@ -309,10 +309,14 @@ class OnlineAccountService
     /**
      * Get the query for online accounts with necessary relationships loaded.
      */
-    public function getOnlineAccountsQuery(?int $userId = null, ?string $email = null): Builder
+    public function getOnlineAccountsQuery(?int $userId = null, ?string $email = null, bool $canUseVoteOnly = false): Builder
     {
         $query = User::with('stockholder.stockholderAccounts', 'stockholderAccount.stockholder', 'nonMemberAccount')
-            ->whereIn('role', ['stockholder', 'corp-rep', 'non-member'])
+            ->whereIn('role', ['stockholder', 'corp-rep'])
+            ->when($canUseVoteOnly, function ($q) {
+                $q->whereNotIn('role', ['non-member']);
+            })
+
             ->whereNotNull('email');
 
         if ($userId) {
@@ -350,6 +354,7 @@ class OnlineAccountService
                 'accountType' => $accountData['accountType'],
                 'stockholder' => $account?->stockholder?->toArray(), //Stockholder with stockholder_accounts relationship
                 'stockholderName' => $account?->stockholder?->stockholder ?? $account?->stockholderAccount?->stockholder->stockholder ?? null,
+                'voteInPerson' => $accountData['voteInPerson'],
             ];
         }
 
@@ -361,7 +366,7 @@ class OnlineAccountService
      * If a stockholder account exists for an email/account, remove corp-rep accounts
      * and add authorized signatory accounts.
      */
-    private function reconcileStockholderAndCorpRepAccounts(array $groupedAccounts): array
+    private function reconcileStockholderAndCorpRepAccounts(array $groupedAccounts, bool $canUseVoteOnly): array
     {
         foreach ($groupedAccounts as $email => $accountsByName) {
 
@@ -372,10 +377,11 @@ class OnlineAccountService
 
             foreach ($accountsByName as $accountNameSha => $accountsByNumber) {
                 foreach ($accountsByNumber as $accountNumber => $details) {
-                    if ($this->hasStockholderRole($details)) {
+                    if ($this->hasStockholderRole($details, $canUseVoteOnly)) {
                         $groupedAccounts[$email][$accountNameSha][$accountNumber] = $this->processStockholderAccountGroup(
                             $details,
-                            $email
+                            $email,
+                            $canUseVoteOnly
                         );
                     }
                 }
@@ -385,26 +391,33 @@ class OnlineAccountService
         return $groupedAccounts;
     }
 
-    /**
-     * Check if any detail in the group has a stockholder role.
-     */
-    private function hasStockholderRole(array $details): bool
+
+    private function hasStockholderRole(array $details, bool $canUseVoteOnly): bool
     {
-        return collect($details)->contains('role', 'stockholder');
+
+        $stockholderRole = collect($details)->firstWhere('role', 'stockholder');
+
+        if (!$stockholderRole) {
+            return false;
+        }
+
+        return $canUseVoteOnly === false
+            || $stockholderRole['voteInPerson'] === 'stockholder';
     }
 
     /**
      * Process a group of accounts where a stockholder role exists.
      * Removes corp-rep accounts and expands stockholder authorized signatories.
      */
-    private function processStockholderAccountGroup(array $details, string $email): array
+    private function processStockholderAccountGroup(array $details, string $email, bool $canUseVoteOnly): array
     {
         $detailsToAdd = [];
 
         foreach ($details as $detail) {
             if ($detail['role'] === 'corp-rep') {
-                // Skip corp-rep accounts
-                continue;
+                Log::info("Removing corporate representative account for email {$email} due to presence of authorized signatory account.", ['accountNo' => $detail['accountNo']]);
+                continue; // Skip corp-rep accounts if a stockholder account exists
+
             } elseif ($detail['role'] === 'stockholder') {
 
                 if (empty($detail['stockholder']['stockholder_accounts'])) {
@@ -463,6 +476,7 @@ class OnlineAccountService
             'accountName' => $accountName,
             'emailRole' => $this->isCorporateAccount($account) ? 'authorized signatory' : 'stockholder',
             'accountType' => $stockholder->accountType,
+            'voteInPerson' => $stockholder->voteInPerson,
         ];
     }
 
@@ -479,6 +493,7 @@ class OnlineAccountService
             'accountKey' => $account->stockholderAccount->accountKey,
             'emailRole' => 'corporate representative',
             'accountType' => $stockholder->accountType,
+            'voteInPerson' => $stockholder->voteInPerson,
         ];
     }
 
@@ -493,6 +508,7 @@ class OnlineAccountService
             'accountName' => $accountName,
             'emailRole' => 'non-member',
             'accountType' => 'non-member',
+            'voteInPerson' => false,
         ];
     }
 
@@ -514,15 +530,45 @@ class OnlineAccountService
     /**
      * Retrieve and reconcile stocks for a specific email address.
      */
-    public function showStocks(ShowOnlineAccountRequest $request, string $email): array
+    public function showStocks(ShowOnlineAccountRequest $request, string $email, bool $canUseVoteOnly = false): array
+    {
+
+        $onlineAccounts = $this->getOnlineAccountsQuery(email: $email, canUseVoteOnly: $canUseVoteOnly)->get();
+        $accountsByEmailAndName = $this->groupAccountsByEmailAndName($onlineAccounts);
+        $reconciledAccounts = $this->reconcileStockholderAndCorpRepAccounts($accountsByEmailAndName, $canUseVoteOnly);
+
+        return $reconciledAccounts;
+    }
+
+
+    /**
+     * Retrieve and reconcile stocks for a specific email address.
+     */
+    public function getAccounts(string $email, bool $canUseVoteOnly = true): array
     {
 
         $onlineAccounts = $this->getOnlineAccountsQuery(email: $email)->get();
         $accountsByEmailAndName = $this->groupAccountsByEmailAndName($onlineAccounts);
-        $reconciledAccounts = $this->reconcileStockholderAndCorpRepAccounts($accountsByEmailAndName);
+        $reconciledAccounts = $this->reconcileStockholderAndCorpRepAccounts($accountsByEmailAndName, $canUseVoteOnly);
 
-        return $reconciledAccounts;
+        $userIds  = [];
+
+        foreach ($reconciledAccounts as $accountsByEmail) {
+            foreach ($accountsByEmail as $accountKey => $accountsByKey) {
+                foreach ($accountsByKey as $accountNo => $accounts) {
+                    foreach ($accounts as $account) {
+                        $userIds[] = $account['userId'];
+                    }
+                }
+            }
+        }
+
+
+
+        return $userIds;
     }
+
+
 
 
     /**
