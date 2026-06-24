@@ -561,10 +561,10 @@
               @if(Auth::check())
               <div class="user-menu">
                 <div class="user-avatar">
-                  {{ strtoupper(substr(Auth::user()->full_name ?? 'U', 0, 1)) }}
+                  {{ strtoupper(substr(Auth::user()->authorized_signatory ?? 'U', 0, 1)) }}
                 </div>
                 <span class="d-none d-lg-inline">
-                  {{ \Illuminate\Support\Str::limit(Auth::user()->full_name ?? 'User', 20) }}
+                  {{ \Illuminate\Support\Str::limit(Auth::user()->authorized_signatory ?? 'User', 20) }}
                 </span>
               </div>
               <a href="{{ asset('logout') }}" class="logout-btn">
@@ -593,7 +593,7 @@
     <div class="mobile-dropdown">
       @if(Auth::check())
       <div class="mobile-menu-item">
-        <i class="fas fa-user"></i> {{ Auth::user()->full_name ?? 'User' }}
+        <i class="fas fa-user"></i> {{ Auth::user()->authorized_signatory ?? 'User' }}
       </div>
       <a href="{{ asset('logout') }}" class="mobile-menu-item">
         <i class="fas fa-sign-out-alt"></i> Logout
