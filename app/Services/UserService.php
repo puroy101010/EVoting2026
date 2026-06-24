@@ -84,7 +84,7 @@ class UserService
 
 
         foreach ($emailConflictUsers as $conflictingUser) {
-            // $conflictingUserSignatory = UserService::getAuthorizedSignatory($conflictingUser);
+
             $conflictingUserSignatory = $conflictingUser->authorized_signatory;
 
             if (!self::compareSignatories($conflictingUserSignatory, $newSignatory)) {
@@ -106,7 +106,7 @@ class UserService
      */
     public static function getAuthorizedSignatory(User $user): ?string
     {
-        //migrated to User model as accessor: $user->authorized_signatory
+        // migrated to User model as accessor: $user->authorized_signatory
         // return match ($user->role) {
         //     'stockholder' => $user->stockholder->accountType === 'corp'
         //         ? $user->stockholder->authorizedSignatory

@@ -2,25 +2,19 @@
 
 namespace App\Services;
 
-use App\Exceptions\ValidationErrorException;
+
 use App\Http\Controllers\ActivityController;
-use App\Http\Controllers\EApp;
-use App\Models\NonMemberAccount;
+
 use App\Models\ProxyAmendment;
 use App\Models\ProxyAmendmentCancelled;
 use App\Models\ProxyAmendmentHistory;
 use App\Models\ProxyBoardOfDirector;
-use App\Models\ProxyBoardOfDirectorHistory;
-use App\Models\StockholderAccount;
 use App\Models\User;
-use App\Stockholder;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
 use Exception;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use  App\Http\Requests\EditOnlineAccountRequest;
@@ -181,18 +175,7 @@ class OnlineAccountService
         }
     }
 
-    /**
-     * Get the account name for a user before update.
-     */
-    private function getAccountName(User $user): string
-    {
-        return match ($user->role) {
-            'stockholder' => $user->stockholder?->stockholder ?? $user->stockholder?->authorizedSignatory ?? '',
-            'corp-rep' => $user->stockholderAccount?->corpRep ?? '',
-            'non-member' => $user->nonMemberAccount?->fullName ?? '',
-            default => '',
-        };
-    }
+
 
     /**
      * Build activity log remarks based on what changed.
@@ -309,19 +292,15 @@ class OnlineAccountService
     /**
      * Get the query for online accounts with necessary relationships loaded.
      */
-    public function getOnlineAccountsQuery(?int $userId = null, ?string $email = null, bool $canUseVoteOnly = false): Builder
+    public function getOnlineAccountsQuery(?string $email = null, bool $canUseVoteOnly = false): Builder
     {
         $query = User::with('stockholder.stockholderAccounts', 'stockholderAccount.stockholder', 'nonMemberAccount')
             ->whereIn('role', ['stockholder', 'corp-rep'])
             ->when($canUseVoteOnly, function ($q) {
                 $q->whereNotIn('role', ['non-member']);
             })
-
             ->whereNotNull('email');
 
-        if ($userId) {
-            $query->where('id', $userId);
-        }
 
         if ($email) {
             $query->where('email', $email);
@@ -338,6 +317,7 @@ class OnlineAccountService
         $groupedAccounts = [];
 
         foreach ($accounts as $account) {
+
             $accountData = $this->getAccountData($account);
 
             $accountNameKey = AppHelper::normalizeString($accountData['accountName'], true);
@@ -380,8 +360,7 @@ class OnlineAccountService
                     if ($this->hasStockholderRole($details, $canUseVoteOnly)) {
                         $groupedAccounts[$email][$accountNameSha][$accountNumber] = $this->processStockholderAccountGroup(
                             $details,
-                            $email,
-                            $canUseVoteOnly
+                            $email
                         );
                     } else {
                         $groupedAccounts[$email][$accountNameSha][$accountNumber] = $this->processCorpRepGroup(
@@ -415,13 +394,12 @@ class OnlineAccountService
      * Process a group of accounts where a stockholder role exists.
      * Removes corp-rep accounts and expands stockholder authorized signatories.
      */
-    private function processStockholderAccountGroup(array $details, string $email, bool $canUseVoteOnly): array
+    private function processStockholderAccountGroup(array $details, string $email): array
     {
         $detailsToAdd = [];
 
         foreach ($details as $detail) {
             if ($detail['role'] === 'corp-rep') {
-                Log::info("Removing corporate representative account for email {$email} due to presence of authorized signatory account.", ['accountNo' => $detail['accountNo']]);
                 continue; // Skip corp-rep accounts if a stockholder account exists
 
             } elseif ($detail['role'] === 'stockholder') {
@@ -446,6 +424,8 @@ class OnlineAccountService
                         'voteInPerson' => $detail['voteInPerson']
                     ];
                 }
+            } else {
+                throw new Exception("Unexpected role '{$detail['role']}' encountered for email {$email}. Expected 'stockholder' or 'corp-rep'.");
             }
         }
 
@@ -463,7 +443,7 @@ class OnlineAccountService
 
             if ($canUseVoteOnly === true && $detail['voteInPerson'] === 'stockholder') {
 
-                Log::info("Skipping corporate representative account for email {$email} due to assigned voteInPerson", [
+                Log::info("Skipping corporate representative account for email {$email} because voting authorization is assigned to the stockholder account.", [
                     'accountNo' => $detail['accountNo'],
                     'voteInPerson' => $detail['voteInPerson'],
                     'role' => $detail['role'],
@@ -587,7 +567,15 @@ class OnlineAccountService
 
 
     /**
-     * Get user IDs for accounts associated with a specific email address, optionally filtering for vote-only accounts.
+     * 
+
+     * Stockholder account user IDs associated with the logged-in user's email.
+     * 
+     * Setting the second parameter to true returns only accounts for which the
+     * user is designated as the authorized online voter in the stockholder settings. 
+     * 
+     * When the second parameter is set to false, all associated accounts are
+     * returned, regardless of the user's voting authorization status.
      */
     public function getAccounts(string $email, bool $canUseVoteOnly = true): array
     {
@@ -607,8 +595,6 @@ class OnlineAccountService
                 }
             }
         }
-
-
 
         return $userIds;
     }

@@ -175,7 +175,8 @@ class User extends Authenticatable
 
 
     /**
-     * 
+     * Returns the authorized signatory name associated with the user. For corporate representative accounts, this returns the corporate representative's name. For stockholder accounts, this returns the authorized signatory name for corporate accounts and the stockholder's name for individual accounts. For non-member accounts, this returns the non-member's full name. 
+     *  * @return string|null
      */
     public function getAuthorizedSignatoryAttribute()
     {
@@ -190,6 +191,31 @@ class User extends Authenticatable
                 return $this->stockholderAccount->stockholder->accountType === 'corp'
                     ? $this->stockholderAccount->corpRep ?? null
                     : $this->stockholderAccount->stockholder->stockholder ?? null;
+
+            case 'non-member':
+                $this->loadMissing('nonMemberAccount');
+                return $this->nonMemberAccount->fullName;
+
+            default:
+                return null;
+        }
+    }
+
+    public function getAuthorizedSignatoryWithFallbackAttribute()
+    {
+        switch ($this->role) {
+
+            case 'stockholder':
+                $this->loadMissing('stockholder');
+                return $this->stockholder->accountType === 'corp'
+                    ? $this->stockholder->authorizedSignatory ?? $this->stockholder->stockholder
+                    : $this->stockholder->stockholder;
+
+            case 'corp-rep':
+                $this->loadMissing('stockholderAccount.stockholder');
+                return $this->stockholderAccount->stockholder->accountType === 'corp'
+                    ? $this->stockholderAccount->corpRep ?? $this->stockholderAccount->stockholder->stockholder
+                    : $this->stockholderAccount->stockholder->stockholder;
 
             case 'non-member':
                 $this->loadMissing('nonMemberAccount');

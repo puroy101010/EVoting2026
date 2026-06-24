@@ -39,11 +39,15 @@ use App\Services\AmendmentProxyService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
+use App\Models\User;
 
 
 
 Route::get('test', function () {
 
+
+
+    return User::findOrFail(904)->authorized_signatory = 'John Doe';
 
 
     var_dump(blank('')); // true

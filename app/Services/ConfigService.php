@@ -38,4 +38,16 @@ class ConfigService
 
         return $cachedConfigs;
     }
+
+    public static function isAmendmentEnabled()
+    {
+        $config = self::getConfig('amendment_enabled');
+        return $config === '1';
+    }
+
+    public static function isBodEnabled()
+    {
+        $config = self::getConfig('bod_module_enabled');
+        return $config === '1';
+    }
 }

@@ -174,8 +174,6 @@ class AmendmentProxyService
     private function createProxyAmendment(User $assignorUser, User $assigneeUser, StockholderAccount $accountToAssign, array $request): ProxyAmendment
     {
 
-        // Log::debug("Assignee: " . $assigneeUser->authorized_signatory . " (" . $assigneeUser->email . ")");
-        // Log::debug('assignee', $assigneeUser->nonMemberAccount ? $assigneeUser->nonMemberAccount->toArray() : null);
         return ProxyAmendment::create([
             'proxyAmendmentFormNo' => $request['refNo'],
             'accountId' => $accountToAssign->accountId,

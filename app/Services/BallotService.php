@@ -37,50 +37,71 @@ class BallotService
 
     protected $stockholderOnlineActive = false;
     protected $proxyVotingActive = false;
+    protected array $configSettings = [];
+
+
+    public function __construct()
+    {
+        $this->configSettings = ConfigService::getConfig();
+    }
+
+    public function getConfigSettings(): array
+    {
+        if (empty($this->configSettings)) {
+            $this->configSettings = ConfigService::getConfig();
+        }
+
+        return $this->configSettings;
+    }
+
 
 
     public function create(Request $request)
     {
 
-        Log::info("Voting Page: Loading page");
 
         $user = Auth::user();
         $fullName = Auth::user()->authorized_signatory;
 
 
-        $settings = ConfigService::getConfig();
 
-        $amendmentEnabled = (int) $settings['amendment_enabled'] === 1;
-        $bodEnabled = (int) $settings['bod_module_enabled'] === 1;
+
+        $amendmentEnabled = ConfigService::isAmendmentEnabled();
+        $bodEnabled = ConfigService::isBodEnabled();
 
 
         $this->checkConfig($bodEnabled, $amendmentEnabled);
 
-
-        $userIds = (new OnlineAccountService())->getAccounts($user->email, true);
+        $userIds = (new OnlineAccountService())->getAccounts(email: $user->email, canUseVoteOnly: true);
         Log::info("User IDs associated with email {$user->email}: " . implode(', ', $userIds));
 
 
-        $proxyBod = $bodEnabled ? $this->getProxyBod($userIds, $bodEnabled) : [];
-        $proxyAmendment = $amendmentEnabled ? $this->getProxyAmendment($userIds, $amendmentEnabled) : [];
+        $proxyBod = $this->getProxyBod($userIds, $bodEnabled);
+        $proxyAmendment = $this->getProxyAmendment($userIds, $amendmentEnabled);
 
         Log::info("Voting Page: Retrieved proxy BOD and amendment data", [
             'proxyBodCount' => count($proxyBod),
             'proxyAmendmentCount' => count($proxyAmendment)
         ]);
 
-        foreach (User::whereIn('id', $userIds)->get() as $user) {
-            Log::info("Voting Page: User ID {$user->id} - Role: {$user->role} - Email: {$user->email} - Signatory: {$user->authorized_signatory} - Account No: {$user->account_no}");
+        // Log user details for debugging
+        foreach (User::with('stockholder', 'stockholderAccount', 'nonMemberAccount', 'adminAccount')->whereIn('id', $userIds)->get() as $user) {
+            Log::info("Voting Page: User ID {$user->id} - Role: {$user->role} - Signatory: {$user->authorized_signatory_with_fallback}", [
+                'userId' => $user->id,
+                'role' => $user->role,
+                'email' => $user->email,
+                'signatory' => $user->authorized_signatory_with_fallback,
+                'accountNo' => $user->account_no
+            ]);
         }
+
 
         $revokeOptions = $this->formatRevokeOptions($proxyBod, $proxyAmendment);
 
         $onlineVoting = $this->checkVotingDay('Stockholder Online Voting');
         $proxyVoting = $this->checkVotingDay('Proxy Voting');
 
-        $stockholderOnlineTC = $this->termsAndCondition($fullName, $settings['terms_and_conditions_online'] ?? null);
-        $proxyVotingTC = $this->termsAndCondition($fullName, $settings['terms_and_conditions_proxy'] ?? null);
-
+        $terms = $this->termsAndCondition($fullName);
         $issuedProxy = $this->getIssuedProxyCount($proxyBod, $proxyAmendment);
 
 
@@ -92,8 +113,8 @@ class BallotService
             'stockholderOnlineTT' => $onlineVoting,
             'proxyVotingTT' => $proxyVoting,
 
-            'stockholderOnlineTC' => $stockholderOnlineTC,
-            'proxyVotingTC' => $proxyVotingTC,
+            'stockholderOnlineTC' => $terms['termsAndConditionsOnline'],
+            'proxyVotingTC' => $terms['termsAndConditionsProxy'],
 
             'issuedProxy' => $issuedProxy,
             'userInitials' => $this->generateUserInitials($user),
@@ -130,11 +151,12 @@ class BallotService
     private function getProxyBod(array $userIds, bool $bodEnabled): array
     {
 
-        $proxy =  ProxyBoardOfDirector::whereDoesntHave('usedAccount')
-            ->whereHas('stockholderAccount', function ($query) use ($userIds) {
-                $query->where('isDelinquent', false)
-                    ->whereIn('userId', $userIds);
-            })
+        $proxy =  ProxyBoardOfDirector::whereHas('stockholderAccount', function ($query) use ($userIds) {
+            $query->whereIn('userId', $userIds)
+                ->where('isDelinquent', false)
+            ;
+        })
+            ->whereDoesntHave('usedAccount')
             ->get()
             ->toArray();
 
@@ -147,11 +169,12 @@ class BallotService
     private function getProxyAmendment(array $userIds, bool $amendmentEnabled): array
     {
 
-        $proxy =  ProxyAmendment::whereDoesntHave('usedAccount')
-            ->whereHas('stockholderAccount', function ($query) use ($userIds) {
-                $query->where('isDelinquent', false)
-                    ->whereIn('userId', $userIds);
-            })
+        $proxy =  ProxyAmendment::whereHas('stockholderAccount', function ($query) use ($userIds) {
+            $query->whereIn('userId', $userIds)
+                ->where('isDelinquent', false)
+            ;
+        })
+            ->whereDoesntHave('usedAccount')
             ->get()
             ->toArray();
 
@@ -170,9 +193,20 @@ class BallotService
         }
     }
 
-    private function termsAndCondition($fullName, $terms): string
+    /**
+     * Generate the terms and conditions for online and proxy voting by replacing the placeholder [voter_name] with the actual full name of the voter. The terms and conditions are retrieved from the configuration settings.
+     *  
+     */
+
+    private function termsAndCondition(string $fullName): array
     {
-        return str_ireplace('[voter_name]', $fullName, $terms);
+
+        $settings = $this->getConfigSettings();
+
+        return [
+            'termsAndConditionsOnline' => str_ireplace('[voter_name]', $fullName, $settings['terms_and_conditions_online'] ?? ''),
+            'termsAndConditionsProxy' => str_ireplace('[voter_name]', $fullName, $settings['terms_and_conditions_proxy'] ?? '')
+        ];
     }
 
     private function generateUserInitials(User $user): string
@@ -207,34 +241,38 @@ class BallotService
 
 
         if ($hasAmendmentProxy || $hasBodProxy) {
-            Log::info('Voting Page: User has either existing BOD, amendment proxies, or both, enabling the "None" revoke option.');
             $none = true; // Always enable "none" if user has any proxy
         }
 
 
         if ($hasAmendmentProxy) {
-            Log::info('Voting Page: User has existing amendment proxies, enabling "Amendment Only" revoke option.');
             $amendment = true;
         }
 
         // Enable BOD option if user has BOD proxy
         if ($hasBodProxy) {
-            Log::info('Voting Page: User has existing BOD proxies, enabling "Board of Director Only" revoke option.');
             $bod = true;
         }
 
         // Enable "all/both" option only if user has both types of proxies
         if ($hasAmendmentProxy && $hasBodProxy) {
-            Log::info('Voting Page: User has existing BOD and amendment proxies, enabling "All" revoke option.');
             $all = true;
         }
 
-        return [
+        $options = [
             'amendment' => $amendment,
             'bod' => $bod,
             'all' => $all,
             'none' => $none
         ];
+
+        Log::info("Voting Page: Revoke options determined", [
+            'proxyBodCount' => count($proxyBod),
+            'proxyAmendmentCount' => count($proxyAmendment),
+            'options' => $options
+        ]);
+
+        return $options;
     }
 
 
@@ -259,7 +297,7 @@ class BallotService
         $votingType = UtilityService::validateVotingType($votingType);
 
         $currentDateTime = Carbon::now();
-        $settings = ConfigService::getConfig();
+        $settings = $this->getConfigSettings();
 
         $startDateTime = $votingType === 'Stockholder Online Voting' ? $settings['vote_in_person_start'] ?? null : $settings['vote_by_proxy_start'] ?? null;
         $endDateTime = $votingType === 'Stockholder Online Voting' ? $settings['vote_in_person_end'] ?? null : $settings['vote_by_proxy_end'] ?? null;
@@ -377,7 +415,7 @@ class BallotService
 
         if ($currentDateTime->lt($startDate)) {
             Log::info("Voting Page: {$votingType} has not started yet.");
-            return "The {$votingType} period will begin on {$formattedStartDate} and continue until {$formattedEndDate}.";
+            return "The {$votingType} period runs from {$formattedStartDate} to {$formattedEndDate}.";
         }
 
         if ($currentDateTime->gt($endDate)) {
@@ -388,7 +426,7 @@ class BallotService
         Log::warning("Voting Page: Unexpected state in {$votingType} period check.");
 
         // This shouldn't happen if called correctly, but just in case. This has been handled from the calling controller.
-        return "Voting Page: The {$votingType} period is from {$formattedStartDate} to {$formattedEndDate}.";
+        return "Voting Page: The {$votingType} period runs from {$formattedStartDate} to {$formattedEndDate}.";
     }
 
 

@@ -33,21 +33,8 @@ use Illuminate\Validation\Rule;
 class BallotStockholderOnlineController extends Controller
 {
 
-    private $ballotInfo;
-    private $availableVotes;
-
-
-    // done 2023-09-18
-
-
-    // done 2023-09-18
-
-
-
-
-
-
-
+    private Ballot $ballotInfo;
+    private array $availableVotes;
 
 
     public function getSummaryDetailsBod($data)
