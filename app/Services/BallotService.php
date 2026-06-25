@@ -505,11 +505,11 @@ class BallotService
                     'email' => Auth::user()->email,
                     'accountNo' => Auth::user()->account_no
                 ]);
-                throw new ValidationErrorException("You have already submitted your ballot for {$votingType} and have no available votes left.");
+                throw new ValidationErrorException("You have already submitted your ballot for {$votingType} and have no available votes remaining.");
             }
 
 
-            $msg = "You don't have any votes available for {$votingType}.";
+            $msg = "No votes are available for your {$votingType} account.";
             Log::info("{$votingType}: No available votes found.", [
                 'votingType' => $votingType,
                 'bodVotes' => $bodVotes,
@@ -536,7 +536,7 @@ class BallotService
     }
 
 
-    public static function generateBallot($votingType): array
+    public static function generateBallot(string $votingType): array
     {
 
         if (!in_array($votingType, ['Stockholder Online Voting', 'Proxy Voting'])) {
@@ -578,16 +578,11 @@ class BallotService
             'ballotId' => $request->ballotId,
             'ballotType' => $ballotInfo->ballotType,
             'ip' => $request->ip(),
-
         ]);
 
-        $amendmentEnabled = (int)ConfigService::getConfig('amendment_enabled') === 1;
-        $bodModuleEnabled = (int)ConfigService::getConfig('bod_module_enabled') === 1;
-
-
-        $amendmentSummary = $amendmentEnabled ? $this->processAmendmentSummary($request->amendment, $ballotInfo) : [];
-        $agendaSummary = $bodModuleEnabled ? $this->processAgendaSummary($request->agenda, $ballotInfo) : [];
-        $bodSummary = $bodModuleEnabled ?  $this->processBodSummary($request->bod, $ballotInfo) : [];
+        $amendmentSummary =  $this->processAmendmentSummary($request->amendment, $ballotInfo);
+        $agendaSummary = $this->processAgendaSummary($request->agenda, $ballotInfo);
+        $bodSummary = $this->processBodSummary($request->bod, $ballotInfo);
 
         $proccessedData = [
             'bod' => $bodSummary,
@@ -603,9 +598,15 @@ class BallotService
         return $proccessedData;
     }
 
-    private function processBodSummary(array $bod, Ballot $ballotInfo)
+    private function processBodSummary(?array $bod, Ballot $ballotInfo): array
     {
 
+
+        $bodModuleEnabled = ConfigService::isBodEnabled();
+        if ($bodModuleEnabled === false) {
+            Log::info("BOD voting is disabled in settings. Skipping BOD summary processing.");
+            return [];
+        }
 
         $votingType = UtilityService::getVotingType($ballotInfo->ballotType);
 
@@ -644,8 +645,15 @@ class BallotService
     }
 
 
-    private function processAmendmentSummary(array $amendments, Ballot $ballotInfo)
+    private function processAmendmentSummary(array $amendments, Ballot $ballotInfo): array
     {
+
+        $amendmentEnabled = ConfigService::isAmendmentEnabled();
+
+        if ($amendmentEnabled === false) {
+            Log::info("Amendment voting is disabled in settings. Skipping amendment summary processing.");
+            return [];
+        }
 
         $amendmentIds = array_column($amendments, 'amendmentId');
         $amendmentsCollection = Amendment::where('isActive', 1)->get();
@@ -686,8 +694,15 @@ class BallotService
 
 
 
-    private function processAgendaSummary(array $agendas, Ballot $ballotInfo)
+    private function processAgendaSummary(?array $agendas, Ballot $ballotInfo): array
     {
+
+        $bodModuleEnabled = ConfigService::isBodEnabled();
+
+        if ($bodModuleEnabled === false) {
+            Log::info("BOD voting is disabled in settings. Skipping agenda summary processing.");
+            return [];
+        }
 
         $votingType = UtilityService::getVotingType($ballotInfo->ballotType);
 
@@ -761,7 +776,7 @@ class BallotService
     }
 
 
-    public static function ballotInfo($request, $votingType): Ballot
+    public static function ballotInfo(Request $request, string $votingType): Ballot
     {
 
 
@@ -914,8 +929,6 @@ class BallotService
 
         $votingType = $ballotInfo->ballotType === 'person' ? 'Stockholder Online Voting' : 'Proxy Voting';
 
-
-
         if ($totalVotesSubmitted > $ballotInfo->availableVotesBod) {
             Log::info("{$votingType}: User exceeded available votes", [
                 'ballotId' => $ballotInfo->ballotId,
@@ -1044,12 +1057,10 @@ class BallotService
      * @throws Exception if an invalid voting type is provided or if attendance creation fails
      */
 
-    public static function saveAttendance($availableVotes, $ballot, $votingType)
+    public static function saveAttendance(array $availableVotes, Ballot $ballot, string $votingType)
     {
 
         UtilityService::validateVotingType($votingType);
-
-
 
         Log::info("{$votingType}: Creating attendance record", [
             'ballotType' => $ballot->ballotType,

@@ -21,14 +21,8 @@ class ConfirmationService
     public function store(Ballot $ballotInfo, array $userSubmittedData, bool $isValidBallot, string $message): BallotConfirmation
     {
 
-
-        Log::debug("wow");
         $stockholderOnlineBallotService = new StockholderOnlineBallotService();
         $proxyVotingBallotService = new ProxyVotingBallotService();
-
-
-        Log::debug("yun");
-
 
         $availableVotes = $ballotInfo->ballotType === 'person' ?
             $stockholderOnlineBallotService->getAvailableVotes($ballotInfo->revoked, Auth::user()) :

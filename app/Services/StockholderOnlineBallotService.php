@@ -22,6 +22,7 @@ use App\Models\Agenda;
 use App\Models\Configuration;
 use App\Services\BallotService;
 use App\Http\Requests\SummaryStockholderOnlineRequest;
+use App\Http\Requests\SubmitStockholderOnlineRequest;
 
 
 
@@ -150,7 +151,7 @@ class StockholderOnlineBallotService
             $this->ensureAvailableVotesAreUnchanged($ballotInfo, $userSubmittedData);
 
             $totalVotesSubmitted = collect($userSubmittedData['bod'])->sum('vote');
-            $unusedVotes = $ballotInfo->availableVotesBod - $totalVotesSubmitted;
+            $unusedVotes = ConfigService::isBodEnabled() ? $ballotInfo->availableVotesBod - $totalVotesSubmitted : 0;
 
             $this->ballotService->checkExceedVotes($userSubmittedData, $ballotInfo, $totalVotesSubmitted);
 
@@ -163,9 +164,8 @@ class StockholderOnlineBallotService
             DB::beginTransaction();
             $confirmationService = new ConfirmationService();
 
-            Log::debug("Coffee");
+
             $ballotConfirmation = $confirmationService->store($ballotInfo, $userSubmittedData, true, $message);
-            Log::debug("Tea");
 
 
             ActivityController::log([
@@ -195,6 +195,9 @@ class StockholderOnlineBallotService
                 'info' => $infoMessage,
                 'message' => $message
             ]);
+        } catch (ValidationErrorException $e) {
+
+            return response()->json(['message' => $e->getMessage()], 400);
         } catch (Exception $e) {
 
             UtilityService::logServerError($request, $e, "Error processing Stockholder Online Voting summary for ballot ID " . $request->ballotId, ['ballotId' => $request->ballotId, 'confirmationId' => $request->confirmationId]);
@@ -207,7 +210,7 @@ class StockholderOnlineBallotService
         }
     }
 
-    private function ensureAvailableVotesAreUnchanged(Ballot $ballotInfo, array $userSubmittedData)
+    private function ensureAvailableVotesAreUnchanged(Ballot $ballotInfo, array $userSubmittedData): void
     {
         $votingType = UtilityService::getVotingType($ballotInfo->ballotType);
 
@@ -329,7 +332,7 @@ class StockholderOnlineBallotService
         );
     }
 
-    public function submit($request)
+    public function submit(SubmitStockholderOnlineRequest $request)
     {
 
         Log::info('Stockholder Online Voting: Submitting ballot ID ' . $request->ballotId, [
@@ -395,7 +398,7 @@ class StockholderOnlineBallotService
 
 
             $userInfo = User::with('stockholder', 'stockholderAccount', 'stockholderAccount.stockholder')->findOrFail(Auth::id());
-            $authorizedVoter = $this->checkIfUserIsAuthorizedVoter($userInfo);
+
             $hasSubmittedBallot = BallotService::hasSubmittedBallot($userInfo->email, 'Stockholder Online Voting');
 
             $availableVotes =  $this->getAvailableVotes($request->revoke, $userInfo);
@@ -455,6 +458,8 @@ class StockholderOnlineBallotService
                 'ballotId' => $ballotId,
                 'confirmationId' => $confirmationId,
                 'userId' => Auth::id(),
+                'email' => Auth::user()->email,
+                'accountNo' => Auth::user()->account_no,
             ]);
 
             throw new ValidationErrorException($electionDataStatus);

@@ -146,19 +146,7 @@ class ConfigurationSeeder extends Seeder
                 'description' => 'Send voting confirmation receipt to users',
                 'type' => 'boolean'
             ],
-            [
-                'config' => 'terms_and_conditions_online',
-                'value' => null,
-                'description' => null,
-                'type' => 'text'
-            ],
 
-            [
-                'config' => 'terms_and_conditions_proxy',
-                'value' => null,
-                'description' => null,
-                'type' => 'text'
-            ],
             [
                 'config' => 'terms_and_conditions_general',
                 'value' => null,

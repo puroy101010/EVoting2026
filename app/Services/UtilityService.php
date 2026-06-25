@@ -220,7 +220,7 @@ class UtilityService
         return $accountRole;
     }
 
-    public static function getVotingType($ballotType)
+    public static function getVotingType(string $ballotType)
     {
         if (!in_array($ballotType, ['person', 'proxy'])) {
             Log::error("Invalid ballot type provided to getVotingType method.", ['ballotType' => $ballotType]);

@@ -723,7 +723,6 @@
                                     </div>
                                 </div>
                                 @endif
-
                                 @if($bodEnabled === true)
                                 <div class="list-group-item border-0 p-0 mb-2 bg-transparent">
                                     <div class="form-check">
@@ -860,7 +859,6 @@
 <script>
     function generateCurrentDateTime() {
         const now = new Date();
-
         const year = now.getFullYear();
         const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are zero-based
         const day = String(now.getDate()).padStart(2, '0');
@@ -871,7 +869,7 @@
         return `${year}${month}${day}${hours}${minutes}${seconds}`;
     }
 
-    function createBallot() {
+    function createProxyBallot() {
 
         const currentDateTime = generateCurrentDateTime();
 
@@ -896,6 +894,22 @@
                     return;
                 }
 
+                if(xhr.status === 419) {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Info',
+                        text: 'Session expired. Please refresh the page and try again.'
+                    }).then(() => {
+                        location.reload();
+                    });
+                    return;
+                }
+
+                //if not logged in, redirect to login page
+                if(xhr.status === 401) {
+                    location.href = BASE_URL + 'login';
+                    return;
+
                 Swal.fire({
                     icon: 'info',
                     title: 'Info',
@@ -908,7 +922,7 @@
     }
 
 
-    function requestStockholderOnlineForm(revoke = "none") {
+    function createOnlineBallot(revoke = "none") {
 
         const now = new Date();
         const year = now.getFullYear();
@@ -924,19 +938,13 @@
             url: BASE_URL + 'user/ballot/stockholder-online?v' + currentDateTime,
             method: 'POST',
             dataType: 'json',
-            data: {
-                revoke: revoke
-            },
-
+            data: {revoke: revoke},
             success: function(data) {
-
                 location.href = `{{asset("user/ballot/stockholder-online")}}/${data['ballotId']}?v${currentDateTime}`;
             },
             error: function(xhr) {
                 handleError(xhr);
             },
-
-
         });
     }
 
@@ -977,7 +985,7 @@
                 return;
             }
 
-            createBallot();
+            createProxyBallot();
 
             e.preventDefault();
 
@@ -1013,7 +1021,7 @@
 
 
             if (issuedProxy == 0) {
-                requestStockholderOnlineForm();
+                createOnlineBallot();
                 return false;
             }
 
@@ -1033,7 +1041,6 @@
 
 
             if (revoke !== "none") {
-
                 Swal.fire({
                     title: 'Are you sure?',
                     text: "Please note that this action is final, and your issued proxy will no longer be considered once you continue with the voting process.",
@@ -1046,7 +1053,7 @@
                     reverseButtons: true
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        requestStockholderOnlineForm(revoke);
+                        createOnlineBallot(revoke);
 
                     } else if (result.dismiss === Swal.DismissReason.cancel) {
                         $('#requestBallotFormModal').modal('hide');
@@ -1055,10 +1062,8 @@
 
                 return false;
             }
-
-            requestStockholderOnlineForm(revoke);
+            createOnlineBallot(revoke);
             e.preventDefault();
-
         })
     })
 </script>
