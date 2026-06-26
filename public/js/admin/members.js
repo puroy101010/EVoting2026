@@ -929,11 +929,11 @@ function buildAuthSignatoryDisplay(stockholder) {
             : `<span style="color: #e67e22; font-style: italic; display: inline-block; padding: 2px 6px; background-color: #fff3e0; border-radius: 3px;"><i class="fas fa-plus-circle" style="margin-right: 4px;"></i>Add auth. sig</span>`;
         return `<a href="#" data-user-id="${stockholder.userId}" class="text-decoration-none btn-auth-signatory" >
                     <div>${authSignatoryContent}</div>
-                    <div style="font-size: 0.85rem; color: #6c757d;">${stockholder.user.email || ""}</div>
+                    <div style="font-size: 0.7rem; color: #6c757d;">${stockholder.user.email || ""}</div>
                 </a>`;
     } else {
         return `<div><strong>${authSignatory}</strong></div>
-                <div style="font-size: 0.85rem; color: #6c757d;">${stockholder.user.email || ""}</div>`;
+                <div style="font-size: 0.7rem; color: #6c757d;">${stockholder.user.email || ""}</div>`;
     }
 }
 
@@ -945,11 +945,11 @@ function buildCorpRepDisplay(id, stockholder, corpRep, userEmail) {
 
         return `<a class="btn-change-corp-rep" href="#" data-user-id="${id}">
                     <div><span style="color: #000; border-bottom: 1px solid currentColor; ">${corpRepContent}</span></div>
-                    <div style="font-size: 0.85rem; color: #6c757d;">${userEmail || ""}</div>
+                    <div style="font-size: 0.7rem; color: #6c757d;">${userEmail || ""}</div>
                 </a>`;
     } else {
         return `<div><strong></strong></div>
-                <div style="font-size: 0.85rem; color: #6c757d;"></div>`;
+                <div style="font-size: 0.7rem; color: #6c757d;"></div>`;
     }
 }
 
@@ -1011,7 +1011,7 @@ function buildProxyActions(accountId, accountKey) {
     return `
         <div style="display: flex; gap: 0.5rem;">
             <div class="btn-group" role="group">
-                <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" id="${proxyDropdownId}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" id="${proxyDropdownId}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="font-size: 0.7rem;">
                     Proxy
                 </button>
                 <div class="dropdown-menu" aria-labelledby="${proxyDropdownId}">
@@ -1020,7 +1020,7 @@ function buildProxyActions(accountId, accountKey) {
                 </div>
             </div>
             <div class="btn-group" role="group">
-                <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" id="${historyDropdownId}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" id="${historyDropdownId}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="font-size: 0.7rem;">
                     History
                 </button>
                 <div class="dropdown-menu" aria-labelledby="${historyDropdownId}">
@@ -1348,8 +1348,12 @@ const load_proxyhoder_amendment = loadProxyAmendment;
 
 function showProxyAmendment(data) {
     const amendment = data.proxy_amendment;
-    const assignor = amendment.assignorName ? `<strong>${amendment.assignorName}</strong> (${amendment.assignorEmail})` : '';
-    const assignee = amendment.assigneeName ? `<strong>${amendment.assigneeName}</strong> (${amendment.assigneeEmail})` : '';
+    const assignor = amendment.assignorName
+        ? `<strong>${amendment.assignorName}</strong> (${amendment.assignorEmail})`
+        : "";
+    const assignee = amendment.assigneeName
+        ? `<strong>${amendment.assigneeName}</strong> (${amendment.assigneeEmail})`
+        : "";
     const detailsForm = $(SELECTORS.proxyFormAmendment + " .assignee-details");
     const stockKey = `${data.accountKey} ${data.stockholder.stockholder}`;
 

@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
 @section('css')
-<link rel="stylesheet" type="text/css" href="{{asset('css/admin/corporate-ui.css')}}">
+<link rel="stylesheet" type="text/css" href="{{asset('css/admin/corporate-ui.css')}}?v={{ filemtime('css/admin/corporate-ui.css') }}">
 
 <script src="{{asset('js/admin/corporate-ui.js') }}"></script>
 <script src="{{asset('js/admin/corporate-ui.modal.js') }}"></script>
@@ -254,7 +254,7 @@
                   <thead class="text-nowrap" style="position: sticky; top: 0; z-index: 1; background-color: #27ae60;">
                     <tr style="background-color: #27ae60; color: white;">
                       <th class="th-padding">#</th>
-                      <th class="th-padding">Account #</th>
+                      <th class="th-padding">Acct. #</th>
                       <th class="th-padding">Stockholder</th>
                       <th class="th-padding">Auth. Signatory</th>
                       <th class="th-padding">Corp. Rep.</th>
