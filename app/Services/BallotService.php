@@ -16,21 +16,17 @@ use Illuminate\Support\Facades\Auth;
 
 use Illuminate\Support\Facades\Log;
 use App\Models\Amendment;
-use App\Models\Attendance;
 use App\Models\Ballot;
 use App\Models\BallotAgenda;
 use App\Models\BallotAmendment;
 use App\Models\BallotConfirmation;
 use App\Models\BallotDetail;
 use App\Models\Candidate;
-use App\Models\Stockholder;
-use App\Models\StockholderAccount;
 use App\Models\UsedAmendmentAccount;
 use App\Models\UsedBoardOfDirectorAccount;
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Mail;
-use PSpell\Config;
+
 
 class BallotService
 {
@@ -38,11 +34,49 @@ class BallotService
     protected $stockholderOnlineActive = false;
     protected $proxyVotingActive = false;
     protected array $configSettings = [];
+    protected string $votingType;
+    protected string $ballotType;
+    protected bool $isBodEnabled;
+    protected bool $isAmendmentEnabled;
 
 
     public function __construct()
     {
         $this->configSettings = ConfigService::getConfig();
+        $this->isBodEnabled = $this->configSettings['bod_module_enabled'] ?? false;
+        $this->isAmendmentEnabled = $this->configSettings['amendment_enabled'] ?? false;
+    }
+
+    /**
+     * Set the voting type for the ballot service. This method also sets the corresponding ballot type based on the provided voting type.
+     * 
+     * @param string $votingType The voting type to set. Valid values are 'Stockholder Online Voting' and 'Proxy Voting'.
+     * @throws Exception If an invalid voting type is provided.
+     */
+    public function setVotingType(string $votingType): void
+    {
+        if (!in_array($votingType, ['Stockholder Online Voting', 'Proxy Voting'])) {
+            throw new Exception("Invalid voting type provided: {$votingType}");
+        }
+
+        $this->votingType = $votingType;
+        $this->ballotType  = $votingType === 'Stockholder Online Voting' ? 'person' : 'proxy';
+    }
+
+    public function getVotingType(): string
+    {
+        if (empty($this->votingType)) {
+            throw new Exception("Voting type has not been set. Please call setVotingType() before accessing the voting type.");
+        }
+        return $this->votingType;
+    }
+
+    public function getBallotType(): string
+    {
+        if (empty($this->ballotType)) {
+            throw new Exception("Ballot type has not been set. Please call setVotingType() before accessing the ballot type.");
+        }
+        return $this->ballotType;
     }
 
     public function getConfigSettings(): array
@@ -775,37 +809,32 @@ class BallotService
         }
     }
 
-
-    public static function ballotInfo(Request $request, string $votingType): Ballot
+    /**
+     * Fetch ballot information based on the provided ballot ID and voting type. Validates the voting type, checks if the ballot exists, and ensures it has not been submitted yet.
+     * @param int $ballotId The ID of the ballot
+     * @return Ballot The ballot information retrieved from the database
+     * @throws ValidationErrorException If the ballot is not found, has an invalid type, or has already been submitted
+     */
+    public function ballotInfo(int $ballotId): Ballot
     {
 
 
-        Log::info("{$votingType}: Fetching ballot information for ballot ID " . $request->ballotId, [
-            'ballotId' => $request->ballotId,
-            'votingType' => $votingType,
-        ]);
-
-        UtilityService::validateVotingType($votingType);
-
-        $ballotType = $votingType === 'Stockholder Online Voting' ? 'person' : 'proxy';
-
-
-        $ballotInfo = Ballot::where('ballotId', $request->ballotId)
-            ->where('ballotType', $ballotType)
+        $ballotInfo = Ballot::where('ballotId', $ballotId)
+            ->where('ballotType', $this->ballotType)
             ->where('isViewed', 1)
             ->where('createdBy', Auth::user()->id)
             ->first();
 
         if (!$ballotInfo) {
-            Log::error("{$votingType}: Ballot not found or invalid ballot type for ballot ID " . $request->ballotId, [
-                'ballotId' => $request->ballotId,
+            Log::error("{$this->votingType}: Ballot not found or invalid ballot type for ballot ID " . $ballotId, [
+                'ballotId' => $ballotId,
             ]);
             throw new  ValidationErrorException('Ballot not found. Please contact support if you believe this is an error.');
         }
 
         if ($ballotInfo->isSubmitted === 1) {
-            Log::error("{$votingType}: Ballot has already been submitted for ballot ID " . $request->ballotId, [
-                'ballotId' => $request->ballotId,
+            Log::error("{$this->votingType}: Ballot has already been submitted for ballot ID " . $ballotId, [
+                'ballotId' => $ballotId,
             ]);
             throw new  ValidationErrorException('This ballot has already been submitted. Please contact support if you believe this is an error.');
         }
@@ -884,6 +913,13 @@ class BallotService
         return [];
     }
 
+    /**
+     * Check for unused votes and log the activity if any.
+     * @param Ballot $ballotInfo The ballot information
+     * @param int $totalVotesSubmitted The total number of votes submitted by the user
+     * @param int $unusedVotes The number of unused votes
+     * @return string|bool A message indicating unused votes or true if no unused votes
+     */
     public function checkUnusedVotes(Ballot $ballotInfo, int $totalVotesSubmitted, int $unusedVotes): string|bool
     {
 
@@ -905,7 +941,9 @@ class BallotService
                 'activityCode' => $ballotInfo->ballotType === 'person' ? '00090' : '00091',
                 'remarks' => $message,
                 'ballotId' => $ballotInfo->ballotId,
-                'userId' => Auth::user()->id
+                'userId' => Auth::user()->id,
+                'email' => Auth::user()->email,
+                'accountNo' => Auth::user()->account_no
             ]);
 
             Log::info("{$votingType}: User has $unusedVotes unused votes.", [
@@ -926,6 +964,11 @@ class BallotService
 
     public function checkExceedVotes(array $userSubmittedData, Ballot $ballotInfo, int $totalVotesSubmitted): void
     {
+
+        if (ConfigService::isBodEnabled() === false) {
+            Log::info("BOD voting is disabled in settings. Skipping exceed votes check.");
+            return;
+        }
 
         $votingType = $ballotInfo->ballotType === 'person' ? 'Stockholder Online Voting' : 'Proxy Voting';
 
@@ -1167,12 +1210,22 @@ class BallotService
     }
 
 
+    /**
+     * Generate a summary information message based on the user's voting status and unused votes.
+     * @param string|bool $usedAllVotes Indicates whether the user has used all their votes (true if all votes are used, false otherwise)
+     * @param int $unusedVotes The number of unused votes remaining
+     * @param bool $confirmMessage Whether to include a confirmation message in the output (default is true)
+     * @return string A summary information message for the user regarding their voting status and unused votes
+     */
     public static function generateSummaryInfoMessage(string|bool $usedAllVotes, int $unusedVotes, bool $confirmMessage = true): string
     {
         if ($usedAllVotes !== true) {
+
+            $voteText = $unusedVotes == 1 ? 'unused vote' : 'unused votes';
+
             return $confirmMessage ?
-                "Once confirmed, you will no longer be allowed to make any changes to this ballot. All of your $unusedVotes unused vote(s) will be voided in this submission and will not be counted. You will also receive an email confirming that your votes have been submitted to the Club." :
-                "Once confirmed, you will no longer be allowed to make any changes to this ballot. All of your $unusedVotes unused vote(s) will be voided in this submission and will not be counted.";
+                "Once confirmed, you will no longer be allowed to make any changes to this ballot. All of your $unusedVotes $voteText will be voided in this submission and will not be counted. You will also receive an email confirming that your votes have been submitted to the Club." :
+                "Once confirmed, you will no longer be allowed to make any changes to this ballot. All of your $unusedVotes $voteText will be voided in this submission and will not be counted.";
         }
 
 
@@ -1181,33 +1234,31 @@ class BallotService
             "Once confirmed, you will no longer be allowed to make any changes to this ballot.";
     }
 
-    public function updateBallotStatus($ballotInfo, $ballotConfirmation)
+
+    /**
+     * Update the status of a ballot after submission, including the number of votes cast and unused votes.
+     * @param Ballot $ballotInfo The ballot information to be updated
+     * @param BallotConfirmation $ballotConfirmation The confirmation information related to the ballot submission
+     * @throws Exception If the confirmation data is empty or invalid
+     */
+    public function updateBallotStatus(Ballot $ballotInfo, BallotConfirmation $ballotConfirmation)
     {
 
         $votingType = UtilityService::getVotingType($ballotInfo->ballotType);
 
-        Log::info("{$votingType}: Updating ballot status to submitted for ballot ID " . $ballotInfo->ballotId, [
-            'ballotId' => $ballotInfo->ballotId,
-            'confirmationId' => $ballotConfirmation->confirmationId
-        ]);
-
-        Log::info("{$votingType}: Decoding ballot confirmation data", [
-            'confirmationData' => $ballotConfirmation->data
-        ]);
-
-
         $confirmationData = json_decode($ballotConfirmation->data);
 
-        Log::info("{$votingType}: Decoded ballot confirmation data for BOD", [
-            'confirmationData' => $confirmationData
-        ]);
+        if (empty($confirmationData)) {
+            throw new Exception("Confirmation data is empty for confirmation ID: " . $ballotConfirmation->confirmationId);
+        }
 
         $totalVotesSubmitted = collect($confirmationData->bod)->sum(function ($bod) {
             return isset($bod->vote) && is_numeric($bod->vote) ? (int)$bod->vote : 0;
         });
 
 
-        $unusedVotesBod = $ballotInfo->availableVotesBod - $totalVotesSubmitted;
+        $unusedVotesBod = ($ballotInfo->availableVotesBod ?? 0) - $totalVotesSubmitted;
+
         $ballotInfo->update([
             'castedVotes' => $totalVotesSubmitted,
             'unusedVotesBod' => $unusedVotesBod,
@@ -1225,7 +1276,7 @@ class BallotService
     }
 
 
-    public function createBallotDetails($confirmation, $ballotInfo)
+    public function createBallotBodDetails(BallotConfirmation $confirmation, Ballot $ballotInfo)
     {
 
 
@@ -1233,10 +1284,7 @@ class BallotService
 
         $candidateData = $this->processBodForCreation($confirmation, $ballotInfo);
 
-        Log::info("{$votingType}: Inserting ballot details", [
-            'candidateData' => $candidateData,
-            'votingType' => $votingType
-        ]);
+
 
         if (!empty($candidateData)) {
             $ballotDetail = BallotDetail::insert($candidateData);
@@ -1252,8 +1300,9 @@ class BallotService
     }
 
 
-    public function createBallotAgendaDetails($confirmation, $ballotInfo)
+    public function createBallotAgendaDetails(BallotConfirmation $confirmation, Ballot $ballotInfo)
     {
+
         $votingType = UtilityService::getVotingType($ballotInfo->ballotType);
 
         $agendaData = $this->processAgendaForCreation($confirmation, $ballotInfo);
@@ -1277,7 +1326,7 @@ class BallotService
     }
 
 
-    public function createBallotAmendmentDetails($confirmation, $ballotInfo)
+    public function createBallotAmendmentDetails(BallotConfirmation $confirmation, Ballot $ballotInfo)
     {
 
 
@@ -1352,28 +1401,22 @@ class BallotService
         return $agendaProcessedData;
     }
 
-    private function processAmendmentForCreation($ballotConfirmation, $ballotInfo)
+    private function processAmendmentForCreation(BallotConfirmation $ballotConfirmation, Ballot $ballotInfo): array
     {
+        if (ConfigService::isAmendmentEnabled() === false) {
+            Log::info("Amendment voting is disabled in settings. Skipping amendment processing for ballot ID " . $ballotConfirmation->ballotId);
+            return [];
+        }
 
         $votingType = UtilityService::getVotingType($ballotInfo->ballotType);
 
-        Log::info("{$votingType}: Processing amendment votes for creation for ballot ID " . $ballotConfirmation->ballotId, [
-            'ballotId' => $ballotConfirmation->ballotId,
-            'confirmationId' => $ballotConfirmation->confirmationId,
-        ]);
-
         if ($ballotInfo->availableVotesAmendment === 0) {
-
-            Log::info("{$votingType}: No available votes for amendment for ballot ID " . $ballotConfirmation->ballotId, [
-                'ballotId' => $ballotConfirmation->ballotId,
-                'confirmationId' => $ballotConfirmation->confirmationId,
-            ]);
             return [];
         }
 
         $ballotService = new BallotService();
         $data = json_decode($ballotConfirmation->data, true);
-        $amendmentData = $data['amendment'] ?? [];
+        $amendmentData = $data['amendment'];
 
         $amendmentProcessedData = [];
 
@@ -1401,19 +1444,34 @@ class BallotService
         return $amendmentProcessedData;
     }
 
-    private function processBodForCreation($ballotConfirmation, $ballotInfo)
-    {
 
+    /**
+     * Process Board of Directors (BOD) votes for creation based on the ballot confirmation and ballot information. Validates the BOD data, checks for available votes, and prepares the candidate data for insertion into the database.
+     * @param BallotConfirmation $ballotConfirmation The ballot confirmation containing the submitted data
+     * @param Ballot $ballotInfo The ballot information containing available votes and other details
+     * @return array An array of candidate data to be inserted into the database for BOD votes
+     *          [
+     *              'vote' => (int) The number of votes for the candidate,
+     *              'candidateId' => (int) The ID of the candidate,
+     *              'ip' => (string) The IP address of the user submitting the votes,
+     *              'ballotId' => (int) The ID of the ballot,
+     *              'createdBy' => (int) The ID of the user who created the vote,
+     *          ]
+     * 
+     * @throws Exception If any candidate has an invalid vote count
+     * 
+     * 
+     */
+    private function processBodForCreation(BallotConfirmation $ballotConfirmation, Ballot $ballotInfo): array
+    {
+        if (!ConfigService::isBodEnabled()) {
+            Log::info("BOD voting is disabled in settings. Skipping BOD processing for ballot ID " . $ballotConfirmation->ballotId);
+            return [];
+        }
 
         $votingType = UtilityService::getVotingType($ballotInfo->ballotType);
 
-        Log::info("{$votingType}: Processing Board of Directors votes for creation for ballot ID " . $ballotConfirmation->ballotId, [
-            'ballotId' => $ballotConfirmation->ballotId,
-            'confirmationId' => $ballotConfirmation->confirmationId,
-        ]);
-
         if ($ballotInfo->availableVotesBod === 0) {
-
             Log::info("{$votingType}: No available votes for Board of Directors for ballot ID " . $ballotConfirmation->ballotId, [
                 'ballotId' => $ballotConfirmation->ballotId,
                 'confirmationId' => $ballotConfirmation->confirmationId,
@@ -1421,32 +1479,37 @@ class BallotService
             return [];
         }
 
-
-
         $data = json_decode($ballotConfirmation->data, true);
-        $bodData = $data['bod'] ?? [];
 
+        $bodData = $data['bod'] ?? [];
+        $userIp = request()->ip();
+        $userId = Auth::id();
         $candidateData = [];
 
         foreach ($bodData as $candidate) {
-            if ((int)$candidate['vote'] > 0) {
-                $candidateData[] = [
-                    'vote' => $candidate['vote'],
-                    'candidateId' => $candidate['candidateId'],
-                    'ip' => request()->ip(),
-                    'ballotId' => $ballotConfirmation->ballotId,
-                    'createdBy' => Auth::id(),
-                ];
-            }
-        }
+            $vote = (int)($candidate['vote'] ?? 0);
 
+            // This should be not happening since we are validating the form before this step. But just in case, we will throw an exception.
+            if ($vote <= 0) {
+                throw new Exception("{$votingType}: Invalid vote count for candidate ID {$candidate['candidateId']}. Votes must be at least 1.");
+            }
+
+            $candidateData[] = [
+                'vote' => $vote,
+                'candidateId' => $candidate['candidateId'],
+                'ip' => $userIp,
+                'ballotId' => $ballotConfirmation->ballotId,
+                'createdBy' => $userId,
+            ];
+        }
 
         Log::info("{$votingType}: Processed " . count($candidateData) . " Board of Directors votes for creation for ballot ID " . $ballotConfirmation->ballotId, [
             'ballotId' => $ballotConfirmation->ballotId,
             'confirmationId' => $ballotConfirmation->confirmationId,
             'processedVotes' => count($candidateData),
-            'data' => $candidateData
+            'countedVotes' => array_sum(array_column($candidateData, 'vote')),
         ]);
+
         return $candidateData;
     }
 

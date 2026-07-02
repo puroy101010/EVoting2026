@@ -28,10 +28,7 @@ class ConfirmationService
             $stockholderOnlineBallotService->getAvailableVotes($ballotInfo->revoked, Auth::user()) :
             $proxyVotingBallotService->getAvailableVotes(Auth::user());
 
-
-
         $availableVotesJson = json_encode($availableVotes);
-
         $userSubmittedData['message'] = $message;
 
         $ballotConfirmation = BallotConfirmation::create([
@@ -46,30 +43,21 @@ class ConfirmationService
             'createdBy'      => Auth::id()
         ]);
 
-
-
-
-
-
         return $ballotConfirmation;
     }
 
 
-    public static function ensureBallotConfirmationIsValid(Ballot $ballotInfo, $request): BallotConfirmation
+    public static function ensureBallotConfirmationIsValid(Ballot $ballotInfo, int $confirmationId): BallotConfirmation
     {
         $votingType = UtilityService::getVotingType($ballotInfo->ballotType);
-
-        Log::info("{$votingType}: Fetching ballot confirmation for confirmation ID " . $request->confirmationId, ['confirmationId' => $request->confirmationId]);
-
-
-        $confirmation = BallotConfirmation::findOrFail($request->confirmationId);
-
+        $confirmation = BallotConfirmation::findOrFail($confirmationId);
 
         $activityCode = $ballotInfo->ballotType === 'person' ? '00092' : '00093';
+
         if ($ballotInfo->ballotId !== $confirmation->ballotId) {
             Log::error('Mismatch between ballot and confirmation data', [
                 'ballotId' => $ballotInfo->ballotId,
-                'confirmationId' => $request->confirmationId,
+                'confirmationId' => $confirmationId,
             ]);
 
             ActivityController::log([
@@ -77,7 +65,9 @@ class ConfirmationService
                 'remarks' => 'Mismatch between ballot and confirmation data during submission attempt',
                 'userId' => Auth::id(),
                 'ballotId' => $ballotInfo->ballotId,
-                'confirmationId' => $request->confirmationId,
+                'confirmationId' => $confirmationId,
+                'email' => Auth::user()->email,
+                'accountNo' => Auth::user()->account_no,
             ]);
 
             throw new Exception('The ballot confirmation data does not match the ballot. Please reload the page to generate a new ballot and try again.');
@@ -85,9 +75,8 @@ class ConfirmationService
 
         if ($confirmation->isValidBallot === 0) {
 
-
             Log::error('Attempt to submit an invalid ballot confirmation data', [
-                'confirmationId' => $request->confirmationId,
+                'confirmationId' => $confirmationId,
                 'ballotId' => $ballotInfo->ballotId,
             ]);
 
@@ -96,18 +85,26 @@ class ConfirmationService
                 'remarks' => 'Alert: Attempted to submit an invalid ballot confirmation data',
                 'userId' => Auth::id(),
                 'ballotId' => $ballotInfo->ballotId,
-                'confirmationId' => $request->confirmationId,
+                'confirmationId' => $confirmationId,
+                'email' => Auth::user()->email,
+                'accountNo' => Auth::user()->account_no,
             ]);
             throw new Exception('The ballot confirmation data is marked as invalid. Please reload the page to generate a new ballot and try again.');
         }
 
-        Log::info("{$votingType}: Ballot confirmation data is valid for confirmation ID " . $request->confirmationId, ['confirmationId' => $request->confirmationId]);
+        Log::info("{$votingType}: Ballot confirmation data is valid for confirmation ID " . $confirmationId, ['confirmationId' => $confirmationId]);
         return $confirmation;
     }
 
 
 
-    public static function createAvailableVoteChangeRecord($ballot, $userSubmittedData): BallotConfirmation
+    /**
+     * Create a new BallotConfirmation record when the available votes have changed since the user generated their ballot.
+     * This method is called when the user attempts to submit their ballot, but the available votes have changed since they generated their ballot.
+     * It creates a new BallotConfirmation record with the updated available votes and a message indicating that the available votes have changed.
+     * Sets the isValidBallot field to false to indicate that the ballot is no longer valid.
+     */
+    public static function createAvailableVoteChangeRecord(Ballot $ballot, array $userSubmittedData): BallotConfirmation
     {
 
 

@@ -33,13 +33,6 @@ class StockholderOnlineBallotController extends Controller
         return $this->stockholderOnlineBallotService->show($request, $id);
     }
 
-
-
-
-
-
-
-
     public function submit(SubmitStockholderOnlineRequest $request)
     {
         return $this->stockholderOnlineBallotService->submit($request);

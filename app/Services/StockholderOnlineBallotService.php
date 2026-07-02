@@ -142,8 +142,6 @@ class StockholderOnlineBallotService
 
             $this->ensureElectionIsOngoing('summary', $request->ballotId, $request->confirmationId);
 
-
-
             $ballotInfo = $this->ballotService->ballotInfo($request, 'Stockholder Online Voting');
 
             $userSubmittedData = $this->ballotService->processUserSubmittedData($request, $ballotInfo);
@@ -157,9 +155,13 @@ class StockholderOnlineBallotService
 
             $overallVotesStatus = $this->ballotService->checkUnusedVotes($ballotInfo, $totalVotesSubmitted, $unusedVotes);
 
-            $message = $this->ballotService->generateSummaryInfoMessage($overallVotesStatus, $unusedVotes, true);
-            $infoMessage = $this->ballotService->generateSummaryInfoMessage($overallVotesStatus, $unusedVotes, false);
 
+            // This message will be displayed in the summary page confirmation modal after the user clicks the submit button.
+            $message = $this->ballotService->generateSummaryInfoMessage($overallVotesStatus, $unusedVotes, true);
+
+
+            // It will be displayed in the summary page after the user clicks the submit button.
+            $infoMessage = $this->ballotService->generateSummaryInfoMessage($overallVotesStatus, $unusedVotes, false);
 
             DB::beginTransaction();
             $confirmationService = new ConfirmationService();
@@ -334,19 +336,20 @@ class StockholderOnlineBallotService
 
     public function submit(SubmitStockholderOnlineRequest $request)
     {
-
-        Log::info('Stockholder Online Voting: Submitting ballot ID ' . $request->ballotId, [
+        Log::info("Stockholder Online Voting: Submitting ballot for ballot ID " . $request->ballotId, [
             'ballotId' => $request->ballotId,
-            'confirmationId' => $request->confirmationId
+            'confirmationId' => $request->confirmationId,
         ]);
+
+        $this->ballotService->setVotingType('Stockholder Online Voting');
 
         $this->checkIfUserIsAuthorizedVoter(Auth::user());
 
         $this->ensureElectionIsOngoing('submit', $request->ballotId, $request->confirmationId);
 
 
-        $ballotInfo = BallotService::ballotInfo($request, 'Stockholder Online Voting');
-        $confirmation = ConfirmationService::ensureBallotConfirmationIsValid($ballotInfo, $request);
+        $ballotInfo = $this->ballotService->ballotInfo($request->ballotId);
+        $confirmation = ConfirmationService::ensureBallotConfirmationIsValid($ballotInfo, $request->confirmationId);
 
         $this->ensureAvailableVotesAreUnchanged($ballotInfo, json_decode($confirmation->data, true));
 
@@ -356,7 +359,7 @@ class StockholderOnlineBallotService
         $this->ballotService->updateBallotStatus($ballotInfo, $confirmation);
 
 
-        $this->ballotService->createBallotDetails($confirmation, $ballotInfo);
+        $this->ballotService->createBallotBodDetails($confirmation, $ballotInfo);
         $this->ballotService->createBallotAgendaDetails($confirmation, $ballotInfo);
         $this->ballotService->createBallotAmendmentDetails($confirmation, $ballotInfo);
 
@@ -380,6 +383,10 @@ class StockholderOnlineBallotService
     }
 
 
+    /**
+     * Check if the user is an authorized voter based on their role.
+     * 
+     */
     private static function checkIfUserIsAuthorizedVoter(User $userInfo): bool
     {
 
